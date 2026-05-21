@@ -20,7 +20,6 @@ const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Players', href: '/joueurs', icon: Users },
   { label: 'Training', href: '/calendrier', icon: Dumbbell },
-  { label: 'Matches', href: '/matches', icon: Trophy },
   { label: 'AI Analytics', href: '/ia-analytics', icon: BrainCircuit },
   { label: 'Communication', href: '/messagerie', icon: MessageSquare },
   { label: 'Logistics', href: '/logistique', icon: Package },
@@ -45,13 +44,13 @@ export default function Sidebar() {
           </div>
           <div>
             <p className="text-white font-bold text-lg leading-tight">TeamPilot AI</p>
-            <p className="text-white/40 text-xs tracking-wide">Elite Tactical Control</p>
+            <p className="text-white/60 text-2xs tracking-wide">Elite Tactical Control</p>
           </div>
         </div>
       </div>
 
       {/* Navigation principale */}
-      <nav className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-5 space-y-5 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;

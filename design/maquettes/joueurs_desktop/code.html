@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ai-glow {
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.1);
+        }
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#ffdad6",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#cad3ff",
+                        "on-primary-fixed-variant": "#0039b5",
+                        "surface-dim": "#d0dbed",
+                        "tertiary-fixed": "#ffdbca",
+                        "secondary-container": "#7cf994",
+                        "primary-fixed": "#dce1ff",
+                        "tertiary": "#753000",
+                        "on-secondary-fixed-variant": "#005320",
+                        "surface": "#f8f9ff",
+                        "tertiary-fixed-dim": "#ffb690",
+                        "surface-bright": "#f8f9ff",
+                        "primary": "#0037b0",
+                        "inverse-primary": "#b7c4ff",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#d9e3f6",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#dee9fc",
+                        "on-tertiary-fixed": "#341100",
+                        "on-background": "#121c2a",
+                        "surface-tint": "#2151da",
+                        "secondary-fixed": "#7ffc97",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-surface-variant": "#434655",
+                        "surface-container-low": "#eff4ff",
+                        "primary-container": "#1d4ed8",
+                        "background": "#f8f9ff",
+                        "inverse-surface": "#27313f",
+                        "primary-fixed-dim": "#b7c4ff",
+                        "on-primary-fixed": "#001551",
+                        "error": "#ba1a1a",
+                        "secondary": "#006e2d",
+                        "outline-variant": "#c4c5d7",
+                        "on-error-container": "#93000a",
+                        "on-secondary-container": "#007230",
+                        "tertiary-container": "#9a4200",
+                        "on-secondary-fixed": "#002109",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#d9e3f6",
+                        "surface-container": "#e6eeff",
+                        "secondary-fixed-dim": "#62df7d",
+                        "on-tertiary-fixed-variant": "#783200",
+                        "on-surface": "#121c2a",
+                        "outline": "#747686",
+                        "on-tertiary-container": "#ffcab0"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "sidebar-width": "280px",
+                        "base": "4px",
+                        "sm": "8px",
+                        "gutter": "20px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "xl": "40px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "stat-value": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "stat-value": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- Fixed Side Navigation -->
+<nav class="fixed left-0 top-0 h-full w-[280px] bg-[#1F2937] flex flex-col py-lg shadow-xl z-50">
+<div class="px-lg mb-xl">
+<h1 class="font-headline-md text-headline-md font-bold text-white">TeamPilot AI</h1>
+<p class="text-xs text-outline-variant tracking-wider uppercase">Elite Tactical Control</p>
+</div>
+<div class="flex-grow space-y-1">
+<a class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-lg text-body-lg font-medium">Dashboard</span>
+</a>
+<a class="bg-primary text-white font-bold rounded-lg mx-2 my-1 px-4 py-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-body-lg text-body-lg font-medium">Players</span>
+</a>
+<a class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">fitness_center</span>
+<span class="font-body-lg text-body-lg font-medium">Training</span>
+</a>
+<a class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">sports_soccer</span>
+<span class="font-body-lg text-body-lg font-medium">Matches</span>
+</a>
+<a class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body-lg text-body-lg font-medium">AI Analytics</span>
+</a>
+<a class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">chat</span>
+<span class="font-body-lg text-body-lg font-medium">Communication</span>
+</a>
+<a class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+<span class="font-body-lg text-body-lg font-medium">Logistics</span>
+</a>
+</div>
+<div class="px-4 mt-auto space-y-1 border-t border-white/10 pt-4">
+<button class="w-full bg-primary-container text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 mb-4 hover:opacity-90 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined">add</span>
+                Generate Report
+            </button>
+<a class="text-on-surface-variant hover:text-white transition-colors duration-200 flex items-center gap-3 px-4 py-3" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-lg text-body-lg font-medium">Settings</span>
+</a>
+<a class="text-on-surface-variant hover:text-white transition-colors duration-200 flex items-center gap-3 px-4 py-3" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="font-body-lg text-body-lg font-medium">Support</span>
+</a>
+</div>
+</nav>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 left-[280px] w-[calc(100%-280px)] bg-surface border-b border-outline-variant z-40 px-lg py-md hidden md:flex items-center justify-between">
+<div class="flex items-center gap-lg flex-1">
+<h2 class="font-headline-md text-headline-md font-extrabold text-on-surface">Player Management</h2>
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent font-body-lg text-body-lg" placeholder="Search by name, position or metrics..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 hover:bg-surface-container-low rounded-full transition-colors active:opacity-80">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="p-2 hover:bg-surface-container-low rounded-full transition-colors active:opacity-80">
+<span class="material-symbols-outlined text-on-surface-variant">settings</span>
+</button>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="Manager Profile" class="w-full h-full object-cover" data-alt="A professional close-up portrait of a mid-40s male football manager with sharp features and thoughtful expression. He is wearing a dark navy tactical polo shirt. The background is a blurred, high-end professional athletic facility with soft cool lighting. The style is clean, sharp, and authoritative, matching a high-performance sports AI interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFkV2QrgS4p_duQt91ysiw50VX7-d0o3q1Eq39IDsveI0-lTJkz6bZ60onsuBPRQwqEub8qCMEuiIe8McFp40_lwQoLNb_S8DKUja_Zv-T10fw5-xDi4ABJS32IG-H50ybGGDNQ591XQt58PRGsxQfUDOVyVT4xLILsS1ziz2dBchc5N40ALCIL3bJFMXRnagx6UwLKNFVEsJGyIsTv_j3CCl5Y3hofYMi4YvaA1DhvrhlU1yygPYGiWc-RdgOM8cfTgfQOwX28O4"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-[280px] pt-[88px] pr-[400px] p-lg min-h-screen">
+<!-- Filter Bar -->
+<div class="flex items-center justify-between mb-lg bg-white p-4 rounded-xl border border-outline-variant shadow-sm">
+<div class="flex items-center gap-md">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-outline mb-1">POSITION</span>
+<select class="bg-surface-container-low border-none rounded-lg text-on-surface font-body-lg font-medium px-3 py-1.5 focus:ring-primary">
+<option>All Positions</option>
+<option>Forward</option>
+<option>Midfielder</option>
+<option>Defender</option>
+<option>Goalkeeper</option>
+</select>
+</div>
+<div class="h-10 w-[1px] bg-outline-variant mx-2"></div>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-outline mb-1">AVAILABILITY</span>
+<select class="bg-surface-container-low border-none rounded-lg text-on-surface font-body-lg font-medium px-3 py-1.5 focus:ring-primary">
+<option>Full Squad</option>
+<option>Available</option>
+<option>Injured</option>
+<option>Restricted</option>
+</select>
+</div>
+<div class="h-10 w-[1px] bg-outline-variant mx-2"></div>
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-outline mb-1">SORT BY</span>
+<select class="bg-surface-container-low border-none rounded-lg text-on-surface font-body-lg font-medium px-3 py-1.5 focus:ring-primary">
+<option>Form Score</option>
+<option>Name</option>
+<option>Fitness Level</option>
+</select>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="flex items-center gap-2 px-4 py-2 text-on-surface-variant font-medium hover:bg-surface-container transition-colors rounded-lg">
+<span class="material-symbols-outlined">filter_list</span>
+                    Advanced
+                </button>
+</div>
+</div>
+<!-- Players Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-lg">
+<!-- Player Card 1: Selected State -->
+<div class="bg-white border-2 border-primary rounded-xl overflow-hidden cursor-pointer shadow-lg transition-transform active:scale-[0.98]">
+<div class="p-lg flex gap-md">
+<div class="relative">
+<img alt="Marcus V." class="w-24 h-24 rounded-lg object-cover" data-alt="A professional high-performance athletic headshot of a young male soccer player with focused intensity. He is wearing a clean white training kit with subtle blue accents. The lighting is crisp and studio-quality, highlighting facial features against a neutral gray background. The aesthetic is modern, athletic, and high-fidelity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxzXKehtPJAK-zJZ1VHFtd-C3Lv9VCYNHMi3_Sidw2HpYqnG7wGLCAUMshuOpQJZfINp3QpxplCo6BNnUALIH_0oenv3uij4E5BhyY1_1DfPe_9pWtHveFZa96S786ya6rPm5q2D-kVx79Sr3jonv6UnVYyT3P5Qk1UyPp3DaVm3PkIUhfc8FK85anie9Lp_E_g0D5kHkQhF9V1F-V-pVwEwH_Xa-jHxVn55DP4UqTHryNzI7GJYI0rFll0z8zfjfk5lEQra5ozVE"/>
+<div class="absolute -bottom-2 -right-2 bg-secondary text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white">FIT</div>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Marcus V.</h3>
+<p class="text-on-surface-variant font-body-sm text-body-sm">Central Midfielder</p>
+</div>
+<div class="text-right">
+<p class="font-stat-value text-stat-value text-secondary">94</p>
+<p class="font-label-caps text-label-caps text-outline">FORM SCORE</p>
+</div>
+</div>
+<div class="mt-4 flex items-center justify-between">
+<div class="flex gap-2">
+<span class="bg-surface-container-high px-2 py-1 rounded text-[11px] font-bold text-on-surface">CM</span>
+<span class="bg-surface-container-high px-2 py-1 rounded text-[11px] font-bold text-on-surface">REGISTA</span>
+</div>
+<div class="flex items-center text-secondary">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span class="text-[12px] font-bold ml-1">+2.4%</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low px-lg py-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-[#F97316] text-[18px]">auto_awesome</span>
+<span class="text-[12px] font-semibold text-on-surface-variant">AI: Peak performance projected for Matchday</span>
+</div>
+</div>
+<!-- Player Card 2: Risk State -->
+<div class="bg-white border border-outline-variant rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition-all ai-glow">
+<div class="p-lg flex gap-md">
+<div class="relative">
+<img alt="Julian R." class="w-24 h-24 rounded-lg object-cover" data-alt="A cinematic athletic portrait of a seasoned male soccer player with short dark hair and a determined gaze. He is wearing a dark navy performance jersey. High-contrast lighting creates a dramatic, professional sports atmosphere. The style is clean and elite, reflecting a high-stakes competitive environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0CBup_OCWqnOmofgnKWEc75krhC9n-NIh5Rx5dFLjGYGQ0AyUzv523fVvX9zfGnOBnE47SUTmqPIqaBggYAOK2S-MCZiZUCfXAqLB87PZP5vYcMXfQhl0LRmeKghPb8y8x5LCjf88kKQ8ptAbOT69vAutRG380a9qIV1KcLvNGMtwi3qsSVyJ8TCA7uXmsVyl89liPjF-j3dpqi-Lvczm3Qcv3NT3f-Ms9Lkg44L94Nft3VA0mbnjrDqtuZLUgggVGl85ZQk-2aY"/>
+<div class="absolute -bottom-2 -right-2 bg-error text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white">FATIGUE</div>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Julian R.</h3>
+<p class="text-on-surface-variant font-body-sm text-body-sm">Left Back</p>
+</div>
+<div class="text-right">
+<p class="font-stat-value text-stat-value text-error">62</p>
+<p class="font-label-caps text-label-caps text-outline">FORM SCORE</p>
+</div>
+</div>
+<div class="mt-4 flex items-center justify-between">
+<div class="flex gap-2">
+<span class="bg-surface-container-high px-2 py-1 rounded text-[11px] font-bold text-on-surface">LB</span>
+<span class="bg-surface-container-high px-2 py-1 rounded text-[11px] font-bold text-on-surface">LWB</span>
+</div>
+<div class="flex items-center text-error">
+<span class="material-symbols-outlined text-sm">trending_down</span>
+<span class="text-[12px] font-bold ml-1">-1.2%</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-error-container/20 px-lg py-2 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#F97316] text-[18px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+<span class="text-[12px] font-bold text-error uppercase tracking-tight">AI: High Injury Risk (Hamstring)</span>
+</div>
+<span class="material-symbols-outlined text-error text-[18px]">info</span>
+</div>
+</div>
+<!-- Player Card 3 -->
+<div class="bg-white border border-outline-variant rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition-all">
+<div class="p-lg flex gap-md">
+<div class="relative">
+<img alt="Kevin L." class="w-24 h-24 rounded-lg object-cover" data-alt="A professional headshot of a concentrated male soccer player with blonde hair, wearing a white and blue athletic training top. The background is a minimalist, modern gymnasium with soft, even lighting. The visual style is crisp and professional, emphasizing high-performance data analytics and elite sport management." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyHpKjMg6bWfgZsP_Fp3Uugpv3sCfXNepN-2xE7gYYzCj9AbKsJXhT0fFUL1T6wUCw4O6hs08lbva4x22m30BLTXnJolJWHHXTgYsk16RzIFIE1_5fjJoT6d5Bu9Y4n0cz_xOygfpo9NbN5d0X9YI2VxN2z9oWMtDQEPFui9R7VWv-XWIr6avaiG2gop_hB8UyvZf0P0q-oLJn2qHzXzpeYKouOr1Nx1V2Xl60uY4SDrxEgWhtcWXmmpaX5MgRe51QEpACIsq_-bE"/>
+<div class="absolute -bottom-2 -right-2 bg-secondary text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white">FIT</div>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Kevin L.</h3>
+<p class="text-on-surface-variant font-body-sm text-body-sm">Striker</p>
+</div>
+<div class="text-right">
+<p class="font-stat-value text-stat-value text-on-surface">81</p>
+<p class="font-label-caps text-label-caps text-outline">FORM SCORE</p>
+</div>
+</div>
+<div class="mt-4 flex items-center justify-between">
+<div class="flex gap-2">
+<span class="bg-surface-container-high px-2 py-1 rounded text-[11px] font-bold text-on-surface">ST</span>
+<span class="bg-surface-container-high px-2 py-1 rounded text-[11px] font-bold text-on-surface">CF</span>
+</div>
+<div class="flex items-center text-outline">
+<span class="material-symbols-outlined text-sm">remove</span>
+<span class="text-[12px] font-bold ml-1">STABLE</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low px-lg py-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+<span class="text-[12px] font-semibold text-on-surface-variant">Tactical Match: High pressing efficiency</span>
+</div>
+</div>
+<!-- Player Card 4 -->
+<div class="bg-white border border-outline-variant rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition-all">
+<div class="p-lg flex gap-md">
+<div class="relative">
+<img alt="Stefan K." class="w-24 h-24 rounded-lg object-cover" data-alt="A sharp, professional sports portrait of a tall, athletic male goalkeeper. He is wearing a bright green padded goalkeeper jersey. The background is a clean, modern training facility with blurred equipment and bright, natural light. The aesthetic is professional, high-end, and focused on elite performance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3VJKQz0RVOZRSgAQLoeolOVzOXTeuLQx_Ib_9XdhHiD0PXJnYKelyjFugVQ8jFWIBwPSHR3wDwioSyPyO0yQHhZXLc87a6Sunsn6k9Whu4lUBW4sirSY-mkriMpgf9o6PynhehtEsu1eHqSzhWC5Sx1h-eOnJ4OZW89hFDaAY-TjeDUDSIuTubwyxLk8zaqLexkvGfH-8jcjTLBR8FX2cQPDoF0NSd5m6aNPXON9PpAbCgk41ubqgS2JRLC3pavWU3TVEvCRmnnI"/>
+<div class="absolute -bottom-2 -right-2 bg-secondary text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-white">FIT</div>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">Stefan K.</h3>
+<p class="text-on-surface-variant font-body-sm text-body-sm">Goalkeeper</p>
+</div>
+<div class="text-right">
+<p class="font-stat-value text-stat-value text-secondary">88</p>
+<p class="font-label-caps text-label-caps text-outline">FORM SCORE</p>
+</div>
+</div>
+<div class="mt-4 flex items-center justify-between">
+<div class="flex gap-2">
+<span class="bg-surface-container-high px-2 py-1 rounded text-[11px] font-bold text-on-surface">GK</span>
+<span class="bg-surface-container-high px-2 py-1 rounded text-[11px] font-bold text-on-surface">SWEEPER</span>
+</div>
+<div class="flex items-center text-secondary">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span class="text-[12px] font-bold ml-1">+0.8%</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low px-lg py-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">bolt</span>
+<span class="text-[12px] font-semibold text-on-surface-variant">Alert: High distribution accuracy this week</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Detailed Sidebar (Preview Overlay) -->
+<aside class="fixed right-0 top-0 h-full w-[400px] bg-white border-l border-outline-variant z-50 shadow-2xl flex flex-col">
+<!-- Header -->
+<div class="p-lg border-b border-outline-variant bg-surface-container-low">
+<div class="flex justify-between items-start mb-lg">
+<button class="p-2 hover:bg-surface-variant rounded-full transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+<button class="bg-primary text-white font-bold px-4 py-2 rounded-lg text-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+                    Edit Profile
+                </button>
+</div>
+<div class="flex items-center gap-md">
+<img alt="Marcus V. Profile" class="w-20 h-20 rounded-xl object-cover border-2 border-primary" data-alt="A professional athletic headshot of a young male soccer player with focused intensity, wearing a white and blue training kit. The style is clean, modern, and high-fidelity sports photography, suitable for a professional data dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuClR6Zj2PtvPg_ughsnfELfD5X3rjU9ahQ7jyFskJt1YLB_uMW-336AD2WNZ2jQ5g3s5Xzw3dI9F6FaLOB9szy1A7mHtse3SWly6PGxPh3vqdp_N9qW-GnN1eemmgXme8Dhe9AabTb10HhXh3y_JmBMC3JaaJhcJI69ty_jQLik6QhAo3GKv3rb8SG4S8i_veWR6sKfxs26NLsdaYA6Ayb8CWFFkOLIR3nWt7QJvawLUTRReIqhhOKC9qht7ddg8NJeIlZXCpwPlyQ"/>
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Marcus V.</h2>
+<p class="text-primary font-bold">Squad Number: 08</p>
+</div>
+</div>
+</div>
+<div class="flex-grow overflow-y-auto p-lg space-y-lg">
+<!-- Physiological Data -->
+<div>
+<h4 class="font-label-caps text-label-caps text-outline mb-4">PHYSIOLOGICAL DATA</h4>
+<div class="grid grid-cols-3 gap-sm">
+<div class="bg-surface-container-low p-3 rounded-lg border border-outline-variant">
+<div class="flex items-center gap-1 text-primary mb-1">
+<span class="material-symbols-outlined text-[18px]">bedtime</span>
+<span class="font-label-caps text-[10px]">SLEEP</span>
+</div>
+<p class="font-stat-value text-stat-value text-on-surface">8.2<span class="text-sm font-normal text-outline">h</span></p>
+<div class="w-full bg-surface-container-high h-1 rounded-full mt-2">
+<div class="bg-secondary h-1 rounded-full" style="width: 82%;"></div>
+</div>
+</div>
+<div class="bg-surface-container-low p-3 rounded-lg border border-outline-variant">
+<div class="flex items-center gap-1 text-[#F97316] mb-1">
+<span class="material-symbols-outlined text-[18px]">restaurant</span>
+<span class="font-label-caps text-[10px]">FUEL</span>
+</div>
+<p class="font-stat-value text-stat-value text-on-surface">94<span class="text-sm font-normal text-outline">%</span></p>
+<div class="w-full bg-surface-container-high h-1 rounded-full mt-2">
+<div class="bg-secondary h-1 rounded-full" style="width: 94%;"></div>
+</div>
+</div>
+<div class="bg-surface-container-low p-3 rounded-lg border border-outline-variant">
+<div class="flex items-center gap-1 text-error mb-1">
+<span class="material-symbols-outlined text-[18px]">battery_charging_full</span>
+<span class="font-label-caps text-[10px]">RECOVERY</span>
+</div>
+<p class="font-stat-value text-stat-value text-on-surface">76<span class="text-sm font-normal text-outline">%</span></p>
+<div class="w-full bg-surface-container-high h-1 rounded-full mt-2">
+<div class="bg-[#F97316] h-1 rounded-full" style="width: 76%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Performance Prediction -->
+<div>
+<h4 class="font-label-caps text-label-caps text-outline mb-4">PERFORMANCE PREDICTION (NEXT 7 DAYS)</h4>
+<div class="bg-inverse-surface text-white p-lg rounded-xl">
+<div class="flex justify-between items-end mb-4">
+<div>
+<p class="text-outline-variant text-[12px] font-bold mb-1">PROJECTED INTENSITY</p>
+<p class="text-2xl font-bold">Elite (Level 5)</p>
+</div>
+<div class="flex items-end gap-1 h-12">
+<div class="bg-white/20 w-3 h-4 rounded-t-sm"></div>
+<div class="bg-white/40 w-3 h-6 rounded-t-sm"></div>
+<div class="bg-white/60 w-3 h-8 rounded-t-sm"></div>
+<div class="bg-primary w-3 h-10 rounded-t-sm"></div>
+<div class="bg-primary-container w-3 h-12 rounded-t-sm"></div>
+</div>
+</div>
+<div class="space-y-3 pt-4 border-t border-white/10">
+<div class="flex justify-between items-center text-sm">
+<span class="text-outline-variant">Aerobic Capacity</span>
+<span class="font-bold text-secondary-fixed">Optimal</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-outline-variant">Match Readiness</span>
+<span class="font-bold text-secondary-fixed">98%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- AI Personalized Recommendation -->
+<div class="relative bg-white border border-[#F97316]/30 p-lg rounded-xl ai-glow">
+<div class="absolute -top-3 left-4 bg-[#F97316] text-white px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">auto_awesome</span>
+                    AI INSIGHT
+                </div>
+<h4 class="font-headline-md text-headline-md text-on-surface mb-2">Tactical Optimization</h4>
+<p class="text-on-surface-variant font-body-sm text-body-sm mb-4 leading-relaxed">
+                    Marcus shows high cognitive load from recent high-intensity regressive sessions. <span class="font-bold text-primary">Recommendation:</span> Reduce tactical briefing time by 15% and prioritize 15min low-impact recovery pool session post-training today.
+                </p>
+<div class="flex gap-2">
+<button class="bg-surface-container-high text-on-surface font-bold px-4 py-2 rounded-lg text-[12px] hover:bg-surface-variant transition-colors">Dismiss</button>
+<button class="bg-primary text-white font-bold px-4 py-2 rounded-lg text-[12px] hover:opacity-90 transition-opacity">Apply to Schedule</button>
+</div>
+</div>
+</div>
+<!-- Footer Footer -->
+<div class="p-lg bg-surface-container-highest border-t border-outline-variant">
+<button class="w-full py-3 border-2 border-primary text-primary font-extrabold rounded-lg hover:bg-primary/5 transition-all">
+                VIEW FULL ANALYTICS REPORT
+            </button>
+</div>
+</aside>
+</body></html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ai-glow {
+            box-shadow: 0 0 15px 2px rgba(249, 115, 22, 0.1);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#007230",
+                        "on-tertiary-fixed-variant": "#783200",
+                        "surface-container-high": "#dee9fc",
+                        "secondary-fixed": "#7ffc97",
+                        "on-tertiary-container": "#ffcab0",
+                        "on-surface": "#121c2a",
+                        "secondary-fixed-dim": "#62df7d",
+                        "surface-tint": "#2151da",
+                        "surface-container": "#e6eeff",
+                        "primary": "#0037b0",
+                        "tertiary-fixed": "#ffdbca",
+                        "on-secondary-fixed-variant": "#005320",
+                        "tertiary": "#753000",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb690",
+                        "surface-container-highest": "#d9e3f6",
+                        "primary-fixed-dim": "#b7c4ff",
+                        "outline": "#747686",
+                        "secondary": "#006e2d",
+                        "on-primary-container": "#cad3ff",
+                        "on-primary-fixed-variant": "#0039b5",
+                        "on-surface-variant": "#434655",
+                        "outline-variant": "#c4c5d7",
+                        "primary-fixed": "#dce1ff",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#27313f",
+                        "surface-dim": "#d0dbed",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#d9e3f6",
+                        "surface-bright": "#f8f9ff",
+                        "surface-container-low": "#eff4ff",
+                        "primary-container": "#1d4ed8",
+                        "on-background": "#121c2a",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-secondary-fixed": "#002109",
+                        "inverse-primary": "#b7c4ff",
+                        "surface": "#f8f9ff",
+                        "on-secondary": "#ffffff",
+                        "background": "#f8f9ff",
+                        "tertiary-container": "#9a4200",
+                        "on-primary-fixed": "#001551",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed": "#341100",
+                        "secondary-container": "#7cf994",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xl": "40px",
+                        "sm": "8px",
+                        "gutter": "20px",
+                        "md": "16px",
+                        "base": "4px",
+                        "xs": "4px",
+                        "sidebar-width": "280px",
+                        "lg": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "stat-value": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "stat-value": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body-lg overflow-x-hidden">
+<!-- SCREEN 1: INBOX VIEW -->
+<div class="min-h-screen flex flex-col pb-24" id="inbox-screen">
+<!-- TopAppBar (From JSON Mapping) -->
+<header class="sticky top-0 w-full z-40 bg-surface flex justify-between items-center h-xl px-lg">
+<h1 class="font-headline-md text-headline-md font-black text-primary">TeamPilot AI</h1>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-opacity duration-150">search</span>
+<span class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-opacity duration-150">add_comment</span>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="Manager Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a high-performance sports manager with a sharp, focused expression. The lighting is crisp and clean, reflecting a professional elite sports environment. The background is a soft-focus athletic facility with cool blue and white tones, matching a modern SaaS interface aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBchk709NyFAbQ2c7QRpZviWysfgQzpLeoa-p6FHvnf7nd57CVF4VORgWwFnYdh3fhebcUzTj8i5BveZLcqFGYOTn5dGHyZHKzTlmFw51CmDnRUlYV-VJd7Jj2b7IZldBDpw3BOJvDbXrVjYlAytsjATB4t_F7HIDRLRgtsi6gZUG_HublGlqqW2d6XP6w_wiPRFokv-KR6ertwb1Tr_H3zzJwr-MTJMJTatLR3qN3EeU5mp3swdOmXLSz6e546p5Duu5wcaZdgz8o"/>
+</div>
+</div>
+</header>
+<!-- Search & Filter Bar -->
+<div class="px-md py-sm">
+<div class="relative">
+<input class="w-full bg-surface-container border-none rounded-xl py-3 pl-11 pr-4 font-body-sm text-on-surface-variant focus:ring-2 focus:ring-primary" placeholder="Search players or staff..." type="text"/>
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+</div>
+</div>
+<!-- Chat List -->
+<main class="flex-1 overflow-y-auto px-md space-y-base">
+<!-- Active AI Insight Chat -->
+<div class="p-md rounded-xl bg-surface-container-low border-l-4 border-[#F97316] ai-glow flex items-start gap-md cursor-pointer">
+<div class="relative flex-shrink-0">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container">psychology</span>
+</div>
+<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-secondary rounded-full border-2 border-white"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-1">
+<span class="font-headline-md text-headline-md text-sm">Tactical Assistant</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">2m ago</span>
+</div>
+<p class="font-body-sm text-on-surface truncate font-semibold">AI: Low recovery scores for Marcus. Recommend rotation...</p>
+<div class="mt-2 flex gap-xs">
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-caps text-[10px]">RECOVERY ALERT</span>
+</div>
+</div>
+<div class="w-2.5 h-2.5 bg-primary rounded-full self-center"></div>
+</div>
+<!-- Standard Chat Threads -->
+<div class="p-md rounded-xl hover:bg-surface-container transition-colors flex items-start gap-md cursor-pointer border-b border-outline-variant/10">
+<div class="relative flex-shrink-0">
+<img alt="Player Avatar" class="w-12 h-12 rounded-full object-cover" data-alt="Close up portrait of a young professional athlete with a determined look. He is wearing a sleek, dark athletic training jersey. The lighting is high-contrast, directional, and dramatic, emphasizing the athletic precision brand. The background is a blurred stadium lighting setup." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvGEmZoZ2txI47rXTb-s7GIp7NMoUuiEE6R9Z9chOgyj-YaMMqsRy6zQFHJMHAwPW3QaFqDsSOOzV7TyqwiVGibRCtf0LCo7Cgn6kazVjmFXJ-dN8du-N4pwz1rMoxAkIF2nygmLNJVg33vcoIjTxg3gEvUTIjnmZ5kpBrwAW3AiVtdZQODQNd_JZKoChhfFLdoZRQEpA5qUSMWQxRT2V8boLcfQ604WdHgMGXPc8abYRrmT_Hhm9CkAOjXC6viIsWtSTRuxKSca8"/>
+<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-secondary rounded-full border-2 border-white"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-1">
+<span class="font-headline-md text-headline-md text-sm">Marcus Vance</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">15m ago</span>
+</div>
+<p class="font-body-sm text-on-surface-variant truncate">Coach, I'm feeling some tightness in my left quad during high-intensity runs...</p>
+</div>
+<div class="w-2.5 h-2.5 bg-primary rounded-full self-center"></div>
+</div>
+<div class="p-md rounded-xl hover:bg-surface-container transition-colors flex items-start gap-md cursor-pointer border-b border-outline-variant/10">
+<div class="relative flex-shrink-0">
+<img alt="Staff Avatar" class="w-12 h-12 rounded-full object-cover" data-alt="A focused male sports physiotherapist in his 40s wearing a clean white clinical polo shirt. He is looking slightly off-camera with professional confidence. The background is a high-tech sports medical clinic with medical equipment in soft focus. Lighting is neutral and bright." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5VV4Gb4jHIXb7rYWK_NoPBHU8IY5KAqipdCm3fUHxmrXsf2OXIWOOKKTHPPedm7pSRycD4C9ye6Wwk5wClR32YXqQASi53M_jxsDr5YuCWVhKOzOktG0N5en7wlEsEwFlgLsKxyADQjkQNyHcpGfwdxV1856L3AdDLd8Dc8oCRAPALbOu3zD_FVQdk40jX2qw1J-KLbT2kqAlV6gE1pFqjPCOWosHOpTeRQOnwqcK7LW3pegm8ivmrWtkgB25PUH2iWdY9_zSzcI"/>
+<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-outline-variant rounded-full border-2 border-white"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-1">
+<span class="font-headline-md text-headline-md text-sm">Dr. Aris Thorne</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">1h ago</span>
+</div>
+<p class="font-body-sm text-on-surface-variant truncate">The MRI results for Elena are back. We need to discuss the rehab timeline...</p>
+</div>
+</div>
+<div class="p-md rounded-xl hover:bg-surface-container transition-colors flex items-start gap-md cursor-pointer border-b border-outline-variant/10">
+<div class="relative flex-shrink-0">
+<div class="w-12 h-12 rounded-full bg-inverse-surface flex items-center justify-center text-white font-bold">DT</div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-1">
+<span class="font-headline-md text-headline-md text-sm">Defensive Tactics Group</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">3h ago</span>
+</div>
+<p class="font-body-sm text-on-surface-variant truncate"><span class="font-bold">Coach Miller:</span> Check the updated transition drills for tomorrow.</p>
+</div>
+</div>
+<div class="p-md rounded-xl hover:bg-surface-container transition-colors flex items-start gap-md cursor-pointer">
+<div class="relative flex-shrink-0">
+<img alt="Player Avatar" class="w-12 h-12 rounded-full object-cover" data-alt="A professional female soccer player during a training session, looking toward the side with intensity. She has a high ponytail and is wearing a performance bib. The background is a lush green pitch under bright natural daylight, creating a vibrant and high-performance atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3cwn6MkLwUvYPGs7MeQnX39MhOFlmYtMCuVhCad3WTACmpwL7TbeTo8Vcc6A37FMB2Lo65CNmzpxxdPqSJgtobqj2hxB4JFnuRlj55fjj801tV6a1An_m0_eofNS1XOzhDpucGvse4NwOpJvNI5vA92yqi27CxL6j6IoftOKNYEn5HzAjXb3_RuuShK1GlvjVVrsnXTJVv8vcvOTnZihx-oec6_Qvv58JNxm4TFV8Src62vbZDvv_Pxp1c7aPhq2V_P0CjhNY1as"/>
+<div class="absolute -bottom-1 -right-1 w-4 h-4 bg-secondary rounded-full border-2 border-white"></div>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-1">
+<span class="font-headline-md text-headline-md text-sm">Elena Rodriguez</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Yesterday</span>
+</div>
+<p class="font-body-sm text-on-surface-variant truncate">Thanks for the feedback on the positioning drill. I'll focus on the pivot...</p>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (From JSON Mapping) -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface/80 backdrop-blur-md flex justify-around items-center h-16 px-gutter shadow-lg border-t border-outline-variant">
+<div class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-caps text-label-caps">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-caps text-label-caps">Players</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-label-caps text-label-caps">AI</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform">
+<span class="material-symbols-outlined">event</span>
+<span class="font-label-caps text-label-caps">Events</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 scale-110 transition-transform">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-label-caps text-label-caps">Chat</span>
+</div>
+</nav>
+</div>
+<!-- SCREEN 2: CHAT DETAIL VIEW (SIMULATED OVERLAY) -->
+<!-- Hidden by default, but structured here for the prompt -->
+<div class="fixed inset-0 bg-background z-50 hidden flex-col" id="chat-detail">
+<!-- Chat Header -->
+<header class="flex items-center gap-md px-md h-xl bg-surface border-b border-outline-variant/10">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<div class="flex items-center gap-sm flex-1">
+<div class="relative">
+<img alt="Player" class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiC-PViPsCStPa1pmnXmtTy6-XEuXU9vlDeI2MPgJUQVCSVRkvzDU1HDmEFpQGfE5XI13tdlRhczvI_VWVqhLo9E8r1i-AGvetDehUwJ9Wlkg-QnM5IAbdREp4OvAT_t-o-TgsYgBgURit9qhR67h3L2LF5k5JETOgm7wZi6DHXx-9JqBw30Ulr8A2OznSt0keQgDiFPDQC1wxFIecsN1sCCFh-8BFa2SRZUIl0iaQR9Xbh6QJwtimJ82XyBE0QtzECTwaHQ3byP0"/>
+<div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-secondary rounded-full border-2 border-white"></div>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-sm leading-tight">Marcus Vance</div>
+<div class="font-label-caps text-label-caps text-secondary text-[10px]">ACTIVE NOW</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">videocam</span>
+<span class="material-symbols-outlined text-on-surface-variant">info</span>
+</header>
+<!-- Messages Area -->
+<main class="flex-1 overflow-y-auto p-md space-y-md flex flex-col">
+<div class="flex flex-col items-center py-xl">
+<span class="font-label-caps text-label-caps text-outline bg-surface-container px-3 py-1 rounded-full uppercase">Today</span>
+</div>
+<!-- Receiver Message -->
+<div class="flex items-end gap-sm max-w-[85%]">
+<img alt="Avatar" class="w-6 h-6 rounded-full mb-1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB02nXP_OzovKYf1PUrKlw8hVA0dZoKO6cWWjAdf-D7UvJBh8zW9mWAF6h_ugK_vttD1p1sEuoVfxOws39ayFKDaAFDxOwMMd643cmp5371g8auVvJocGJ7Q8_pC8wA2emoIkCuj8ka9lcOPztKcl_UM4h-_N23XZRDKNLFS764W5CsxwIRi4lkj74xyhk6Lmu2pUvjPsC_59wFAs0TZ3R7npiTcO8T7ixpI6GMstL7DnTCPfnm4a5Ab3t2cD_rHpE4hnyIkLSF3-Y"/>
+<div class="bg-surface-container text-on-surface p-md rounded-2xl rounded-bl-none font-body-sm shadow-sm">
+                    Coach, I'm feeling some tightness in my left quad during high-intensity runs. Should I skip the afternoon sprint session?
+                </div>
+</div>
+<!-- Sender Message -->
+<div class="flex flex-col items-end gap-base self-end max-w-[85%]">
+<div class="bg-primary text-white p-md rounded-2xl rounded-br-none font-body-sm shadow-md">
+                    Let's not take risks. Skip the sprints. Have you done the mobility routine Aris prescribed?
+                </div>
+<div class="flex items-center gap-xs pr-1">
+<span class="font-label-caps text-label-caps text-outline text-[10px]">10:42 AM</span>
+<span class="material-symbols-outlined text-[12px] text-primary">done_all</span>
+</div>
+</div>
+<!-- AI Suggestion Card -->
+<div class="self-stretch bg-surface-container-low border border-outline-variant/30 rounded-xl p-md ai-glow border-l-4 border-[#F97316]">
+<div class="flex items-center gap-sm mb-2">
+<span class="material-symbols-outlined text-[#F97316] text-sm">auto_awesome</span>
+<span class="font-label-caps text-label-caps text-[#783200]">AI INSIGHT</span>
+</div>
+<p class="font-body-sm text-on-surface mb-3">Marcus's GPS load is 15% above his 7-day average. Combined with his quad report, our model suggests a 48h recovery block.</p>
+<div class="flex gap-sm overflow-x-auto pb-1">
+<button class="bg-primary text-white px-3 py-1.5 rounded-lg font-label-caps text-[11px] whitespace-nowrap flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">event_busy</span>
+                        SCHEDULE RECOVERY
+                    </button>
+<button class="bg-surface-container border border-outline-variant px-3 py-1.5 rounded-lg font-label-caps text-[11px] whitespace-nowrap flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">share</span>
+                        SHARE WITH DR. ARIS
+                    </button>
+</div>
+</div>
+<!-- Receiver Message -->
+<div class="flex items-end gap-sm max-w-[85%]">
+<img alt="Avatar" class="w-6 h-6 rounded-full mb-1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOG0yvTr8IMReWdwCgh47YId7RVNKy5vI1sGW2kE0zou6Dmmxvb9z-YYF7h7T6FUiopUvViNB6-ttDYPMjckss5BtNWIpFvu9R2v4klIFPMoqRDLUwtf7ct_M3mARw_LTKLrmOBtcxdzl8Ogkd6cX4BiF-GasgAPXprrYjIgrBQ9aVgq9Ywfd95YShj_GYRyUIgsuoxL_Vte9cwM2cUTQklCRCQGWld6zK8avVwoXKoJzMa9bezL9QOd8nhIg0GghBRpNJFPxZzho"/>
+<div class="bg-surface-container text-on-surface p-md rounded-2xl rounded-bl-none font-body-sm shadow-sm">
+                    Yes, I did the routine this morning. The tightness is still there though.
+                </div>
+</div>
+</main>
+<!-- Quick Reply & Input -->
+<div class="p-md bg-surface space-y-md border-t border-outline-variant/10">
+<!-- Quick Tactical Replies -->
+<div class="flex gap-sm overflow-x-auto no-scrollbar">
+<button class="px-4 py-2 bg-surface-container-high border border-outline-variant/20 rounded-full font-label-caps text-[11px] whitespace-nowrap text-on-surface hover:bg-primary hover:text-white transition-colors">REPORT TO PHYSIO</button>
+<button class="px-4 py-2 bg-surface-container-high border border-outline-variant/20 rounded-full font-label-caps text-[11px] whitespace-nowrap text-on-surface hover:bg-primary hover:text-white transition-colors">MODIFY DRILL</button>
+<button class="px-4 py-2 bg-surface-container-high border border-outline-variant/20 rounded-full font-label-caps text-[11px] whitespace-nowrap text-on-surface hover:bg-primary hover:text-white transition-colors">SEE DATA TREND</button>
+</div>
+<div class="flex items-center gap-sm">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant">
+<span class="material-symbols-outlined">add</span>
+</button>
+<div class="flex-1 relative">
+<input class="w-full bg-surface-container border-none rounded-full py-3 px-5 font-body-sm focus:ring-2 focus:ring-primary" placeholder="Type tactical response..." type="text"/>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Script to simulate screen toggle for demonstration -->
+<script>
+        // This is purely for internal layout verification in this static environment
+        // Normally no script allowed as per prompt instructions, but providing 
+        // a purely layout-based CSS approach below instead for interactivity.
+    </script>
+<style>
+        /* Mobile-specific scrollbar hiding */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Tactical Interaction Simulation (Pure CSS Toggle) */
+        #inbox-screen:active + #chat-detail { display: flex; }
+    </style>
+</body></html>

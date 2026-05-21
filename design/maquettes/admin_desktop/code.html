@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Club Administration - TeamPilot AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ai-glow {
+            box-shadow: 0 0 15px 2px rgba(249, 115, 22, 0.1);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#001551",
+                        "inverse-surface": "#27313f",
+                        "surface-bright": "#f8f9ff",
+                        "secondary-container": "#7cf994",
+                        "on-tertiary-fixed-variant": "#783200",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#747686",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#b7c4ff",
+                        "on-tertiary-fixed": "#341100",
+                        "on-surface-variant": "#434655",
+                        "surface-variant": "#d9e3f6",
+                        "on-secondary-fixed-variant": "#005320",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-tertiary-container": "#ffcab0",
+                        "error-container": "#ffdad6",
+                        "surface": "#f8f9ff",
+                        "primary-container": "#1d4ed8",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#002109",
+                        "tertiary-container": "#9a4200",
+                        "primary-fixed": "#dce1ff",
+                        "on-primary-container": "#cad3ff",
+                        "surface-container": "#e6eeff",
+                        "tertiary": "#753000",
+                        "secondary-fixed-dim": "#62df7d",
+                        "background": "#f8f9ff",
+                        "surface-container-highest": "#d9e3f6",
+                        "tertiary-fixed": "#ffdbca",
+                        "on-background": "#121c2a",
+                        "tertiary-fixed-dim": "#ffb690",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#7ffc97",
+                        "on-primary-fixed-variant": "#0039b5",
+                        "surface-container-low": "#eff4ff",
+                        "on-secondary-container": "#007230",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "secondary": "#006e2d",
+                        "on-surface": "#121c2a",
+                        "primary": "#0037b0",
+                        "error": "#ba1a1a",
+                        "surface-container-high": "#dee9fc",
+                        "outline-variant": "#c4c5d7",
+                        "surface-tint": "#2151da",
+                        "surface-dim": "#d0dbed",
+                        "inverse-primary": "#b7c4ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sidebar-width": "280px",
+                        "xl": "40px",
+                        "gutter": "20px",
+                        "lg": "24px",
+                        "base": "4px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "stat-value": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-caps": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "stat-value": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background">
+<!-- SideNavBar (Desktop Shell) -->
+<aside class="hidden md:flex flex-col fixed left-0 top-0 h-full w-sidebar-width bg-inverse-surface dark:bg-on-background p-md space-y-base shadow-xl z-50">
+<div class="flex items-center space-x-md px-sm py-md border-b border-outline-variant/20 mb-md">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="sports_soccer">sports_soccer</span>
+</div>
+<div>
+<h1 class="text-headline-md font-black text-primary-fixed dark:text-primary-fixed-dim leading-none">TeamPilot AI</h1>
+<p class="text-body-sm text-surface-variant/70">Elite Performance</p>
+</div>
+</div>
+<nav class="flex-grow space-y-xs">
+<a class="flex items-center space-x-md p-md text-surface-variant hover:text-on-primary-fixed-variant hover:bg-surface-variant/10 transition-all duration-200 hover:translate-x-1 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-body-sm font-body-sm">Dashboard</span>
+</a>
+<a class="flex items-center space-x-md p-md text-surface-variant hover:text-on-primary-fixed-variant hover:bg-surface-variant/10 transition-all duration-200 hover:translate-x-1 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="text-body-sm font-body-sm">Players</span>
+</a>
+<a class="flex items-center space-x-md p-md text-surface-variant hover:text-on-primary-fixed-variant hover:bg-surface-variant/10 transition-all duration-200 hover:translate-x-1 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="text-body-sm font-body-sm">Calendar</span>
+</a>
+<a class="flex items-center space-x-md p-md text-surface-variant hover:text-on-primary-fixed-variant hover:bg-surface-variant/10 transition-all duration-200 hover:translate-x-1 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span class="text-body-sm font-body-sm">Analytics</span>
+</a>
+<a class="flex items-center space-x-md p-md text-surface-variant hover:text-on-primary-fixed-variant hover:bg-surface-variant/10 transition-all duration-200 hover:translate-x-1 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="text-body-sm font-body-sm">Logistics</span>
+</a>
+<a class="flex items-center space-x-md p-md bg-primary-container text-on-primary-container rounded-lg font-bold transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span class="text-body-sm font-body-sm">Admin</span>
+</a>
+</nav>
+<div class="mt-auto space-y-xs pt-md border-t border-outline-variant/20">
+<button class="w-full bg-primary text-on-primary py-md rounded-lg font-bold mb-md hover:bg-primary/90 transition-colors">
+                New Entry
+            </button>
+<a class="flex items-center space-x-md p-md text-surface-variant hover:text-on-primary-fixed-variant hover:bg-surface-variant/10 transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="text-body-sm font-body-sm">Support</span>
+</a>
+<a class="flex items-center space-x-md p-md text-surface-variant hover:text-on-primary-fixed-variant hover:bg-surface-variant/10 transition-all duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="text-body-sm font-body-sm">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-sidebar-width min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center px-lg py-md w-full bg-surface dark:bg-surface-container border-b border-outline-variant dark:border-outline sticky top-0 z-40">
+<div class="flex items-center space-x-md">
+<h2 class="text-headline-md font-extrabold text-on-surface dark:text-inverse-on-surface">Admin Settings</h2>
+</div>
+<div class="flex items-center space-x-lg">
+<div class="hidden lg:flex items-center bg-surface-container rounded-full px-md py-xs border border-outline-variant/50">
+<span class="material-symbols-outlined text-outline mr-sm" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-64" placeholder="Search settings..." type="text"/>
+</div>
+<div class="flex items-center space-x-md">
+<button class="p-sm rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="notifications">notifications</span>
+</button>
+<button class="p-sm rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="settings">settings</span>
+</button>
+<div class="w-10 h-10 rounded-full border-2 border-primary-container overflow-hidden">
+<img alt="Manager profile" class="w-full h-full object-cover" data-alt="A professional headshot of a club administrator in a clean-cut navy blue suit, set against a blurred high-end stadium background. The lighting is soft and corporate, creating an air of authority and precision. The overall aesthetic is minimalist and high-contrast, perfectly aligning with an elite sports management software environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtipRk-SrlK4K-89j7r5vS612W6-8uTgMU0_GLA6zQrmSQ4W0GKzFjJApv_siQpu5wMIVUhdPdM1bbLw67rlklIUsdU--hSbaG6Ry1b6NXtz6Xi7A08YhWPWd7JVwtT2zssLuxqHrVjL39woAM6gKkipJfGoH8jfW4UoCx9pvuQ-IMay4hCp7Ppas6vzwbcJJg4_mPDV8gBXtIEjkNTzTt_XV-jt7OmeH-yDmcQQ5OiwSULpdCI7g_3snpa7hP7qXMDS8ql99BYgk"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="p-lg grid grid-cols-12 gap-lg">
+<!-- Section: Club Overview -->
+<section class="col-span-12 lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-lg border-b border-outline-variant pb-md">
+<div class="flex items-center space-x-lg">
+<div class="w-24 h-24 bg-surface-container-high rounded-xl flex items-center justify-center border border-outline-variant">
+<img alt="Club Logo" class="w-20 h-20 object-contain" data-alt="A high-resolution, modern crest for a professional football club, featuring bold geometric shapes and a minimalist hawk emblem. The color palette uses deep navy blue and metallic silver, representing elite performance and legacy. The logo is displayed on a clean, architectural white background with soft shadows for depth." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcHrvPdLlqfhcEP7IZgRi0O4zWEoTpfElCFfPhxOSm-sjuRLFqROCkVR3zK6BtX655WQl4lxKJQULFoMaBikU_iDq-xR_f9Y7LEm5_eLs2rKwVf834u91l4_poemsqlox7O_y69568nIq2IFpqIb9Vq-bgD6krFVn1MOQrOGOZ7XG2v-_H1qKom6wmSFud93zurcSDlOmfSHyCZdocf3M4RDkdGrp25p8p7cp5apiP4qr8xfLixqBw-AoDIqyArCVQdF7G83hliRs"/>
+</div>
+<div>
+<h3 class="text-headline-lg font-headline-lg text-on-surface">Metropolis United FC</h3>
+<p class="text-body-lg text-on-surface-variant">Founded 1924 • Elite Pro League</p>
+</div>
+</div>
+<button class="mt-md md:mt-0 px-lg py-sm border border-outline text-primary font-bold rounded-lg hover:bg-primary-container/10 transition-colors">
+                        Edit Profile
+                    </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl">
+<div>
+<span class="text-label-caps font-label-caps text-outline uppercase block mb-xs">Primary Contact</span>
+<p class="text-body-lg font-bold">admin@metropolisunited.com</p>
+<p class="text-body-sm text-outline">+44 20 7946 0012</p>
+</div>
+<div>
+<span class="text-label-caps font-label-caps text-outline uppercase block mb-xs">Headquarters</span>
+<p class="text-body-lg font-bold">United Training Complex</p>
+<p class="text-body-sm text-outline">London, SE1 7PB, UK</p>
+</div>
+</div>
+</section>
+<!-- Section: Billing & Subscription -->
+<section class="col-span-12 lg:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
+<div class="flex items-center justify-between mb-md">
+<h3 class="text-headline-md font-headline-md text-on-surface">Subscription</h3>
+<span class="px-md py-xs bg-secondary-container text-on-secondary-container text-label-caps rounded-full">Active</span>
+</div>
+<div class="bg-primary p-lg rounded-xl text-on-primary mb-md">
+<p class="text-label-caps font-label-caps opacity-80 uppercase mb-xs">Current Plan</p>
+<h4 class="text-display-lg font-display-lg leading-none mb-md">TeamPilot Pro</h4>
+<div class="flex items-center justify-between border-t border-white/20 pt-md mt-md">
+<span class="text-body-sm">Next Renewal</span>
+<span class="font-bold">Oct 12, 2024</span>
+</div>
+</div>
+<button class="w-full py-md bg-surface-container text-primary font-bold rounded-lg hover:bg-surface-container-high transition-colors">
+                    Manage Billing
+                </button>
+</section>
+<!-- Section: AI Configuration (The Kinetic Feature) -->
+<section class="col-span-12 lg:col-span-6 bg-surface-container-lowest border border-outline-variant rounded-xl p-lg ai-glow relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-tertiary"></div>
+<div class="flex items-center space-x-md mb-lg">
+<span class="material-symbols-outlined text-tertiary" data-icon="bolt">bolt</span>
+<h3 class="text-headline-md font-headline-md text-on-surface">AI Insights Engine</h3>
+</div>
+<div class="space-y-lg">
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded-lg border border-outline-variant/30">
+<div>
+<h5 class="text-body-lg font-bold">Tactical Recommendation Frequency</h5>
+<p class="text-body-sm text-on-surface-variant">How often the AI triggers mid-session alerts</p>
+</div>
+<select class="bg-surface-container border-outline-variant rounded-lg text-body-sm font-bold focus:ring-primary focus:border-primary">
+<option>Real-time</option>
+<option selected="">High (15m)</option>
+<option>Standard (30m)</option>
+</select>
+</div>
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded-lg border border-outline-variant/30">
+<div>
+<h5 class="text-body-lg font-bold">Fatigue Sensitivity</h5>
+<p class="text-body-sm text-on-surface-variant">Detection threshold for injury risk warnings</p>
+</div>
+<div class="flex items-center space-x-md">
+<span class="text-label-caps font-label-caps text-outline">Aggressive</span>
+<input class="accent-primary w-32" type="range"/>
+<span class="text-label-caps font-label-caps text-outline">Safe</span>
+</div>
+</div>
+<div class="p-md bg-tertiary/5 border border-tertiary/20 rounded-lg">
+<p class="text-body-sm text-tertiary italic">"Higher sensitivity focuses on player longevity, while real-time frequency provides immediate tactical advantages on match days."</p>
+</div>
+</div>
+</section>
+<!-- Section: Security & Access -->
+<section class="col-span-12 lg:col-span-6 bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
+<div class="flex items-center justify-between mb-lg">
+<div class="flex items-center space-x-md">
+<span class="material-symbols-outlined text-on-surface" data-icon="lock">lock</span>
+<h3 class="text-headline-md font-headline-md text-on-surface">Security &amp; Access</h3>
+</div>
+<button class="text-primary font-bold text-body-sm hover:underline">Manage All Users</button>
+</div>
+<div class="space-y-md">
+<div class="flex items-center justify-between p-md border-b border-outline-variant/30">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="verified_user">verified_user</span>
+</div>
+<div>
+<h5 class="text-body-lg font-bold text-on-surface">Two-Factor Authentication</h5>
+<p class="text-body-sm text-on-surface-variant">Required for all Executive Staff</p>
+</div>
+</div>
+<div class="w-12 h-6 bg-secondary rounded-full relative">
+<div class="absolute right-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-md border-b border-outline-variant/30">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-error" data-icon="gpp_maybe">gpp_maybe</span>
+</div>
+<div>
+<h5 class="text-body-lg font-bold text-on-surface">Data Export Restrictions</h5>
+<p class="text-body-sm text-on-surface-variant">Prevent mass player data downloads</p>
+</div>
+</div>
+<div class="w-12 h-6 bg-outline-variant rounded-full relative">
+<div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-md">
+<div class="flex items-center space-x-md">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="vpn_key">vpn_key</span>
+</div>
+<div>
+<h5 class="text-body-lg font-bold text-on-surface">API Key Access</h5>
+<p class="text-body-sm text-on-surface-variant">External analytics integration</p>
+</div>
+</div>
+<span class="text-label-caps font-label-caps text-outline px-md py-xs bg-surface-container rounded-lg">Disabled</span>
+</div>
+</div>
+</section>
+<!-- Section: Organization Settings -->
+<section class="col-span-12 bg-surface-container-lowest border border-outline-variant rounded-xl p-lg shadow-sm">
+<div class="flex items-center justify-between mb-xl">
+<h3 class="text-headline-md font-headline-md text-on-surface">Organization Settings</h3>
+<button class="bg-primary text-on-primary px-lg py-md rounded-lg font-bold flex items-center space-x-md hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+<span>Add Category</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<!-- League Settings -->
+<div class="p-lg bg-surface-container-low rounded-xl border border-outline-variant/30 hover:border-primary/50 transition-all cursor-pointer group">
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-md group-hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-primary group-hover:text-on-primary" data-icon="emoji_events">emoji_events</span>
+</div>
+<h4 class="text-body-lg font-bold mb-xs">League Participation</h4>
+<p class="text-body-sm text-on-surface-variant mb-lg">Premier Tier 1, National Cup A</p>
+<div class="flex items-center text-primary text-label-caps font-label-caps">
+<span>Configure Rules</span>
+<span class="material-symbols-outlined ml-xs text-[16px]" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Team Categories -->
+<div class="p-lg bg-surface-container-low rounded-xl border border-outline-variant/30 hover:border-primary/50 transition-all cursor-pointer group">
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-md group-hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-primary group-hover:text-on-primary" data-icon="category">category</span>
+</div>
+<h4 class="text-body-lg font-bold mb-xs">Team Categories</h4>
+<p class="text-body-sm text-on-surface-variant mb-lg">U18 Academy, Pro First Team, Reserve Squad</p>
+<div class="flex items-center text-primary text-label-caps font-label-caps">
+<span>Manage Squads</span>
+<span class="material-symbols-outlined ml-xs text-[16px]" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Facilities -->
+<div class="p-lg bg-surface-container-low rounded-xl border border-outline-variant/30 hover:border-primary/50 transition-all cursor-pointer group">
+<div class="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-md group-hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-primary group-hover:text-on-primary" data-icon="stadium">stadium</span>
+</div>
+<h4 class="text-body-lg font-bold mb-xs">Facilities &amp; Arenas</h4>
+<p class="text-body-sm text-on-surface-variant mb-lg">Metropolis Arena, Performance Lab Center</p>
+<div class="flex items-center text-primary text-label-caps font-label-caps">
+<span>Facility Dashboard</span>
+<span class="material-symbols-outlined ml-xs text-[16px]" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Footer / Responsive Spacing -->
+<footer class="mt-auto p-lg text-center text-body-sm text-outline">
+            © 2024 TeamPilot AI Performance Systems. All rights reserved. Professional Grade Administration v4.2.0
+        </footer>
+</main>
+<!-- Mobile Bottom Navigation (Shell Pivot) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-inverse-surface/90 backdrop-blur-md border-t border-white/10 flex justify-around items-center p-md z-50">
+<a class="flex flex-col items-center text-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] uppercase font-bold mt-xs">Dash</span>
+</a>
+<a class="flex flex-col items-center text-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="text-[10px] uppercase font-bold mt-xs">Players</span>
+</a>
+<a class="flex flex-col items-center text-primary-fixed font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span class="text-[10px] uppercase mt-xs">Admin</span>
+</a>
+<a class="flex flex-col items-center text-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="insights">insights</span>
+<span class="text-[10px] uppercase font-bold mt-xs">Data</span>
+</a>
+<a class="flex flex-col items-center text-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="text-[10px] uppercase font-bold mt-xs">Exit</span>
+</a>
+</nav>
+</body></html>

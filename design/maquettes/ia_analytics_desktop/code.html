@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "error-container": "#ffdad6",
+                    "on-secondary": "#ffffff",
+                    "on-primary-container": "#cad3ff",
+                    "on-primary-fixed-variant": "#0039b5",
+                    "surface-dim": "#d0dbed",
+                    "tertiary-fixed": "#ffdbca",
+                    "secondary-container": "#7cf994",
+                    "primary-fixed": "#dce1ff",
+                    "tertiary": "#753000",
+                    "on-secondary-fixed-variant": "#005320",
+                    "surface": "#f8f9ff",
+                    "tertiary-fixed-dim": "#ffb690",
+                    "surface-bright": "#f8f9ff",
+                    "primary": "#0037b0",
+                    "inverse-primary": "#b7c4ff",
+                    "on-error": "#ffffff",
+                    "surface-variant": "#d9e3f6",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#dee9fc",
+                    "on-tertiary-fixed": "#341100",
+                    "on-background": "#121c2a",
+                    "surface-tint": "#2151da",
+                    "secondary-fixed": "#7ffc97",
+                    "on-primary": "#ffffff",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-surface-variant": "#434655",
+                    "surface-container-low": "#eff4ff",
+                    "primary-container": "#1d4ed8",
+                    "background": "#f8f9ff",
+                    "inverse-surface": "#27313f",
+                    "primary-fixed-dim": "#b7c4ff",
+                    "on-primary-fixed": "#001551",
+                    "error": "#ba1a1a",
+                    "secondary": "#006e2d",
+                    "outline-variant": "#c4c5d7",
+                    "on-error-container": "#93000a",
+                    "on-secondary-container": "#007230",
+                    "tertiary-container": "#9a4200",
+                    "on-secondary-fixed": "#002109",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-highest": "#d9e3f6",
+                    "surface-container": "#e6eeff",
+                    "secondary-fixed-dim": "#62df7d",
+                    "on-tertiary-fixed-variant": "#783200",
+                    "on-surface": "#121c2a",
+                    "outline": "#747686",
+                    "on-tertiary-container": "#ffcab0"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "16px",
+                    "sidebar-width": "280px",
+                    "base": "4px",
+                    "sm": "8px",
+                    "gutter": "20px",
+                    "xs": "4px",
+                    "lg": "24px",
+                    "xl": "40px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter"],
+                    "stat-value": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "stat-value": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .ai-glow {
+            box-shadow: 0 0 15px 2px rgba(249, 115, 22, 0.1);
+            border-left: 4px solid #f97316;
+        }
+        .pitch-gradient {
+            background: radial-gradient(circle at center, #006e2d 0%, #004d1f 100%);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-lg overflow-x-hidden">
+<!-- Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-[280px] bg-[#1F2937] shadow-xl flex flex-col py-lg z-50">
+<div class="px-lg mb-xl">
+<h1 class="font-headline-md text-headline-md font-bold text-white">TeamPilot AI</h1>
+<p class="text-on-surface-variant text-sm opacity-70">Elite Tactical Control</p>
+</div>
+<nav class="flex-1 space-y-1">
+<div class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3 cursor-pointer style_universal_hover active:scale-[0.98]">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-lg">Dashboard</span>
+</div>
+<div class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3 cursor-pointer style_universal_hover active:scale-[0.98]">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-body-lg">Players</span>
+</div>
+<div class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3 cursor-pointer style_universal_hover active:scale-[0.98]">
+<span class="material-symbols-outlined">fitness_center</span>
+<span class="font-body-lg">Training</span>
+</div>
+<div class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3 cursor-pointer style_universal_hover active:scale-[0.98]">
+<span class="material-symbols-outlined">sports_soccer</span>
+<span class="font-body-lg">Matches</span>
+</div>
+<!-- Active State -->
+<div class="bg-primary text-white font-bold rounded-lg mx-2 my-1 px-4 py-3 flex items-center gap-3 cursor-pointer shadow-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-body-lg">AI Analytics</span>
+</div>
+<div class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3 cursor-pointer style_universal_hover active:scale-[0.98]">
+<span class="material-symbols-outlined">chat</span>
+<span class="font-body-lg">Communication</span>
+</div>
+<div class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3 cursor-pointer style_universal_hover active:scale-[0.98]">
+<span class="material-symbols-outlined">local_shipping</span>
+<span class="font-body-lg">Logistics</span>
+</div>
+</nav>
+<div class="mt-auto px-2">
+<button class="w-full bg-primary-container text-on-primary-container font-bold rounded-lg py-3 px-4 mb-4 transition-all hover:brightness-110 active:scale-95">
+                Generate Report
+            </button>
+<div class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3 cursor-pointer style_universal_hover">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</div>
+<div class="text-on-surface-variant hover:text-white transition-colors duration-200 mx-2 my-1 px-4 py-3 flex items-center gap-3 cursor-pointer style_universal_hover">
+<span class="material-symbols-outlined">help_outline</span>
+<span>Support</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-[280px] min-h-screen">
+<!-- Top Navigation -->
+<header class="flex justify-between items-center w-full px-lg py-md sticky top-0 bg-surface/80 backdrop-blur-md z-40 border-b border-outline-variant">
+<div class="flex items-center gap-md">
+<div class="relative">
+<span class="absolute inset-y-0 left-3 flex items-center text-outline">
+<span class="material-symbols-outlined">search</span>
+</span>
+<input class="bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 w-64 focus:ring-2 focus:ring-primary text-body-sm" placeholder="Search analytics..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-full relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<div class="flex items-center gap-sm cursor-pointer hover:bg-surface-container p-1 pr-3 rounded-full transition-colors">
+<img alt="Manager Profile" class="w-8 h-8 rounded-full bg-surface-container-highest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0B_Dgdw0KfxnI28r3S1zFSCoXbjZp7aM173a-w_eKabf47f7foU4K6U0gHssWz1FNhjSXwtGs9nbkO0KoaODyLO-qtKG-pWF5T4g5Y_Wgt9kiioobBM5G1-1pOgkrxuJ-wFoCSa7kcn2Oid81zhYasWm_MOc2XSGDsX7H-SlLUy7swuuNr2ELqFTA2fTw-ccN_5KRk-DAduSp9puIu6ui7S4yU-vuqpH-7Qwsb55gMGTTWjKyAuVqMvY8CYeqRYSLh5pSwQz4Sfo"/>
+<span class="font-body-lg font-semibold">M. Arteta</span>
+</div>
+</div>
+</header>
+<div class="p-lg space-y-lg">
+<!-- Header Section -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">AI Tactical Lab</h2>
+<p class="text-on-surface-variant">Live predictive modeling and squad optimization for Gameweek 24.</p>
+</div>
+<div class="flex gap-sm">
+<button class="px-md py-2 bg-surface border border-outline-variant rounded-lg font-semibold text-body-sm flex items-center gap-2 hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-sm">history</span>
+                        Compare Models
+                    </button>
+<button class="px-md py-2 bg-primary text-white rounded-lg font-semibold text-body-sm flex items-center gap-2 hover:brightness-110 transition-all">
+<span class="material-symbols-outlined text-sm">bolt</span>
+                        Run Simulation
+                    </button>
+</div>
+</div>
+<!-- KPI Row -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-lg">
+<div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-lg">
+<div class="w-12 h-12 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined">health_and_safety</span>
+</div>
+<div>
+<p class="text-label-caps text-on-surface-variant">Injury Reduction</p>
+<h4 class="text-stat-value text-secondary">84%</h4>
+</div>
+</div>
+<div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-lg">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant">
+<span class="material-symbols-outlined">precision_manufacturing</span>
+</div>
+<div>
+<p class="text-label-caps text-on-surface-variant">Tactical Efficiency</p>
+<h4 class="text-stat-value text-primary">92.4</h4>
+</div>
+</div>
+<div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm ai-glow flex items-center gap-lg">
+<div class="w-12 h-12 rounded-full bg-tertiary-fixed flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">psychology</span>
+</div>
+<div>
+<p class="text-label-caps text-on-surface-variant">Win Probability</p>
+<h4 class="text-stat-value text-tertiary">68.2%</h4>
+</div>
+</div>
+<div class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm flex items-center gap-lg">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined">speed</span>
+</div>
+<div>
+<p class="text-label-caps text-on-surface-variant">Avg. Velocity</p>
+<h4 class="text-stat-value text-on-surface">32.4 km/h</h4>
+</div>
+</div>
+</div>
+<!-- Main Layout Grid -->
+<div class="grid grid-cols-12 gap-lg items-start">
+<!-- Left Column: Tactical Pitch -->
+<div class="col-span-12 lg:col-span-8 space-y-lg">
+<section class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm">
+<div class="flex justify-between items-center mb-lg">
+<h3 class="font-headline-md text-headline-md flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">strategy</span>
+                                Tactical Composition Suggester
+                            </h3>
+<div class="bg-surface-container-low px-sm py-1 rounded-full text-label-caps font-bold text-primary">
+                                OPTIMIZED: 4-3-3 ATTACK
+                            </div>
+</div>
+<div class="relative w-full aspect-[1.5/1] rounded-xl overflow-hidden pitch-gradient p-md flex flex-col items-center justify-around border-4 border-white/10">
+<!-- Tactical Overlay Graphics -->
+<div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(circle, white 1px, transparent 1px); background-size: 40px 40px;"></div>
+<!-- Tactical Lines -->
+<div class="absolute top-1/2 left-0 right-0 h-px bg-white/20"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border border-white/20 rounded-full"></div>
+<!-- Player Nodes -->
+<!-- Forward -->
+<div class="flex justify-around w-full max-w-2xl">
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="w-10 h-10 bg-primary border-2 border-white rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-110 transition-transform">LW</div>
+<span class="text-[10px] font-bold text-white uppercase bg-black/40 px-2 rounded">Martinelli</span>
+</div>
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="w-10 h-10 bg-primary border-2 border-white rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-110 transition-transform">ST</div>
+<span class="text-[10px] font-bold text-white uppercase bg-black/40 px-2 rounded">Jesus</span>
+</div>
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="w-10 h-10 bg-primary border-2 border-white rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-110 transition-transform">RW</div>
+<span class="text-[10px] font-bold text-white uppercase bg-black/40 px-2 rounded">Saka</span>
+</div>
+</div>
+<!-- Midfield -->
+<div class="flex justify-around w-full max-w-md">
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="w-10 h-10 bg-primary border-2 border-white rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-110 transition-transform">CM</div>
+<span class="text-[10px] font-bold text-white uppercase bg-black/40 px-2 rounded">Rice</span>
+</div>
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="w-10 h-10 bg-primary border-2 border-white rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-110 transition-transform">CM</div>
+<span class="text-[10px] font-bold text-white uppercase bg-black/40 px-2 rounded">Odegaard</span>
+</div>
+</div>
+<!-- Defense -->
+<div class="flex justify-around w-full max-w-3xl">
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="w-10 h-10 bg-primary border-2 border-white rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-110 transition-transform">LB</div>
+<span class="text-[10px] font-bold text-white uppercase bg-black/40 px-2 rounded">Zinchenko</span>
+</div>
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="w-10 h-10 bg-primary border-2 border-white rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-110 transition-transform">CB</div>
+<span class="text-[10px] font-bold text-white uppercase bg-black/40 px-2 rounded">Gabriel</span>
+</div>
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="w-10 h-10 bg-primary border-2 border-white rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-110 transition-transform">CB</div>
+<span class="text-[10px] font-bold text-white uppercase bg-black/40 px-2 rounded">Saliba</span>
+</div>
+<div class="flex flex-col items-center gap-1 group cursor-pointer">
+<div class="w-10 h-10 bg-primary border-2 border-white rounded-full flex items-center justify-center text-white font-bold text-xs shadow-lg group-hover:scale-110 transition-transform">RB</div>
+<span class="text-[10px] font-bold text-white uppercase bg-black/40 px-2 rounded">White</span>
+</div>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-2 gap-lg">
+<!-- Predictive Performance Graph -->
+<section class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm h-80 flex flex-col">
+<div class="flex justify-between items-center mb-md">
+<h3 class="font-headline-md text-headline-md flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">trending_up</span>
+                                    Predictive Form
+                                </h3>
+<div class="flex gap-4">
+<div class="flex items-center gap-1">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<span class="text-[10px] font-medium text-on-surface-variant">PROJECTED</span>
+</div>
+<div class="flex items-center gap-1">
+<div class="w-2 h-2 rounded-full bg-outline"></div>
+<span class="text-[10px] font-medium text-on-surface-variant">ACTUAL</span>
+</div>
+</div>
+</div>
+<div class="flex-1 relative mt-4">
+<!-- Mock Line Chart -->
+<svg class="w-full h-full" viewbox="0 0 400 150">
+<path d="M0,120 L50,110 L100,130 L150,90 L200,100 L250,60 L300,70 L350,40 L400,50" fill="none" stroke="#e5e7eb" stroke-dasharray="4" stroke-width="2"></path>
+<path d="M0,125 Q50,115 100,100 Q150,85 200,70 Q250,55 300,45 Q350,30 400,25" fill="none" stroke="#0037b0" stroke-width="3"></path>
+<circle cx="300" cy="45" fill="#0037b0" r="4"></circle>
+<text class="text-[10px] font-bold" fill="#0037b0" x="290" y="35">Peak Performance</text>
+</svg>
+<div class="absolute bottom-0 left-0 right-0 flex justify-between text-[10px] text-on-surface-variant px-2 border-t border-outline-variant pt-2">
+<span>GW 20</span><span>GW 21</span><span>GW 22</span><span>GW 23</span><span>GW 24</span><span>GW 25</span>
+</div>
+</div>
+</section>
+<!-- Fatigue Map -->
+<section class="bg-white p-lg rounded-xl border border-outline-variant shadow-sm h-80">
+<h3 class="font-headline-md text-headline-md mb-md flex items-center gap-2">
+<span class="material-symbols-outlined text-error">blood_pressure</span>
+                                Squad Physical Load
+                            </h3>
+<div class="space-y-4 overflow-y-auto max-h-[220px] pr-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest">
+<img alt="Saka" class="rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMP2jmUoziKToo5oQQJ8dW4L-MMr58hMAtRzDYkWOdARYqgypUCxmkoIhQQIJGfCak3_6g3B4oH123re_sJ8xf9BD8c1uvigPOjaOAXX7W6cGhHYbd_VV0llcjo2c4NF3TtyFF7qW3FeC8lGZxqsk8S1IU3SQ4bmojst7T1CEkD8ASmgji3e-ITZzdcl-PyeSEoAoVAis5q5BK7-zl7McrVw8d558Ts062QcRKtVdlpUYb-peewE1sVYgzG7rG3d1eWL5_KO1gydM"/>
+</div>
+<span class="text-body-sm font-semibold">Bukayo Saka</span>
+</div>
+<div class="flex items-center gap-3 flex-1 px-lg">
+<div class="h-2 flex-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-error" style="width: 88%;"></div>
+</div>
+<span class="text-body-sm font-bold text-error">CRITICAL</span>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest">
+<img alt="Rice" class="rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXsU_3X2k4iQ951St9ojU8lZCODX-pPi2kI5avxVhddhLz0UeA_Iv891UxagzNm37m-t2zofz38xW-_doOBIyH93qKe0Yk8BJBjH76OCypu8YqlQ_NuoGtfxf9tTZrvLHYXxH-RQQ3S2JQMSrkEooAb7rEVOY6YVsnG_ZJYY4lsJNiJL0OEwVs7GrizY0krOQh-CE7u2wGvvnJ79GuwEITHgpDyvpQJ1bU_HLupP74BztgMQw5DGR7hWTcW6GipGqm-T3nR6yytJE"/>
+</div>
+<span class="text-body-sm font-semibold">Declan Rice</span>
+</div>
+<div class="flex items-center gap-3 flex-1 px-lg">
+<div class="h-2 flex-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-tertiary" style="width: 65%;"></div>
+</div>
+<span class="text-body-sm font-bold text-tertiary">HIGH</span>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest">
+<img alt="Odegaard" class="rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFw0fFqHJEg5MCx91CpjXm8iy5UKFSF6Rbeut879hJaIhHKbSIAObdKdBHIepBSSHUp8HNK9SlL-MNrS1UUP71jO6RDJGR1wvtjpnHCTJSt7wsKJcV2eMe252fUnRs0VmnSNLCXFWEBlvOOX5jXh-Gpit6kZUo8IRBBz8I9YqJQgiv03XpYUkWviUSOlKIVGOOwyeFjAn4MNmTtPXUlu8pjqG_w1UB7DX_i2sFmqjYOYEWeOObkRicJq5UL9ok_LNEDDDZh6aLXew"/>
+</div>
+<span class="text-body-sm font-semibold">M. Odegaard</span>
+</div>
+<div class="flex items-center gap-3 flex-1 px-lg">
+<div class="h-2 flex-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary" style="width: 32%;"></div>
+</div>
+<span class="text-body-sm font-bold text-secondary">OPTIMAL</span>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-surface-container-highest">
+<img alt="Saliba" class="rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKjFcAWhRdj2sOKjurg7xVWzM_2MyT2W_pVblV-tBo8PSUCtb0GWHHkVo-pNP2mY7MFBZjQn65ao5HE9q4SBzjOYBGxCzGTMuBLW9xmyeXqE1KibfdnYQxhlmIlOk8M0KdZpW3QYwaHD3HiCL68yNmsBWb-35yPxJd3jjxAKHHB9WC76hOsJ9ktk2cVYTtQANWxrJAOpObRwRASo-4PBZ4xWNt8AKsyxN-FWKmZHklYLZTMvwS76KdPL049WqqpTCZ_P6Y_V75qYk"/>
+</div>
+<span class="text-body-sm font-semibold">William Saliba</span>
+</div>
+<div class="flex items-center gap-3 flex-1 px-lg">
+<div class="h-2 flex-1 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary" style="width: 15%;"></div>
+</div>
+<span class="text-body-sm font-bold text-secondary">FRESH</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Right Column: AI Assistant Panel -->
+<div class="col-span-12 lg:col-span-4 h-full">
+<section class="bg-surface-container-high p-lg rounded-xl border border-outline-variant shadow-lg h-full flex flex-col ai-glow">
+<div class="flex items-center gap-3 mb-lg">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
+<span class="material-symbols-outlined">auto_awesome</span>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md">AI Insights</h3>
+<p class="text-xs text-on-surface-variant">Real-time tactical advisory</p>
+</div>
+</div>
+<div class="flex-1 space-y-md">
+<!-- Insight Item 1 -->
+<div class="bg-white p-md rounded-lg border border-outline-variant hover:border-primary transition-colors cursor-pointer group">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-tertiary mt-1">warning</span>
+<div>
+<p class="text-body-sm font-bold text-on-surface">Exploit Wide Weakness</p>
+<p class="text-xs text-on-surface-variant mt-1 leading-relaxed">Opponent (Brighton) has conceded 64% of goals from wide crosses. Switch to <span class="text-primary font-bold">4-3-3 Wide</span> to isolate their fullbacks.</p>
+</div>
+</div>
+</div>
+<!-- Insight Item 2 -->
+<div class="bg-white p-md rounded-lg border border-outline-variant hover:border-primary transition-colors cursor-pointer group">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary mt-1">check_circle</span>
+<div>
+<p class="text-body-sm font-bold text-on-surface">Squad Rotation Required</p>
+<p class="text-xs text-on-surface-variant mt-1 leading-relaxed">Saka's fatigue index is at 88. AI recommends starting Trossard to reduce injury risk by <span class="text-secondary font-bold">12%</span>.</p>
+</div>
+</div>
+</div>
+<!-- Insight Item 3 -->
+<div class="bg-white p-md rounded-lg border border-outline-variant hover:border-primary transition-colors cursor-pointer group">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">insights</span>
+<div>
+<p class="text-body-sm font-bold text-on-surface">Set Piece Analysis</p>
+<p class="text-xs text-on-surface-variant mt-1 leading-relaxed">In-swinging corners to the near post have a <span class="text-primary font-bold">4.2x higher xG</span> against the current opponent profile.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-lg pt-lg border-t border-outline-variant">
+<div class="relative">
+<input class="w-full bg-white border border-outline-variant rounded-full py-3 px-md text-body-sm focus:ring-2 focus:ring-primary pr-12" placeholder="Ask AI anything..." type="text"/>
+<button class="absolute right-2 top-2 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+<div class="flex gap-2 mt-4 overflow-x-auto pb-2 no-scrollbar">
+<button class="whitespace-nowrap px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-bold rounded-full border border-outline-variant hover:bg-primary hover:text-white transition-colors">SUBSTITUTION PLANS</button>
+<button class="whitespace-nowrap px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-bold rounded-full border border-outline-variant hover:bg-primary hover:text-white transition-colors">PRESSING MAPS</button>
+<button class="whitespace-nowrap px-3 py-1 bg-surface-container text-on-surface-variant text-[10px] font-bold rounded-full border border-outline-variant hover:bg-primary hover:text-white transition-colors">XG PROJECTIONS</button>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Asymmetric Data Card -->
+<div class="grid grid-cols-12 gap-lg">
+<section class="col-span-12 lg:col-span-12 bg-white rounded-xl border border-outline-variant overflow-hidden flex flex-col md:flex-row shadow-sm">
+<div class="md:w-1/3 bg-[#1F2937] p-xl text-white flex flex-col justify-center">
+<h3 class="font-headline-md text-headline-md mb-md">Elite Performance Lab</h3>
+<p class="text-sm opacity-80 mb-lg">Our neural network has processed over 40,000 matches to provide these real-time tactical adjustments. Every decision is backed by mathematical certainty.</p>
+<div class="flex items-center gap-4">
+<div class="flex -space-x-3">
+<img alt="Analyst 1" class="w-8 h-8 rounded-full border-2 border-[#1F2937]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuhOaMwO0cEzhVd8CEFr94YpzBfxfP-4BYXDCvNMzxg7riyHd2FW82gRXvG-m83ywsARM505_h5Q93yGb80cB5rXB50xHpwntMsCg-7eDXZCjMCIgV8CFUKNdQbxE0gpFHS9OY_upVh6E46Yb8SDhADrwtCDlVoC4jqM41pa_UpQMZ3KBCIyCJFFIUehWTwsSICFiz9TZHR1VHS8vQSzBZzdMF4QDnT2joM7wfZSuO_5M1T9mmUAP83F8gRXgHclPFxKUtarwHSqQ"/>
+<img alt="Analyst 2" class="w-8 h-8 rounded-full border-2 border-[#1F2937]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTK2RG1NZoSmjlvZ9ZzxyzdmrlgHJh_DQEUKwBJJVNLKWgbrOu4iq4gHxxSEc5XkY4kxHoGgoVK6gMVf9pja54YwfUnhfI6bdNQy8aKWcwFNfkeTApX9rJc41-nsR0KU_MIXlJNYtD0iHYzJ2YOUJKUcXNcKNB9_vd505BjIIvJpt1jebNDAS2Ajk6oZVkZzBNbh-VvXJqWiuGgTpH87QUnbwbZFlz28zNeNMqY0f2oU7VXBisuWP400QQBXc1eD87EkxZlKP6xMY"/>
+<img alt="Analyst 3" class="w-8 h-8 rounded-full border-2 border-[#1F2937]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyy0Knd0MtgsvlnD9xCInNVcjv4PxCw4c99KXK7MYWx8BBsHH63R-IMk9OfaKaPMXH0vUuhHCXvVrpJGGFfX8RZUvZlOxWOdTEEAqr96ap0VFyESYN_jMAttkobLWtNLr4VPkxTMaXdoKnGnoZL3LruI5tnXcekrezLOBMTLVh_LVzeMIPaAr4uW09jZ0rAEr7udR9SpY0oOFYLYKjh80AKYViOxHBBPe_MeS5hL-Cu8js4vnx0zrVWe01HI0SvimmEa3n5gMrWDU"/>
+</div>
+<span class="text-xs font-semibold">Verified by Performance Team</span>
+</div>
+</div>
+<div class="md:w-2/3 p-lg grid grid-cols-2 md:grid-cols-4 gap-lg">
+<div class="space-y-1">
+<span class="text-label-caps text-on-surface-variant">Last Match xG</span>
+<h5 class="text-headline-md text-primary">2.84</h5>
+<p class="text-[10px] text-secondary flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[12px]">trending_up</span> +12% vs Season Avg
+                            </p>
+</div>
+<div class="space-y-1">
+<span class="text-label-caps text-on-surface-variant">PPDA Index</span>
+<h5 class="text-headline-md text-on-surface">8.2</h5>
+<p class="text-[10px] text-on-surface-variant font-medium">Aggressive High Press</p>
+</div>
+<div class="space-y-1">
+<span class="text-label-caps text-on-surface-variant">Deep Completions</span>
+<h5 class="text-headline-md text-on-surface">14</h5>
+<p class="text-[10px] text-tertiary flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[12px]">priority_high</span> 2nd in League
+                            </p>
+</div>
+<div class="space-y-1">
+<span class="text-label-caps text-on-surface-variant">Verticality Score</span>
+<h5 class="text-headline-md text-on-surface">74%</h5>
+<p class="text-[10px] text-secondary font-bold">Optimized for Counter</p>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- Contextual FAB -->
+<button class="fixed bottom-lg right-lg bg-primary text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined text-2xl">auto_graph</span>
+</button>
+</body></html>

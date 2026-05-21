@@ -1,5 +1,5 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
 
 @theme {
   --font-sans: 'Inter', sans-serif;
@@ -36,11 +36,6 @@
   --color-outline-variant: #c4c5d7;
   --color-primary-fixed-dim: #b7c4ff;
 
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 40px;
   --spacing-sidebar-width: 280px;
 
   --radius-sm: 0.25rem;

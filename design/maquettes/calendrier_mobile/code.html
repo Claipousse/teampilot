@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>TeamPilot AI - Calendrier</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#f8f9ff",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed": "#341100",
+                    "surface-dim": "#d0dbed",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb690",
+                    "surface-container": "#e6eeff",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed": "#7ffc97",
+                    "surface-container-low": "#eff4ff",
+                    "secondary": "#006e2d",
+                    "primary-fixed-dim": "#b7c4ff",
+                    "tertiary": "#753000",
+                    "on-primary-container": "#cad3ff",
+                    "inverse-primary": "#b7c4ff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#434655",
+                    "on-primary-fixed": "#001551",
+                    "on-secondary-fixed": "#002109",
+                    "on-secondary-container": "#007230",
+                    "error": "#ba1a1a",
+                    "primary-fixed": "#dce1ff",
+                    "inverse-on-surface": "#eaf1ff",
+                    "outline-variant": "#c4c5d7",
+                    "surface-tint": "#2151da",
+                    "secondary-fixed-dim": "#62df7d",
+                    "primary": "#0037b0",
+                    "tertiary-fixed": "#ffdbca",
+                    "background": "#f8f9ff",
+                    "surface-variant": "#d9e3f6",
+                    "on-surface": "#121c2a",
+                    "surface-container-highest": "#d9e3f6",
+                    "on-error-container": "#93000a",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#ffcab0",
+                    "error-container": "#ffdad6",
+                    "surface-container-high": "#dee9fc",
+                    "on-secondary-fixed-variant": "#005320",
+                    "tertiary-container": "#9a4200",
+                    "secondary-container": "#7cf994",
+                    "surface": "#f8f9ff",
+                    "primary-container": "#1d4ed8",
+                    "on-tertiary-fixed-variant": "#783200",
+                    "on-primary-fixed-variant": "#0039b5",
+                    "inverse-surface": "#27313f",
+                    "outline": "#747686",
+                    "on-background": "#121c2a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "16px",
+                    "base": "4px",
+                    "xl": "40px",
+                    "gutter": "20px",
+                    "xs": "4px",
+                    "sm": "8px",
+                    "sidebar-width": "280px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "stat-value": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "display-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "stat-value": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .ai-glow {
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.1);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-sm overflow-x-hidden pb-24">
+<!-- Top App Bar -->
+<header class="bg-surface dark:bg-surface text-primary dark:text-primary-fixed-dim w-full top-0 sticky z-40 border-b border-outline-variant dark:border-outline transition-colors duration-200 flex justify-between items-center px-md h-16">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
+<img alt="Club Logo" class="w-full h-full object-cover" data-alt="A professional high-resolution sports club logo badge featuring minimalist geometric shapes and a bold blue and white color scheme. The aesthetic is clean, corporate, and modern, shot against a soft-focus athletic facility background with bright, natural lighting that emphasizes professional excellence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCC6egFMryLGQq-_fZJlkTOBGBGoOI8Oyn3SQ_mVe5lxkEHXn859Xe-9tm9MZdOLr_zPu_2y8-4ZmmzXaD9DYPjJFp3ZHjrNC7mm4JlKAIkUtqBNoGooOwsR_1B_OiAy726AK-Dxa-OxFHrBX9b-93T11ziDGgNNypGtZ_XvBCY_zLfceuZilEqXFWzhwOUztkcJBhkNdcEXDH9eORgr5rLR3qOX9FqvdyBgRgIRsBvWuzFnECzYI5pmVW7OLO5bkaj6zKqouFR-GI"/>
+</div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">TeamPilot AI</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<main class="px-md pt-md space-y-lg">
+<!-- Date Selector Section -->
+<section class="space-y-sm">
+<div class="flex justify-between items-center">
+<h2 class="font-headline-md text-headline-md text-on-surface">Calendrier</h2>
+<button class="text-primary font-label-caps flex items-center gap-xs">
+                    NOVEMBRE <span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+</div>
+<!-- Horizontal Day Picker -->
+<div class="flex gap-sm overflow-x-auto hide-scrollbar py-sm -mx-md px-md">
+<div class="flex-shrink-0 w-14 py-3 flex flex-col items-center justify-center rounded-xl bg-surface-container-low text-on-surface-variant">
+<span class="text-[10px] font-label-caps opacity-70">LUN</span>
+<span class="text-body-lg font-bold">11</span>
+</div>
+<div class="flex-shrink-0 w-14 py-3 flex flex-col items-center justify-center rounded-xl bg-surface-container-low text-on-surface-variant">
+<span class="text-[10px] font-label-caps opacity-70">MAR</span>
+<span class="text-body-lg font-bold">12</span>
+</div>
+<div class="flex-shrink-0 w-14 py-3 flex flex-col items-center justify-center rounded-xl bg-primary-container text-on-primary border-2 border-primary-container shadow-md">
+<span class="text-[10px] font-label-caps">MER</span>
+<span class="text-body-lg font-bold">13</span>
+</div>
+<div class="flex-shrink-0 w-14 py-3 flex flex-col items-center justify-center rounded-xl bg-surface-container-low text-on-surface-variant">
+<span class="text-[10px] font-label-caps opacity-70">JEU</span>
+<span class="text-body-lg font-bold">14</span>
+</div>
+<div class="flex-shrink-0 w-14 py-3 flex flex-col items-center justify-center rounded-xl bg-surface-container-low text-on-surface-variant">
+<span class="text-[10px] font-label-caps opacity-70">VEN</span>
+<span class="text-body-lg font-bold">15</span>
+</div>
+<div class="flex-shrink-0 w-14 py-3 flex flex-col items-center justify-center rounded-xl bg-surface-container-low text-on-surface-variant">
+<span class="text-[10px] font-label-caps opacity-70">SAM</span>
+<span class="text-body-lg font-bold">16</span>
+</div>
+<div class="flex-shrink-0 w-14 py-3 flex flex-col items-center justify-center rounded-xl bg-surface-container-low text-on-surface-variant">
+<span class="text-[10px] font-label-caps opacity-70">DIM</span>
+<span class="text-body-lg font-bold">17</span>
+</div>
+</div>
+</section>
+<!-- Rapid Load Analysis / AI Summary -->
+<section class="bg-primary text-on-primary rounded-xl p-md shadow-lg relative overflow-hidden">
+<div class="relative z-10 space-y-sm">
+<div class="flex justify-between items-start">
+<div>
+<span class="text-[10px] font-label-caps bg-on-primary/20 px-2 py-0.5 rounded-full uppercase">Résumé du jour</span>
+<h3 class="text-headline-md font-bold mt-1">Charge Élevée</h3>
+</div>
+<span class="material-symbols-outlined text-3xl opacity-50">insights</span>
+</div>
+<p class="text-body-sm opacity-90 leading-relaxed">
+                    Préparation tactique intense avant le match de demain. Disponibilité d'équipe : 92%.
+                </p>
+<div class="flex gap-md pt-xs">
+<div class="flex-1">
+<div class="h-1 bg-on-primary/20 rounded-full overflow-hidden">
+<div class="h-full bg-secondary-fixed w-[85%]"></div>
+</div>
+<span class="text-[10px] font-label-caps mt-1 block">INTENSITÉ 85%</span>
+</div>
+<div class="flex-1">
+<div class="h-1 bg-on-primary/20 rounded-full overflow-hidden">
+<div class="h-full bg-on-primary w-[92%]"></div>
+</div>
+<span class="text-[10px] font-label-caps mt-1 block">DISPO 92%</span>
+</div>
+</div>
+</div>
+<!-- Decorative circle -->
+<div class="absolute -right-8 -bottom-8 w-32 h-32 bg-on-primary/10 rounded-full blur-2xl"></div>
+</section>
+<!-- Event List -->
+<section class="space-y-md">
+<div class="flex items-center justify-between">
+<h3 class="font-headline-md text-headline-md">Événements du jour</h3>
+<span class="text-body-sm text-on-surface-variant">3 sessions</span>
+</div>
+<!-- Event 1: Match/Tactical (Blue) -->
+<div class="flex gap-md group">
+<div class="flex flex-col items-center gap-xs w-12 pt-1">
+<span class="text-body-sm font-bold text-on-surface">09:30</span>
+<div class="w-0.5 h-full bg-outline-variant group-last:bg-transparent"></div>
+</div>
+<div class="flex-1 bg-surface-container-highest rounded-xl p-md border-l-4 border-primary">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-headline-md text-on-surface">Séance Vidéo</h4>
+<p class="text-body-sm text-on-surface-variant">Analyse Tactique - Salle 1</p>
+</div>
+<span class="material-symbols-outlined text-primary">videocam</span>
+</div>
+<div class="mt-sm flex -space-x-2">
+<img class="w-6 h-6 rounded-full border-2 border-surface-container-highest" data-alt="Close-up portrait of a professional soccer player with a focused expression, wearing team training gear. The lighting is clean and professional, using high-key studio techniques to create a premium SaaS avatar style with vibrant yet natural tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdh4sIQxOtlKIF1yaevt7Mhyikg7ndlkfKayekIhLh6pC0eO0oWlsUVy1t6Jm8mS5sqjAYrgEmYrVekhKqTw_8mUgiwv6Ns0UZdIAllVhlTDdOGQZeXrN2ZnITjhpwjivSzvFgauSrA_7z85P50vxSTJvBcfSt_jqle00LyTO_3TMubYVaf7cdV8veAOHtbH9ZytFDGCN23IWcxvrZsdy2TPryl9hnIdBQtsGiC3PmZgw74swxJqUEsyQKrtIC_a6iwh3zQ7pYc7I"/>
+<img class="w-6 h-6 rounded-full border-2 border-surface-container-highest" data-alt="Portrait of an athletic man in sports apparel, looking determined. The image is styled as a professional headshot for a sports management application, featuring soft-focus backgrounds and balanced, neutral lighting to maintain visual consistency." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5WntMZJpzp3Gu8Qqk2_aOu2tc9mBkhEOI_k50vwrbvEogmUhxfTR5OSvu2NeJGNhZCYrN8MSRMuO6vlMhvJib0M0GyGVOf9x1ZLSfFQofpgbeocj7oaJyu0PeGAEAvCta2v-FJ7QRXqkEur5AvPsG3_4eUf1zSDymZxMMDunrJihavDTqrNAJR_3RwK8CSOwLdIe7Anj6SL7usrECaOP1ChIFGMjdgnsuuSkKDdXpoJALq2V1UImcU3a_ylOT-8Ieq57gk8KylbM"/>
+<div class="w-6 h-6 rounded-full border-2 border-surface-container-highest bg-primary text-[8px] flex items-center justify-center text-white font-bold">+18</div>
+</div>
+</div>
+</div>
+<!-- Event 2: Recovery (Green) -->
+<div class="flex gap-md group">
+<div class="flex flex-col items-center gap-xs w-12 pt-1">
+<span class="text-body-sm font-bold text-on-surface">11:00</span>
+<div class="w-0.5 h-full bg-outline-variant group-last:bg-transparent"></div>
+</div>
+<div class="flex-1 bg-surface-container-highest rounded-xl p-md border-l-4 border-secondary">
+<div class="flex justify-between items-start">
+<div>
+<h4 class="font-headline-md text-on-surface">Récupération Active</h4>
+<p class="text-body-sm text-on-surface-variant">Cryothérapie &amp; Massage</p>
+</div>
+<span class="material-symbols-outlined text-secondary">spa</span>
+</div>
+<div class="mt-sm inline-flex items-center gap-xs px-2 py-0.5 bg-secondary-container text-on-secondary-container rounded-full text-[10px] font-label-caps">
+<span class="material-symbols-outlined text-[12px]">check_circle</span> TERMINE
+                    </div>
+</div>
+</div>
+<!-- Event 3: AI Insight (Orange) -->
+<div class="flex gap-md group">
+<div class="flex flex-col items-center gap-xs w-12 pt-1">
+<span class="text-body-sm font-bold text-on-surface">14:00</span>
+<div class="w-0.5 h-full bg-outline-variant group-last:bg-transparent"></div>
+</div>
+<div class="flex-1 bg-surface-container-highest ai-glow rounded-xl p-md border-l-4 border-[#F97316]">
+<div class="flex justify-between items-start">
+<div>
+<div class="flex items-center gap-xs text-[#783200]">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-[10px] font-label-caps">OPTIMISATION IA</span>
+</div>
+<h4 class="font-headline-md text-on-surface">Gestion de Fatigue</h4>
+<p class="text-body-sm text-on-surface-variant">Repos suggéré pour 4 joueurs clés.</p>
+</div>
+<button class="w-8 h-8 rounded-full bg-[#ffdbca] text-[#783200] flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Quick Action FAB (Suppressed on details, but keeping it as a "New Event" on main calendar) -->
+<button class="fixed right-md bottom-24 w-14 h-14 bg-primary text-on-primary rounded-2xl shadow-xl flex items-center justify-center active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-2xl">add</span>
+</button>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-md flex justify-around items-center px-sm py-xs pb-safe border-t border-outline-variant dark:border-outline shadow-lg rounded-t-xl h-[72px]">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<span class="font-label-caps text-label-caps">Club</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_today</span>
+<span class="font-label-caps text-label-caps">Calendrier</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span class="font-label-caps text-label-caps">Joueurs</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-caps text-label-caps">Logistique</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-caps text-label-caps">Profil</span>
+</a>
+</nav>
+<script>
+        // Simple micro-interaction for date selection
+        document.querySelectorAll('.flex-shrink-0.w-14').forEach(el => {
+            el.addEventListener('click', () => {
+                document.querySelectorAll('.flex-shrink-0.w-14').forEach(item => {
+                    item.classList.remove('bg-primary-container', 'text-on-primary', 'border-2', 'border-primary-container', 'shadow-md');
+                    item.classList.add('bg-surface-container-low', 'text-on-surface-variant');
+                });
+                el.classList.add('bg-primary-container', 'text-on-primary', 'border-2', 'border-primary-container', 'shadow-md');
+                el.classList.remove('bg-surface-container-low', 'text-on-surface-variant');
+            });
+        });
+
+        // Atmospheric fade-in for list items
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.flex.gap-md.group').forEach((el, i) => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = `all 0.4s ease-out ${i * 0.1}s`;
+            observer.observe(el);
+        });
+    </script>
+</body></html>

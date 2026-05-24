@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Paramètres du Club - TeamPilot AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#f8f9ff",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed": "#341100",
+                    "surface-dim": "#d0dbed",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb690",
+                    "surface-container": "#e6eeff",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed": "#7ffc97",
+                    "surface-container-low": "#eff4ff",
+                    "secondary": "#006e2d",
+                    "primary-fixed-dim": "#b7c4ff",
+                    "tertiary": "#753000",
+                    "on-primary-container": "#cad3ff",
+                    "inverse-primary": "#b7c4ff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#434655",
+                    "on-primary-fixed": "#001551",
+                    "on-secondary-fixed": "#002109",
+                    "on-secondary-container": "#007230",
+                    "error": "#ba1a1a",
+                    "primary-fixed": "#dce1ff",
+                    "inverse-on-surface": "#eaf1ff",
+                    "outline-variant": "#c4c5d7",
+                    "surface-tint": "#2151da",
+                    "secondary-fixed-dim": "#62df7d",
+                    "primary": "#0037b0",
+                    "tertiary-fixed": "#ffdbca",
+                    "background": "#f8f9ff",
+                    "surface-variant": "#d9e3f6",
+                    "on-surface": "#121c2a",
+                    "surface-container-highest": "#d9e3f6",
+                    "on-error-container": "#93000a",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#ffcab0",
+                    "error-container": "#ffdad6",
+                    "surface-container-high": "#dee9fc",
+                    "on-secondary-fixed-variant": "#005320",
+                    "tertiary-container": "#9a4200",
+                    "secondary-container": "#7cf994",
+                    "surface": "#f8f9ff",
+                    "primary-container": "#1d4ed8",
+                    "on-tertiary-fixed-variant": "#783200",
+                    "on-primary-fixed-variant": "#0039b5",
+                    "inverse-surface": "#27313f",
+                    "outline": "#747686",
+                    "on-background": "#121c2a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "16px",
+                    "base": "4px",
+                    "xl": "40px",
+                    "gutter": "20px",
+                    "xs": "4px",
+                    "sm": "8px",
+                    "sidebar-width": "280px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "stat-value": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "display-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "stat-value": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ai-glow {
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.1);
+        }
+        .glass-nav {
+            background: rgba(248, 249, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-lg overflow-x-hidden pb-24">
+<!-- Top App Bar -->
+<header class="bg-surface dark:bg-surface text-primary dark:text-primary-fixed-dim w-full top-0 sticky z-50 border-b border-outline-variant dark:border-outline flex justify-between items-center px-md h-16">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container overflow-hidden">
+<img alt="Club Logo" class="w-full h-full object-cover" data-alt="A professional and sleek football club crest for Metropolis United FC, featuring a modern geometric shield design. The color palette is dominated by sporty blue and pristine white, with sharp lines and an authoritative athletic aesthetic. The image is presented as a high-quality vector graphic on a clean, light background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNjdtIaq7HcBjPGuOZoU3ITansT48-O4MnH90oFUHOYg3PWmUuCmuTEUcfzkKEsA3zDGjeedy5Ys9isa15mANha1D-zYtq9aWb1Za6M_fYdwWFXfioRsmXiuySoFEERagmgcHn2g48feHswUl1Yq9M-cTx2JtBrS2bg6g9MPu_7O8HZ-UVDwC3IazOnTy-LACdyFFcZPUBN4Xt055ZYVWbiS5tiZCY3YO4PcgVyFeN2_pbDKzlVIziXJ9zOT9mGSoRGku4X6xI6dI"/>
+</div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">TeamPilot AI</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<main class="px-md py-lg space-y-lg">
+<!-- Page Title -->
+<div class="space-y-1">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Paramètres du Club</h2>
+<p class="font-body-sm text-on-surface-variant">Gérez l'identité et les performances de votre organisation.</p>
+</div>
+<!-- Section: Profil du Club -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm">
+<div class="flex items-center justify-between mb-md">
+<h3 class="font-headline-md text-headline-md text-on-surface">Profil du club</h3>
+<span class="material-symbols-outlined text-primary">edit</span>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-16 h-16 rounded-xl bg-surface-container overflow-hidden border border-outline-variant">
+<img alt="Stadium" class="w-full h-full object-cover" data-alt="A wide-angle interior shot of a modern, elite football stadium during a bright day. The architecture is cutting-edge with clean white lines and lush green pitch visible. The lighting is natural and high-key, reinforcing a professional and organized sporting atmosphere. The overall mood is high-performance and authoritative." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhUfZZxlp3GQcb1L2mw4sZ1m8ixu02S347YCfl0C9oUch-Gw_-ahXzaNrenjnSE4p6gAHFfHyghAr5KjORDfkwbFezPlW8QGhxzQ8MKEW9_9nYvPAytiOcFj3E6eapz2Z36ab1Y-OD-FVu8c3QDuCN1TwnoSLfpShdpja9f3VlWJWGI_q1yblAUmyF5vA5DXFNHn_T4sTHs73ab9mm2nQeI3ylpPMwxEmHJcwV1oQ_cWD1XZmYtYWNrRRxkVWaHiqAS0DfPXZ7MoE"/>
+</div>
+<div>
+<p class="font-headline-md text-headline-md text-on-surface">Metropolis United FC</p>
+<p class="font-body-sm text-on-surface-variant">Ligue 1 Professionnelle</p>
+</div>
+</div>
+</section>
+<!-- Section: AI Settings (The AI Insight Card Style) -->
+<section class="bg-surface-container-lowest border-l-4 border-l-[#F97316] border border-outline-variant rounded-xl p-md ai-glow">
+<div class="flex items-center gap-2 mb-md">
+<span class="material-symbols-outlined text-[#F97316]" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Paramètres de l'IA</h3>
+</div>
+<div class="space-y-md">
+<div class="space-y-sm">
+<div class="flex justify-between items-center">
+<label class="font-body-sm font-semibold text-on-surface">Fréquence des recommandations</label>
+<span class="font-body-sm text-primary font-bold">Quotidien</span>
+</div>
+<input class="w-full h-2 bg-surface-container rounded-lg appearance-none cursor-pointer accent-primary" max="100" min="0" type="range" value="75"/>
+</div>
+<div class="space-y-sm">
+<div class="flex justify-between items-center">
+<label class="font-body-sm font-semibold text-on-surface">Sensibilité à la fatigue</label>
+<span class="font-body-sm text-[#F97316] font-bold">Élevée</span>
+</div>
+<input class="w-full h-2 bg-surface-container rounded-lg appearance-none cursor-pointer accent-[#F97316]" max="100" min="0" type="range" value="85"/>
+</div>
+</div>
+</section>
+<!-- Section: Sécurité -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md">
+<div class="flex items-center gap-2 mb-md">
+<span class="material-symbols-outlined text-on-surface-variant">shield</span>
+<h3 class="font-headline-md text-headline-md text-on-surface">Sécurité</h3>
+</div>
+<div class="flex items-center justify-between p-sm bg-surface rounded-lg">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-secondary">verified_user</span>
+<p class="font-body-sm font-semibold">Authentification 2FA</p>
+</div>
+<button class="relative inline-flex h-6 w-11 items-center rounded-full bg-primary">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition duration-200"></span>
+</button>
+</div>
+</section>
+<!-- Quick Actions Bento -->
+<div class="grid grid-cols-2 gap-md">
+<div class="bg-primary-container text-white p-md rounded-xl flex flex-col justify-between aspect-square">
+<span class="material-symbols-outlined text-3xl">subscriptions</span>
+<div>
+<p class="font-headline-md text-headline-md">Abonnement</p>
+<p class="font-body-sm opacity-80">Plan Pro Elite</p>
+</div>
+</div>
+<div class="bg-surface-container-highest border border-outline-variant p-md rounded-xl flex flex-col justify-between aspect-square">
+<span class="material-symbols-outlined text-on-surface text-3xl">hub</span>
+<div>
+<p class="font-headline-md text-headline-md text-on-surface">Organisation</p>
+<p class="font-body-sm text-on-surface-variant">12 Membres</p>
+</div>
+</div>
+</div>
+<!-- Log out -->
+<button class="w-full py-md px-md rounded-xl border border-error text-error font-headline-md flex items-center justify-center gap-2 active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined">logout</span>
+            Déconnexion
+        </button>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-sm py-xs pb-safe bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-t border-outline-variant dark:border-outline shadow-lg h-20 rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="admin_panel_settings">admin_panel_settings</span>
+<span class="font-label-caps text-label-caps mt-1">Club</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="font-label-caps text-label-caps mt-1">Calendrier</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-label-caps text-label-caps mt-1">Joueurs</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-caps text-label-caps mt-1">Logistique</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 Active: scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-caps text-label-caps">Profil</span>
+</a>
+</nav>
+<script>
+        // Simple Interaction for Toggle Switch
+        const toggleBtn = document.querySelector('button.relative.inline-flex');
+        const toggleDot = toggleBtn.querySelector('span');
+        let isEnabled = true;
+
+        toggleBtn.addEventListener('click', () => {
+            isEnabled = !isEnabled;
+            if (isEnabled) {
+                toggleBtn.classList.replace('bg-surface-variant', 'bg-primary');
+                toggleDot.classList.replace('translate-x-1', 'translate-x-6');
+            } else {
+                toggleBtn.classList.replace('bg-primary', 'bg-surface-variant');
+                toggleDot.classList.replace('translate-x-6', 'translate-x-1');
+            }
+        });
+
+        // Range Input Visualization
+        const ranges = document.querySelectorAll('input[type="range"]');
+        ranges.forEach(range => {
+            range.addEventListener('input', (e) => {
+                const val = e.target.value;
+                const parent = e.target.closest('.space-y-sm');
+                const label = parent.querySelector('span');
+                if (range.classList.contains('accent-[#F97316]')) {
+                    if (val < 33) label.innerText = 'Basse';
+                    else if (val < 66) label.innerText = 'Moyenne';
+                    else label.innerText = 'Élevée';
+                } else {
+                    if (val < 50) label.innerText = 'Hebdomadaire';
+                    else label.innerText = 'Quotidien';
+                }
+            });
+        });
+    </script>
+</body></html>

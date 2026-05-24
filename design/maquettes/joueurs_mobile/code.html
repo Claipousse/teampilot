@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+
+<html class="light" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#f8f9ff",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed": "#341100",
+                    "surface-dim": "#d0dbed",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb690",
+                    "surface-container": "#e6eeff",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed": "#7ffc97",
+                    "surface-container-low": "#eff4ff",
+                    "secondary": "#006e2d",
+                    "primary-fixed-dim": "#b7c4ff",
+                    "tertiary": "#753000",
+                    "on-primary-container": "#cad3ff",
+                    "inverse-primary": "#b7c4ff",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#434655",
+                    "on-primary-fixed": "#001551",
+                    "on-secondary-fixed": "#002109",
+                    "on-secondary-container": "#007230",
+                    "error": "#ba1a1a",
+                    "primary-fixed": "#dce1ff",
+                    "inverse-on-surface": "#eaf1ff",
+                    "outline-variant": "#c4c5d7",
+                    "surface-tint": "#2151da",
+                    "secondary-fixed-dim": "#62df7d",
+                    "primary": "#0037b0",
+                    "tertiary-fixed": "#ffdbca",
+                    "background": "#f8f9ff",
+                    "surface-variant": "#d9e3f6",
+                    "on-surface": "#121c2a",
+                    "surface-container-highest": "#d9e3f6",
+                    "on-error-container": "#93000a",
+                    "on-error": "#ffffff",
+                    "on-tertiary-container": "#ffcab0",
+                    "error-container": "#ffdad6",
+                    "surface-container-high": "#dee9fc",
+                    "on-secondary-fixed-variant": "#005320",
+                    "tertiary-container": "#9a4200",
+                    "secondary-container": "#7cf994",
+                    "surface": "#f8f9ff",
+                    "primary-container": "#1d4ed8",
+                    "on-tertiary-fixed-variant": "#783200",
+                    "on-primary-fixed-variant": "#0039b5",
+                    "inverse-surface": "#27313f",
+                    "outline": "#747686",
+                    "on-background": "#121c2a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "16px",
+                    "base": "4px",
+                    "xl": "40px",
+                    "gutter": "20px",
+                    "xs": "4px",
+                    "sm": "8px",
+                    "sidebar-width": "280px",
+                    "lg": "24px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "stat-value": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "display-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "stat-value": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .ai-glow { box-shadow: 0 0 12px 0 rgba(249, 115, 22, 0.15); border-left: 3px solid #f97316; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface w-full top-0 sticky border-b border-outline-variant dark:border-outline flex justify-between items-center px-md h-16 w-full z-40">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white overflow-hidden">
+<img alt="Club Logo" class="w-full h-full object-cover" data-alt="A professional sports club crest designed in a minimalist vector style, using deep blue and crisp white colors. The logo feels elite and corporate, centered on a clean white background with soft studio lighting. It communicates authority and precision, mirroring a high-performance athletic laboratory aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBECKpNmhLL_1jAQQWoIr42N-UesIttri7zLaf7gMRgvhU7PRYc9dnU4ASSsQ1lhRMJjCRSIjWGzFrum3AeUxeVV44wy3JkAv13TJx4d1R_pOh1xeSgQ-KEo3LcvIUn7QsJe96eG0xKOzCKillpPpOTReiFa3o0oNXC9nMv6CV9BYOJ_Gvt81ezqTOYxuDpnb1NQ6OM73w9ToWbp_06Hm3K1XdZ0k9aQPEuw_YNqD6in1Er2RpIKj9_ehwmOGy_MyZDwXjw4mlzcGU"/>
+</div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">TeamPilot AI</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low transition-colors duration-200">
+<span class="material-symbols-outlined text-primary">notifications</span>
+</button>
+</header>
+<main class="px-md pt-md pb-32">
+<!-- Title & Stats Summary -->
+<div class="mb-lg">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">Équipe</h2>
+<div class="flex gap-4 overflow-x-auto no-scrollbar py-1">
+<div class="flex items-center bg-surface-container-low rounded-xl px-3 py-2 border border-outline-variant whitespace-nowrap">
+<span class="material-symbols-outlined text-secondary text-[20px] mr-2">check_circle</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">FIT: 18</span>
+</div>
+<div class="flex items-center bg-surface-container-low rounded-xl px-3 py-2 border border-outline-variant whitespace-nowrap">
+<span class="material-symbols-outlined text-error text-[20px] mr-2">error</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">FATIGUE: 4</span>
+</div>
+<div class="flex items-center bg-surface-container-low rounded-xl px-3 py-2 border border-outline-variant whitespace-nowrap">
+<span class="material-symbols-outlined text-tertiary text-[20px] mr-2">warning</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant">LÉSION: 1</span>
+</div>
+</div>
+</div>
+<!-- Filters -->
+<div class="flex gap-2 overflow-x-auto no-scrollbar mb-lg">
+<button class="bg-primary text-white px-4 py-2 rounded-full font-label-caps text-label-caps transition-transform active:scale-95">TOUS</button>
+<button class="bg-surface-container-highest text-on-surface-variant px-4 py-2 rounded-full font-label-caps text-label-caps">DEF</button>
+<button class="bg-surface-container-highest text-on-surface-variant px-4 py-2 rounded-full font-label-caps text-label-caps">MIL</button>
+<button class="bg-surface-container-highest text-on-surface-variant px-4 py-2 rounded-full font-label-caps text-label-caps">ATT</button>
+<button class="bg-surface-container-highest text-on-surface-variant px-4 py-2 rounded-full font-label-caps text-label-caps">GDK</button>
+</div>
+<!-- Player List (Mobile Grid/Stack) -->
+<div class="grid grid-cols-1 gap-md">
+<!-- Player Card 1 (Fatigued + AI Insight) -->
+<div class="bg-white rounded-xl border border-outline-variant overflow-hidden ai-glow">
+<div class="p-md">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-14 h-14 rounded-lg bg-surface-container overflow-hidden">
+<img alt="Kylian" class="w-full h-full object-cover" data-alt="A high-resolution close-up portrait of a professional soccer player in training gear, looking focused and intense. The lighting is dramatic and cinematic, highlighting athletic determination. The background is a blurred high-tech training facility with cool blue and white tones, matching a premium athletic performance aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMeCL3-_SezZAWxBdqe2_gLqR8nJZi1oX0cPmKcUzRL854vfrY2wFyLISn9jPO3ETPQSuD3BZL_JkHtIShfsW_EvaRluKcaQn3Bzq4TlKY7lvKpzepalUXIuznlMJZA1nZ7aAyu80O8PEbN19GtHQoq3o-kkRm5Eh9f2OioNXiyiE0pfAYc00IwcRr6Y6DBLOhi6CYaEywBB5yk0CrXu3mK-wz8O3asEPsF_ax92h7MeDdx_7rUqMDNhJyEHJ6R0p69RYLXmfA7C8"/>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">K. Mbappé</h3>
+<div class="flex items-center gap-2">
+<span class="bg-error-container text-on-error-container px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Fatigué</span>
+<span class="text-on-surface-variant font-label-caps text-label-caps">ATT</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="text-error font-stat-value text-stat-value">64%</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant">FORME</div>
+</div>
+</div>
+<!-- AI Recommendation Box -->
+<div class="bg-tertiary-fixed/30 rounded-lg p-3 flex items-start gap-3">
+<span class="material-symbols-outlined text-tertiary text-lg" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<div class="flex-1">
+<p class="font-body-sm text-body-sm text-on-tertiary-fixed leading-tight">
+<span class="font-bold">Recommandation AI:</span> Charge élevée détectée. Réduire l'intensité à 40% pour la session de demain.
+                            </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Player Card 2 (Fit) -->
+<div class="bg-white rounded-xl border border-outline-variant overflow-hidden">
+<div class="p-md">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-14 h-14 rounded-lg bg-surface-container overflow-hidden">
+<img alt="Antoine" class="w-full h-full object-cover" data-alt="A professional athlete portrait in a stadium environment, showing a mid-fielder in peak physical condition. Soft natural light illuminates the scene, emphasizing clarity and high-performance reliability. The palette is dominated by professional blues and clean whites, reflecting a corporate modern sports management interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSqQmOx5GRd7d4TPTrMRal43KGbxWy778rtqX6d4WSXi8YzJOIf93R84jBccPvDrm_TfrzwXv9Md2otoD_C1PD14YKovEv8Sks4mCbAkJCfNNhv2yao5dsTZITl7WCqs_1i03apyQuO7-EiPUa8SfkD_gDQfK--8HcrC30CFwoF7o3ihZ0uhK1T-YZPWqtcg7O4PvNCr4NAXb-5uxXEV4pVF6bmTLKAVO1am2yvpS3Vh5QNNrmCn1Zz7QR5878BhafOPQlgF9WA7w"/>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">A. Griezmann</h3>
+<div class="flex items-center gap-2">
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Optimal</span>
+<span class="text-on-surface-variant font-label-caps text-label-caps">MIL</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="text-secondary font-stat-value text-stat-value">92%</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant">FORME</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="border-t border-outline-variant pt-2">
+<div class="font-label-caps text-label-caps text-on-surface-variant">CHARGE</div>
+<div class="font-body-lg text-body-lg font-bold">12.4 km/sem</div>
+</div>
+<div class="border-t border-outline-variant pt-2">
+<div class="font-label-caps text-label-caps text-on-surface-variant">INTENSITÉ</div>
+<div class="font-body-lg text-body-lg font-bold">Élevée</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Player Card 3 (Fit) -->
+<div class="bg-white rounded-xl border border-outline-variant overflow-hidden">
+<div class="p-md">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-14 h-14 rounded-lg bg-surface-container overflow-hidden">
+<img alt="William" class="w-full h-full object-cover" data-alt="A strong, athletic defender pictured in a professional studio setting with high-contrast lighting. The image captures the focus and physical readiness of an elite athlete. The styling follows the Athletic Precision brand with a clean, measured look and sharp details, perfectly suited for a high-end AI software interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcpm9MSbh8_qzqp0N3ghTqouXJoAsIg8wHenBg3W_7rsUISzIPgdfCOCvIhUkVZ5QHuf5w9-Yq4iZRrodPsK1etoIp1fLg6nldWkfFe9-mQYrJtkEMFnWl5xIIXVK6wBm8Tdth6d9J_WbTVGIsYS7PksTLAPUWTTjjn7HLecFrxETjzIIyB6xYjr-0Oab-MWpZ-q7ihdcYBuzHtbYMlTDm6C86TMiRxvNeAMhv0rLw2zwlBV2lm7ESctRK-dok1GKVO0QIfYJROB8"/>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">W. Saliba</h3>
+<div class="flex items-center gap-2">
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Optimal</span>
+<span class="text-on-surface-variant font-label-caps text-label-caps">DEF</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="text-secondary font-stat-value text-stat-value">88%</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant">FORME</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="border-t border-outline-variant pt-2">
+<div class="font-label-caps text-label-caps text-on-surface-variant">CHARGE</div>
+<div class="font-body-lg text-body-lg font-bold">9.8 km/sem</div>
+</div>
+<div class="border-t border-outline-variant pt-2">
+<div class="font-label-caps text-label-caps text-on-surface-variant">INTENSITÉ</div>
+<div class="font-body-lg text-body-lg font-bold">Stable</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Player Card 4 (Caution + AI Insight) -->
+<div class="bg-white rounded-xl border border-outline-variant overflow-hidden ai-glow">
+<div class="p-md">
+<div class="flex items-start justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-14 h-14 rounded-lg bg-surface-container overflow-hidden">
+<img alt="Theo" class="w-full h-full object-cover" data-alt="Action portrait of a focused defender during a technical drill. The lighting is crisp and detailed, showcasing muscle definition and professional-grade reliability. The background features technical training markers in vibrant sporty green, reinforcing the feeling of elite tactical control and precision engineering." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAetcbQTs3sra3ZYVjz-9e9pQ31bPRE5K1V670aG42hDmY_D6v0RAQDOdp_ckm16N01bQ0POZBNPDE8xfq3z6EZjn2yyllw4wWCodR8hSab3phdcxBr82uJQ50Qj2_fJEWk9TGl17JrpNc1iwyX_RO5yj_qYIQNQev7EJw66-8s6qOm4G0gkxE8srsrNn56z12SIeCMNsixPIb0U_FXgSVhPpimisr8eoR8l3yIkm3BQUeJSzC99zwrc7MYwOWUr2xl0o5lEfW3WVg"/>
+</div>
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface">T. Hernandez</h3>
+<div class="flex items-center gap-2">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">À Surveiller</span>
+<span class="text-on-surface-variant font-label-caps text-label-caps">DEF</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<div class="text-tertiary font-stat-value text-stat-value">71%</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant">FORME</div>
+</div>
+</div>
+<div class="bg-tertiary-fixed/30 rounded-lg p-3 flex items-start gap-3">
+<span class="material-symbols-outlined text-tertiary text-lg" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<div class="flex-1">
+<p class="font-body-sm text-body-sm text-on-tertiary-fixed leading-tight">
+<span class="font-bold">Recommandation AI:</span> Risque de lésion ischios élevé. Session de récupération kiné suggérée.
+                            </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface/80 dark:bg-surface/80 backdrop-blur-md border-t border-outline-variant dark:border-outline shadow-lg flex justify-around items-center px-sm py-xs pb-safe">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-transform active:scale-95 duration-150 py-2" href="#">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<span class="font-label-caps text-label-caps mt-1">Club</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-transform active:scale-95 duration-150 py-2" href="#">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="font-label-caps text-label-caps mt-1">Calendrier</span>
+</a>
+<!-- Active Item: Joueurs -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 transition-transform active:scale-95 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span class="font-label-caps text-label-caps mt-1">Joueurs</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-transform active:scale-95 duration-150 py-2" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label-caps text-label-caps mt-1">Logistique</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim transition-transform active:scale-95 duration-150 py-2" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-caps text-label-caps mt-1">Profil</span>
+</a>
+</nav>
+<script>
+        // Simple micro-interaction for cards
+        document.querySelectorAll('.bg-white').forEach(card => {
+            card.addEventListener('touchstart', () => {
+                card.style.transform = 'scale(0.98)';
+                card.style.transition = 'transform 0.1s ease';
+            });
+            card.addEventListener('touchend', () => {
+                card.style.transform = 'scale(1)';
+            });
+        });
+
+        // Dynamic greeting or time-based accent can be added here
+    </script>
+</body></html>

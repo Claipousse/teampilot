@@ -11,6 +11,7 @@ import {
   BrainCircuit,
   MessageSquare,
   Package,
+  Shield,
   Settings,
   HelpCircle,
   Zap,
@@ -23,6 +24,7 @@ const navItems = [
   { label: 'AI Analytics', href: '/ia-analytics', icon: BrainCircuit },
   { label: 'Communication', href: '/messagerie', icon: MessageSquare },
   { label: 'Logistics', href: '/logistique', icon: Package },
+  { label: 'Administration', href: '/administration', icon: Shield },  // ← ajouter
 ];
 
 const bottomItems = [

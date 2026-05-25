@@ -42,7 +42,7 @@ export default function Sidebar() {
       <div className="px-6 py-5 border-b border-white/10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shrink-0">
-            <Image src="/logo-icon.png" alt="TeamPilot" width={28} height={28} />
+            <Image src="/logo-icon.png" alt="TeamPilot" width={28} height={28} style={{ width: 28, height: 28 }} />
           </div>
           <div>
             <p className="text-white font-bold text-lg leading-tight">TeamPilot AI</p>

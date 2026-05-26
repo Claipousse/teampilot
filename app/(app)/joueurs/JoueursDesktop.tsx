@@ -161,10 +161,10 @@ export default function JoueursDesktop() {
 
       {/* Panneau droit animé */}
       <div className={`shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
-        panelVisible ? 'w-[360px] xl:w-[420px] opacity-100' : 'w-0 opacity-0'
-      }`}>
+            panelVisible ? 'w-[320px] xl:w-[520px] 2xl:w-[620px] opacity-100' : 'w-0 opacity-0'
+        }`}>
         {displayedPlayer && (
-          <div className="w-[360px] xl:w-[420px] h-full bg-surface-container-lowest border border-outline-variant rounded-2xl flex flex-col overflow-hidden">
+          <div className="w-[320px] xl:w-[520px] 2xl:w-[620px] h-full bg-surface-container-lowest border border-outline-variant rounded-2xl flex flex-col overflow-hidden">
 
             <div className="flex items-center justify-between p-5 border-b border-outline-variant shrink-0">
               <button onClick={closePanel} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">

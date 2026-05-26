@@ -6,8 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
   Users,
-  Dumbbell,
-  Trophy,
+  Calendar,
   BrainCircuit,
   MessageSquare,
   Package,
@@ -20,11 +19,11 @@ import {
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Players', href: '/joueurs', icon: Users },
-  { label: 'Training', href: '/calendrier', icon: Dumbbell },
+  { label: 'Calendar', href: '/calendrier', icon: Calendar },
   { label: 'AI Analytics', href: '/ia-analytics', icon: BrainCircuit },
   { label: 'Communication', href: '/messagerie', icon: MessageSquare },
   { label: 'Logistics', href: '/logistique', icon: Package },
-  { label: 'Administration', href: '/administration', icon: Shield },  // ← ajouter
+  { label: 'Administration', href: '/administration', icon: Shield },
 ];
 
 const bottomItems = [
@@ -36,7 +35,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[280px] h-screen bg-inverse-surface flex flex-col shrink-0">
+    <aside className="w-[280px] h-screen bg-inverse-surface flex flex-col">
 
       {/* Logo */}
       <div className="px-6 py-5 border-b border-white/10">

@@ -17,9 +17,7 @@ const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Players', href: '/joueurs', icon: Users },
   { label: 'Calendar', href: '/calendrier', icon: Calendar },
-  { label: 'AI Analytics', href: '/ia-analytics', icon: BrainCircuit },
   { label: 'Communication', href: '/messagerie', icon: MessageSquare },
-  { label: 'Logistics', href: '/logistique', icon: Package },
   { label: 'Administration', href: '/administration', icon: Shield },
 ];
 
@@ -43,7 +41,7 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+      <nav className="flex-1 px-4 py-6 space-y-4 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;

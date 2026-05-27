@@ -1,14 +1,14 @@
-import DashboardDesktop from './DashboardDesktop';
-import DashboardMobile from './DashboardMobile';
+import AdministrationDesktop from './AdministrationDesktop';
+import AdministrationMobile from './AdministrationMobile';
 
-export default function DashboardPage() {
+export default function AdministrationPage() {
   return (
     <>
       <div className="hidden lg:block h-full">
-        <DashboardDesktop />
+        <AdministrationDesktop />
       </div>
       <div className="lg:hidden">
-        <DashboardMobile />
+        <AdministrationMobile />
       </div>
     </>
   );

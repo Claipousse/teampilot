@@ -12,7 +12,6 @@ const navItems = [
   { label: 'Calendrier', href: '/calendrier', icon: Calendar },
   { label: 'Joueurs', href: '/joueurs', icon: Users },
   { label: 'Messages', href: '/messagerie', icon: MessageSquare },
-  { label: 'Logistique', href: '/logistique', icon: Package },
   { label: 'Admin', href: '/administration', icon: Shield },
 ];
 

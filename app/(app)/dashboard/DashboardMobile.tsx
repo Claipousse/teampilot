@@ -23,11 +23,6 @@ const players = [
   { initials: 'HL', name: 'Hugo Leroy', position: 'Gardien de but', status: 'INJURED', statusBg: 'bg-error/10', statusColor: 'text-error' },
 ];
 
-const stock = [
-  { label: 'Kits médicaux', qty: 2 },
-  { label: 'Ballons Match', qty: 4 },
-];
-
 const messages = [
   {
     initials: 'JD',
@@ -106,26 +101,6 @@ export default function DashboardMobile() {
               <span className={`px-3 py-1.5 rounded-full text-sm font-bold shrink-0 ${player.statusBg} ${player.statusColor}`}>
                 {player.status}
               </span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Stock Critique */}
-      <section>
-        <h2 className="text-2xl font-extrabold text-on-surface mb-4">Stock Critique</h2>
-        <div className="grid grid-cols-2 gap-3">
-          {stock.map((item, i) => (
-            <div
-              key={i}
-              className="bg-surface-container-lowest border border-outline-variant border-l-4 border-l-error rounded-2xl p-4"
-            >
-              <div className="flex items-center gap-1.5 mb-3">
-                <AlertTriangle size={13} className="text-error" />
-                <span className="text-xs font-bold text-error uppercase tracking-wider">Alerte</span>
-              </div>
-              <p className="text-base font-bold text-on-surface mb-1">{item.label}</p>
-              <p className="text-sm text-on-surface-variant">Reste : {item.qty} unités</p>
             </div>
           ))}
         </div>

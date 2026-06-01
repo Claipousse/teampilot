@@ -66,3 +66,14 @@ body {
 html {
   font-size: clamp(12px, 1.1vw, 17px);
 }
+@media (min-width: 1600px) {
+  .panel-detail {
+    width: 660px;
+  }
+}
+
+@media (min-width: 2200px) {
+  .panel-detail {
+    width: 860px;
+  }
+}

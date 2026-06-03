@@ -2,6 +2,7 @@
 
 import { Calendar, Users, MessageSquare, MapPin, ChevronRight, Shield, AlertTriangle } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useT } from '@/contexts/LanguageContext';
 
 type EventTag = 'Match' | 'Entraînement' | 'Récupération' | 'Réunion';
 
@@ -57,6 +58,7 @@ const ADMIN_STAFF  = [
 export default function DashboardMobile() {
   const { role } = useCurrentUser();
   const isAdmin = role === 'admin';
+  const t = useT();
 
   const totalPlayers  = 6;
   const fitPlayers    = 3;
@@ -68,8 +70,8 @@ export default function DashboardMobile() {
 
       {/* En-tête */}
       <div>
-        <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Tableau de bord</p>
-        <h1 className="text-2xl font-extrabold text-on-surface tracking-tight">Bonjour, Alex</h1>
+        <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">{t.dashboard.pageTitle}</p>
+        <h1 className="text-2xl font-extrabold text-on-surface tracking-tight">{t.dashboard.greeting}, Alex</h1>
         <p className="text-sm text-on-surface-variant mt-1">
           {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })}
         </p>
@@ -78,9 +80,9 @@ export default function DashboardMobile() {
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-3">
         {([
-          { label: 'Joueurs',    value: totalPlayers,  sub: `${fitPlayers} dispo`, Icon: Users,         accent: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/20' },
-          { label: 'Événements', value: upcomingCount, sub: 'à venir',             Icon: Calendar,      accent: 'text-secondary', bg: 'bg-secondary/5', border: 'border-secondary/20' },
-          { label: 'Messages',   value: unreadCount,   sub: 'non lus',             Icon: MessageSquare, accent: 'text-error',     bg: 'bg-error/5',     border: 'border-error/20' },
+          { label: t.dashboard.kpiPlayers,  value: totalPlayers,  sub: `${fitPlayers} ${t.dashboard.kpiAvailable}`, Icon: Users,         accent: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/20' },
+          { label: t.dashboard.kpiEvents,   value: upcomingCount, sub: t.dashboard.kpiUpcoming,                  Icon: Calendar,      accent: 'text-secondary', bg: 'bg-secondary/5', border: 'border-secondary/20' },
+          { label: t.dashboard.kpiMessages, value: unreadCount,   sub: t.dashboard.kpiUnread,                    Icon: MessageSquare, accent: 'text-error',     bg: 'bg-error/5',     border: 'border-error/20' },
         ] as const).map(kpi => (
           <div key={kpi.label} className={`${kpi.bg} border ${kpi.border} rounded-2xl p-4 flex flex-col gap-1.5`}>
             <div className="flex items-center justify-between">
@@ -98,10 +100,10 @@ export default function DashboardMobile() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Calendar size={18} className="text-primary" />
-            <h2 className="text-base font-bold text-on-surface">Prochains événements</h2>
+            <h2 className="text-base font-bold text-on-surface">{t.dashboard.upcomingEvents}</h2>
           </div>
           <a href="/calendrier" className="text-xs font-semibold text-primary flex items-center gap-0.5">
-            Voir tout <ChevronRight size={13} />
+            {t.dashboard.viewAll} <ChevronRight size={13} />
           </a>
         </div>
         <div className="space-y-2">
@@ -132,10 +134,10 @@ export default function DashboardMobile() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <MessageSquare size={18} className="text-on-surface-variant" />
-            <h2 className="text-base font-bold text-on-surface">Messages récents</h2>
+            <h2 className="text-base font-bold text-on-surface">{t.dashboard.recentMessages}</h2>
           </div>
           <a href="/messagerie" className="text-xs font-semibold text-primary flex items-center gap-0.5">
-            Voir tout <ChevronRight size={13} />
+            {t.dashboard.viewAll} <ChevronRight size={13} />
           </a>
         </div>
         <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl divide-y divide-outline-variant/50">
@@ -164,10 +166,10 @@ export default function DashboardMobile() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <AlertTriangle size={18} className="text-[#F97316]" />
-            <h2 className="text-base font-bold text-on-surface">Non disponibles</h2>
+            <h2 className="text-base font-bold text-on-surface">{t.dashboard.unavailable}</h2>
           </div>
           <a href="/joueurs" className="text-xs font-semibold text-primary flex items-center gap-0.5">
-            Voir la liste <ChevronRight size={13} />
+            {t.dashboard.viewPlayersList} <ChevronRight size={13} />
           </a>
         </div>
         <div className="space-y-2">
@@ -196,38 +198,38 @@ export default function DashboardMobile() {
               <Shield size={14} className="text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="text-base font-bold text-on-surface">Vue administrateur</h2>
-              <p className="text-xs text-on-surface-variant">Visible uniquement par les admins</p>
+              <h2 className="text-base font-bold text-on-surface">{t.dashboard.adminPanel}</h2>
+              <p className="text-xs text-on-surface-variant">{t.dashboard.adminOnly}</p>
             </div>
             <a href="/administration" className="text-xs font-semibold text-error/80 flex items-center gap-0.5 shrink-0">
-              Gérer <ChevronRight size={13} />
+              {t.common.manage} <ChevronRight size={13} />
             </a>
           </div>
           <div className="border border-error/25 bg-error/5 rounded-2xl p-4 space-y-3">
 
             {/* Club */}
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
-              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Club</p>
+              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">{t.dashboard.clubCard}</p>
               <p className="text-base font-extrabold text-on-surface">{ADMIN_CLUB.nom}</p>
               <p className="text-sm text-on-surface-variant mt-0.5">{ADMIN_CLUB.ligue}</p>
-              <p className="text-xs text-on-surface-variant/60 mt-0.5">Fondé en {ADMIN_CLUB.annee} · {ADMIN_CLUB.ville}</p>
+              <p className="text-xs text-on-surface-variant/60 mt-0.5">{t.dashboard.founded} {ADMIN_CLUB.annee} · {ADMIN_CLUB.ville}</p>
             </div>
 
             {/* Saison */}
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
-              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Saison active</p>
+              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">{t.dashboard.seasonCard}</p>
               <div className="flex items-center gap-2 mb-1">
                 <p className="text-base font-extrabold text-on-surface">{ADMIN_SAISON.label}</p>
                 <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-secondary/10 text-secondary">{ADMIN_SAISON.statut}</span>
               </div>
               <p className="text-sm text-on-surface-variant">{ADMIN_SAISON.competitions}</p>
-              <p className="text-xs text-on-surface-variant/60 mt-0.5">Objectif : {ADMIN_SAISON.objectif}</p>
+              <p className="text-xs text-on-surface-variant/60 mt-0.5">{t.dashboard.objective} {ADMIN_SAISON.objectif}</p>
             </div>
 
             {/* Staff */}
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
               <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">
-                Staff · <span className="normal-case font-semibold text-on-surface">{ADMIN_STAFF.length} membres</span>
+                {t.dashboard.staffCard} · <span className="normal-case font-semibold text-on-surface">{ADMIN_STAFF.length} {t.common.members}</span>
               </p>
               <div className="space-y-2.5 max-h-44 overflow-y-auto pr-1">
                 {ADMIN_STAFF.map((s, i) => (

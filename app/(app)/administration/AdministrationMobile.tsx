@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Pencil, UserPlus, CalendarPlus, Search, X, Trash2, Upload, Plus, AlertTriangle, ChevronRight } from 'lucide-react';
+import { useT } from '@/contexts/LanguageContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -80,6 +81,7 @@ const INIT_STAFF: StaffMember[] = [
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AdministrationMobile() {
+  const t = useT();
   // Club
   const [club,         setClub]         = useState<ClubData>(INIT_CLUB);
   const [clubOpen,     setClubOpen]     = useState(false);
@@ -283,23 +285,23 @@ export default function AdministrationMobile() {
         <div className="space-y-4">
           <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Identité</p>
           <div>
-            <label className={labelCls}>Prénom <span className="text-error">*</span></label>
+            <label className={labelCls}>{t.admin.fieldFirstName} <span className="text-error">*</span></label>
             <input type="text" value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))}
               className={inputCls(errors.prenom)} placeholder="Ex : Thomas" />
             {errors.prenom && <p className="text-xs text-error mt-1">{errors.prenom}</p>}
           </div>
           <div>
-            <label className={labelCls}>Nom <span className="text-error">*</span></label>
+            <label className={labelCls}>{t.admin.fieldLastName} <span className="text-error">*</span></label>
             <input type="text" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
               className={inputCls(errors.nom)} placeholder="Ex : Laurent" />
             {errors.nom && <p className="text-xs text-error mt-1">{errors.nom}</p>}
           </div>
           <div>
-            <label className={labelCls}>Rôle / Fonction <span className="text-error">*</span></label>
+            <label className={labelCls}>{t.admin.fieldRole} <span className="text-error">*</span></label>
             <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
               className={`${inputCls(errors.role)} cursor-pointer`}>
               <option value="">Sélectionner un rôle…</option>
-              {STAFF_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+              {STAFF_ROLES.map(r => <option key={r} value={r}>{t.admin.roles[r as keyof typeof t.admin.roles] ?? r}</option>)}
             </select>
             {errors.role && <p className="text-xs text-error mt-1">{errors.role}</p>}
           </div>
@@ -315,7 +317,7 @@ export default function AdministrationMobile() {
               className={inputCls()} placeholder="+33 6 …" />
           </div>
           <div>
-            <label className={labelCls}>Membre depuis <span className="font-normal normal-case opacity-60">(optionnel)</span></label>
+            <label className={labelCls}>{t.admin.fieldSince} <span className="font-normal normal-case opacity-60">({t.common.optional})</span></label>
             <input type="text" value={form.since} onChange={e => setForm(f => ({ ...f, since: e.target.value }))}
               className={inputCls()} placeholder="JJ/MM/AAAA" />
           </div>
@@ -349,7 +351,7 @@ export default function AdministrationMobile() {
             </div>
             <div>
               <h2 className="text-xl font-extrabold text-on-surface">{club.nom}</h2>
-              <p className="text-sm text-on-surface-variant mt-0.5">Fondé en {club.annee} · {club.ligue}</p>
+              <p className="text-sm text-on-surface-variant mt-0.5">{t.dashboard.founded} {club.annee} · {club.ligue}</p>
             </div>
           </div>
           <button onClick={openClub}
@@ -374,21 +376,21 @@ export default function AdministrationMobile() {
       {/* ── Saison Active ── */}
       <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-on-surface">Saison active</h2>
+          <h2 className="text-xl font-bold text-on-surface">{t.admin.activeSeason}</h2>
           <div className="flex items-center gap-2">
             <span className={`px-3 py-1.5 text-sm font-bold rounded-full ${ss.badge}`}>{saisonLabel}</span>
             <button onClick={openSaison}
               className="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors">
-              <Pencil size={13} /> Modifier
+              <Pencil size={13} /> {t.admin.editSeason}
             </button>
           </div>
         </div>
         <div>
           {[
-            { label: 'Début',        value: saison.debut },
-            { label: 'Fin',          value: saison.fin },
-            { label: 'Compétitions', value: saison.competitions },
-            { label: 'Objectif',     value: saison.objectif },
+            { label: t.admin.fieldSeasonStart,  value: saison.debut },
+            { label: t.admin.fieldSeasonEnd,    value: saison.fin },
+            { label: t.admin.fieldCompetitions, value: saison.competitions },
+            { label: t.admin.fieldObjective,    value: saison.objectif },
           ].map((row, i) => (
             <div key={i} className="flex items-center justify-between py-3.5 border-b border-outline-variant">
               <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">{row.label}</p>
@@ -396,10 +398,10 @@ export default function AdministrationMobile() {
             </div>
           ))}
           <div className="flex items-center justify-between py-3.5">
-            <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">Statut</p>
+            <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">{t.admin.fieldStatus}</p>
             <div className="flex items-center gap-2">
               <div className={`w-2.5 h-2.5 rounded-full ${ss.dot}`} />
-              <p className={`text-base font-semibold ${ss.text}`}>{saison.statut}</p>
+              <p className={`text-base font-semibold ${ss.text}`}>{t.admin.statuses[saison.statut]}</p>
             </div>
           </div>
         </div>
@@ -439,19 +441,19 @@ export default function AdministrationMobile() {
       {/* ── Gérer le staff ── */}
       <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-xl font-bold text-on-surface">Gérer le staff</h2>
+          <h2 className="text-xl font-bold text-on-surface">{t.admin.manageStaff}</h2>
           <button onClick={openAdd}
             className="flex items-center gap-1.5 px-3 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-xl transition-colors shrink-0">
-            <Plus size={15} /> Ajouter
+            <Plus size={15} /> {t.common.add}
           </button>
         </div>
-        <p className="text-xs text-on-surface-variant/60 mb-4">{staff.length} membre{staff.length > 1 ? 's' : ''} du staff</p>
+        <p className="text-xs text-on-surface-variant/60 mb-4">{staff.length} {staff.length > 1 ? t.admin.staffCountPlural : t.admin.staffCount}</p>
 
         {/* Recherche + filtre rôle */}
         <div className="space-y-2 mb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" size={16} />
-            <input type="text" placeholder="Rechercher..." value={staffSearch}
+            <input type="text" placeholder={t.admin.searchStaff} value={staffSearch}
               onChange={e => setStaffSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 bg-surface-container border border-outline-variant rounded-xl text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary transition-all" />
           </div>
@@ -464,7 +466,7 @@ export default function AdministrationMobile() {
                   ? 'bg-primary/10 text-primary border-primary'
                   : 'bg-surface-container border-outline-variant text-on-surface'
               }`}>
-              <span>{roleFilters.length > 0 ? `${roleFilters.length} rôle${roleFilters.length > 1 ? 's' : ''} sélectionné${roleFilters.length > 1 ? 's' : ''}` : 'Filtrer par rôle'}</span>
+              <span>{roleFilters.length > 0 ? `${roleFilters.length} ${t.admin.filterRoles}` : t.admin.filterRoles}</span>
               <svg width="12" height="12" viewBox="0 0 12 12" className={`transition-transform shrink-0 ${roleFilterOpen ? 'rotate-180' : ''}`}>
                 <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
               </svg>
@@ -489,7 +491,7 @@ export default function AdministrationMobile() {
                         )}
                         className="w-4 h-4 rounded accent-primary"
                       />
-                      <span className="text-sm text-on-surface">{role}</span>
+                      <span className="text-sm text-on-surface">{t.admin.roles[role as keyof typeof t.admin.roles] ?? role}</span>
                     </label>
                   ))}
                 </div>
@@ -499,7 +501,7 @@ export default function AdministrationMobile() {
         </div>
 
         {filteredStaff.length === 0 ? (
-          <p className="text-sm text-on-surface-variant text-center py-6">Aucun membre trouvé</p>
+          <p className="text-sm text-on-surface-variant text-center py-6">{t.admin.noStaff}</p>
         ) : (
           <div className="space-y-2">
             {filteredStaff.map(m => {
@@ -515,7 +517,7 @@ export default function AdministrationMobile() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-base font-bold text-on-surface">{m.prenom} {m.nom}</p>
-                    <p className="text-sm text-on-surface-variant">{m.role}</p>
+                    <p className="text-sm text-on-surface-variant">{t.admin.roles[m.role as keyof typeof t.admin.roles] ?? m.role}</p>
                   </div>
                   <ChevronRight size={16} className="text-on-surface-variant shrink-0" />
                 </div>
@@ -536,7 +538,7 @@ export default function AdministrationMobile() {
           <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 pt-4 pb-24 pointer-events-none">
             <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md max-h-full flex flex-col pointer-events-auto transition-all duration-200 ${clubVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
               <div className="flex items-center justify-between px-5 py-4 border-b border-outline-variant shrink-0">
-                <p className="text-lg font-bold text-on-surface">Modifier le profil du club</p>
+                <p className="text-lg font-bold text-on-surface">{t.admin.editProfile}</p>
                 <button onClick={closeClub} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
                 </button>
@@ -616,8 +618,8 @@ export default function AdministrationMobile() {
                 </div>
               </div>
               <div className="flex items-center justify-end px-5 py-4 border-t border-outline-variant shrink-0 gap-2">
-                <button onClick={closeClub} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
-                <button onClick={submitClub} className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Sauvegarder</button>
+                <button onClick={closeClub} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
+                <button onClick={submitClub} className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
               </div>
             </div>
           </div>
@@ -673,7 +675,7 @@ export default function AdministrationMobile() {
                       return (
                         <button key={st} onClick={() => setSaisonForm(f => ({ ...f, statut: st }))}
                           className={`px-2 py-2.5 rounded-xl text-sm font-bold transition-all border ${saisonForm.statut === st ? style.active : `bg-surface-container text-on-surface-variant border-outline-variant ${style.hover}`}`}>
-                          {st}
+                          {t.admin.statuses[st]}
                         </button>
                       );
                     })}
@@ -682,8 +684,8 @@ export default function AdministrationMobile() {
                 </div>
               </div>
               <div className="flex items-center justify-end px-5 py-4 border-t border-outline-variant shrink-0 gap-2">
-                <button onClick={closeSaison} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
-                <button onClick={submitSaison} className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Sauvegarder</button>
+                <button onClick={closeSaison} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
+                <button onClick={submitSaison} className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
               </div>
             </div>
           </div>
@@ -697,15 +699,15 @@ export default function AdministrationMobile() {
           <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 pt-4 pb-24 pointer-events-none">
             <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md max-h-full flex flex-col pointer-events-auto transition-all duration-200 ${addVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
               <div className="flex items-center justify-between px-5 py-4 border-b border-outline-variant shrink-0">
-                <p className="text-lg font-bold text-on-surface">Nouveau membre du staff</p>
+                <p className="text-lg font-bold text-on-surface">{t.admin.addMemberTitle}</p>
                 <button onClick={closeAdd} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
                 </button>
               </div>
               {renderStaffForm(addForm, setAddForm, addErrors, addPhotoRef)}
               <div className="flex items-center justify-end px-5 py-4 border-t border-outline-variant shrink-0 gap-2">
-                <button onClick={closeAdd} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
-                <button onClick={submitAdd} className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Ajouter</button>
+                <button onClick={closeAdd} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
+                <button onClick={submitAdd} className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.add}</button>
               </div>
             </div>
           </div>
@@ -719,7 +721,7 @@ export default function AdministrationMobile() {
           <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 pt-4 pb-24 pointer-events-none">
             <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md max-h-full flex flex-col pointer-events-auto transition-all duration-200 ${editVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
               <div className="flex items-center justify-between px-5 py-4 border-b border-outline-variant shrink-0">
-                <p className="text-lg font-bold text-on-surface">Modifier le membre</p>
+                <p className="text-lg font-bold text-on-surface">{t.admin.editMember}</p>
                 <button onClick={closeEdit} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
                 </button>
@@ -732,11 +734,11 @@ export default function AdministrationMobile() {
                     closeEdit();
                   })}
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold text-sm">
-                  <Trash2 size={15} /> Supprimer
+                  <Trash2 size={15} /> {t.common.delete}
                 </button>
                 <div className="flex items-center gap-2">
-                  <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
-                  <button onClick={submitEdit} className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Sauvegarder</button>
+                  <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
+                  <button onClick={submitEdit} className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
                 </div>
               </div>
             </div>
@@ -768,7 +770,7 @@ export default function AdministrationMobile() {
                 </p>
               </div>
               <div className="flex items-center justify-end gap-2 px-5 pb-5">
-                <button onClick={closeDel} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
+                <button onClick={closeDel} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                 <button onClick={confirmDel} disabled={delTimer > 0}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all text-sm ${
                     delTimer > 0 ? 'bg-error/30 text-error/50 cursor-not-allowed' : 'bg-error hover:bg-error/90 text-white'

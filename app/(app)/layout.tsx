@@ -3,6 +3,7 @@ import Header from '@/components/layout/Header';
 import BottomNav from '@/components/layout/BottomNav';
 import Image from 'next/image';
 import { Bell, Settings } from 'lucide-react';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 
 export default function AppLayout({
   children,
@@ -10,6 +11,7 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   return (
+    <LanguageProvider>
     <div className="flex h-screen overflow-hidden bg-surface">
 
       {/* Sidebar — desktop uniquement */}
@@ -64,5 +66,6 @@ export default function AppLayout({
 
       </div>
     </div>
+    </LanguageProvider>
   );
 }

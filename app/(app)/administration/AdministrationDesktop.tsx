@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Pencil, UserPlus, CalendarPlus, Search, X, Trash2, Upload, Plus, AlertTriangle } from 'lucide-react';
+import { useT } from '@/contexts/LanguageContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -80,6 +81,7 @@ const INIT_STAFF: StaffMember[] = [
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AdministrationDesktop() {
+  const t = useT();
   // Club
   const [club,         setClub]         = useState<ClubData>(INIT_CLUB);
   const [clubOpen,     setClubOpen]     = useState(false);
@@ -292,24 +294,24 @@ export default function AdministrationDesktop() {
           <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Identité</p>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Prénom <span className="text-error">*</span></label>
+              <label className={labelCls}>{t.admin.fieldFirstName} <span className="text-error">*</span></label>
               <input type="text" value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))}
                 className={inputCls(errors.prenom)} placeholder="Ex : Thomas" />
               {errors.prenom && <p className="text-xs text-error mt-1">{errors.prenom}</p>}
             </div>
             <div>
-              <label className={labelCls}>Nom <span className="text-error">*</span></label>
+              <label className={labelCls}>{t.admin.fieldLastName} <span className="text-error">*</span></label>
               <input type="text" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
                 className={inputCls(errors.nom)} placeholder="Ex : Laurent" />
               {errors.nom && <p className="text-xs text-error mt-1">{errors.nom}</p>}
             </div>
           </div>
           <div>
-            <label className={labelCls}>Rôle / Fonction <span className="text-error">*</span></label>
+            <label className={labelCls}>{t.admin.fieldRole} <span className="text-error">*</span></label>
             <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}
               className={`${inputCls(errors.role)} cursor-pointer`}>
               <option value="">Sélectionner un rôle…</option>
-              {STAFF_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+              {STAFF_ROLES.map(r => <option key={r} value={r}>{t.admin.roles[r as keyof typeof t.admin.roles] ?? r}</option>)}
             </select>
             {errors.role && <p className="text-xs text-error mt-1">{errors.role}</p>}
           </div>
@@ -327,7 +329,7 @@ export default function AdministrationDesktop() {
             </div>
           </div>
           <div>
-            <label className={labelCls}>Membre depuis <span className="font-normal normal-case opacity-60">(optionnel)</span></label>
+            <label className={labelCls}>{t.admin.fieldSince} <span className="font-normal normal-case opacity-60">({t.common.optional})</span></label>
             <input type="text" value={form.since} onChange={e => setForm(f => ({ ...f, since: e.target.value }))}
               className={inputCls()} placeholder="JJ/MM/AAAA" />
           </div>
@@ -367,7 +369,7 @@ export default function AdministrationDesktop() {
           </div>
           <button onClick={openClub}
             className="flex items-center gap-2 px-5 py-3 border-2 border-outline-variant rounded-xl text-base font-semibold text-on-surface hover:bg-surface-container transition-colors">
-            <Pencil size={18} /> Modifier le profil
+            <Pencil size={18} /> {t.admin.editProfile}
           </button>
         </div>
         <div className="grid grid-cols-2 gap-6 mt-6 pt-6 border-t border-outline-variant">
@@ -390,7 +392,7 @@ export default function AdministrationDesktop() {
         {/* Saison Active */}
         <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 flex flex-col">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-on-surface">Saison active</h2>
+            <h2 className="text-xl font-bold text-on-surface">{t.admin.activeSeason}</h2>
             <div className="flex items-center gap-3">
               <span className={`px-3 py-1.5 text-sm font-bold rounded-full ${ss.badge}`}>{saisonLabel}</span>
               <button onClick={openSaison}
@@ -401,10 +403,10 @@ export default function AdministrationDesktop() {
           </div>
           <div className="flex-1">
             {[
-              { label: 'Début de saison',  value: saison.debut },
-              { label: 'Fin de saison',    value: saison.fin },
-              { label: 'Compétitions',     value: saison.competitions },
-              { label: 'Objectif',         value: saison.objectif },
+              { label: t.admin.fieldSeasonStart, value: saison.debut },
+              { label: t.admin.fieldSeasonEnd,   value: saison.fin },
+              { label: t.admin.fieldCompetitions, value: saison.competitions },
+              { label: t.admin.fieldObjective,   value: saison.objectif },
             ].map((row, i) => (
               <div key={i} className="flex items-center justify-between py-4 border-b border-outline-variant">
                 <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">{row.label}</p>
@@ -412,10 +414,10 @@ export default function AdministrationDesktop() {
               </div>
             ))}
             <div className="flex items-center justify-between py-4">
-              <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">Statut</p>
+              <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">{t.admin.fieldStatus}</p>
               <div className="flex items-center gap-2">
                 <div className={`w-2.5 h-2.5 rounded-full ${ss.dot}`} />
-                <p className={`text-base font-semibold ${ss.text}`}>{saison.statut}</p>
+                <p className={`text-base font-semibold ${ss.text}`}>{t.admin.statuses[saison.statut]}</p>
               </div>
             </div>
           </div>
@@ -455,9 +457,9 @@ export default function AdministrationDesktop() {
       <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6">
         {/* Titre + compteur */}
         <div className="flex items-baseline gap-3 mb-4">
-          <h2 className="text-xl font-bold text-on-surface">Gérer le staff</h2>
+          <h2 className="text-xl font-bold text-on-surface">{t.admin.manageStaff}</h2>
           <span className="text-xs text-on-surface-variant/60">
-            {staff.length} membre{staff.length > 1 ? 's' : ''} du staff
+            {staff.length} {staff.length > 1 ? t.admin.staffCountPlural : t.admin.staffCount}
           </span>
         </div>
 
@@ -465,7 +467,7 @@ export default function AdministrationDesktop() {
         <div className="flex items-center gap-3 mb-5 flex-wrap">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" size={16} />
-            <input type="text" placeholder="Rechercher..." value={staffSearch}
+            <input type="text" placeholder={t.admin.searchStaff} value={staffSearch}
               onChange={e => setStaffSearch(e.target.value)}
               className="pl-9 pr-4 py-2.5 bg-surface-container border border-outline-variant rounded-xl text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary transition-all w-52" />
           </div>
@@ -487,7 +489,7 @@ export default function AdministrationDesktop() {
             {roleFilterOpen && (
               <div className="absolute top-full left-0 mt-2 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl z-50 min-w-[220px] overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-outline-variant">
-                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Filtrer par rôle</p>
+                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.admin.filterRoles}</p>
                   {roleFilters.length > 0 && (
                     <button onClick={() => setRoleFilters([])} className="text-xs text-primary font-semibold hover:underline">Effacer</button>
                   )}
@@ -500,7 +502,7 @@ export default function AdministrationDesktop() {
                           prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]
                         )}
                         className="w-4 h-4 rounded accent-primary cursor-pointer" />
-                      <span className="text-sm text-on-surface">{role}</span>
+                      <span className="text-sm text-on-surface">{t.admin.roles[role as keyof typeof t.admin.roles] ?? role}</span>
                     </label>
                   ))}
                 </div>
@@ -509,18 +511,18 @@ export default function AdministrationDesktop() {
           </div>
 
           {(staffSearch || roleFilters.length > 0) && (
-            <p className="text-sm text-on-surface-variant">{filteredStaff.length} résultat{filteredStaff.length > 1 ? 's' : ''}</p>
+            <p className="text-sm text-on-surface-variant">{filteredStaff.length} {filteredStaff.length > 1 ? t.admin.resultsPlural : t.admin.results}</p>
           )}
 
           <button onClick={openAdd}
             className="ml-auto flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-xl transition-colors">
-            <Plus size={16} /> Ajouter un membre
+            <Plus size={16} /> {t.admin.addMember}
           </button>
         </div>
 
         {filteredStaff.length === 0 ? (
           <div className="py-12 text-center text-on-surface-variant">
-            <p className="text-base">Aucun membre trouvé</p>
+            <p className="text-base">{t.admin.noStaff}</p>
           </div>
         ) : (
           <div className="divide-y divide-outline-variant/50">
@@ -536,7 +538,7 @@ export default function AdministrationDesktop() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-base font-bold text-on-surface">{m.prenom} {m.nom}</p>
-                    <p className="text-sm text-on-surface-variant">{m.role}</p>
+                    <p className="text-sm text-on-surface-variant">{t.admin.roles[m.role as keyof typeof t.admin.roles] ?? m.role}</p>
                   </div>
                   <p className="text-sm text-on-surface-variant hidden lg:block min-w-0 truncate max-w-[200px]">{m.email}</p>
                   {m.phone && <p className="text-sm text-on-surface-variant hidden xl:block shrink-0">{m.phone}</p>}
@@ -563,7 +565,7 @@ export default function AdministrationDesktop() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none">
             <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto transition-all duration-200 ${clubVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
               <div className="flex items-center justify-between px-7 py-5 border-b border-outline-variant shrink-0">
-                <p className="text-xl font-bold text-on-surface">Modifier le profil du club</p>
+                <p className="text-xl font-bold text-on-surface">{t.admin.editProfile} - {t.admin.clubProfile}</p>
                 <button onClick={closeClub} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
                 </button>
@@ -654,8 +656,8 @@ export default function AdministrationDesktop() {
               </div>
 
               <div className="flex items-center justify-end px-7 py-5 border-t border-outline-variant shrink-0 gap-2">
-                <button onClick={closeClub} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
-                <button onClick={submitClub} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Sauvegarder</button>
+                <button onClick={closeClub} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
+                <button onClick={submitClub} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
               </div>
             </div>
           </div>
@@ -722,7 +724,7 @@ export default function AdministrationDesktop() {
                         return (
                           <button key={st} onClick={() => setSaisonForm(f => ({ ...f, statut: st }))}
                             className={`px-3 py-3 rounded-xl text-sm font-bold transition-all border ${saisonForm.statut === st ? style.active : `bg-surface-container text-on-surface-variant border-outline-variant ${style.hover}`}`}>
-                            {st}
+                            {t.admin.statuses[st]}
                           </button>
                         );
                       })}
@@ -733,8 +735,8 @@ export default function AdministrationDesktop() {
               </div>
 
               <div className="flex items-center justify-end px-7 py-5 border-t border-outline-variant shrink-0 gap-2">
-                <button onClick={closeSaison} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
-                <button onClick={submitSaison} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Sauvegarder</button>
+                <button onClick={closeSaison} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
+                <button onClick={submitSaison} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
               </div>
             </div>
           </div>
@@ -748,15 +750,15 @@ export default function AdministrationDesktop() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none">
             <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto transition-all duration-200 ${addVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
               <div className="flex items-center justify-between px-7 py-5 border-b border-outline-variant shrink-0">
-                <p className="text-xl font-bold text-on-surface">Ajouter un membre du staff</p>
+                <p className="text-xl font-bold text-on-surface">{t.admin.addMemberTitle}</p>
                 <button onClick={closeAdd} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
                 </button>
               </div>
               {renderStaffForm(addForm, setAddForm, addErrors, addPhotoRef)}
               <div className="flex items-center justify-end px-7 py-5 border-t border-outline-variant shrink-0 gap-2">
-                <button onClick={closeAdd} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
-                <button onClick={submitAdd} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Ajouter le membre</button>
+                <button onClick={closeAdd} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
+                <button onClick={submitAdd} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.add}</button>
               </div>
             </div>
           </div>
@@ -770,7 +772,7 @@ export default function AdministrationDesktop() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none">
             <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto transition-all duration-200 ${editVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
               <div className="flex items-center justify-between px-7 py-5 border-b border-outline-variant shrink-0">
-                <p className="text-xl font-bold text-on-surface">Modifier le membre</p>
+                <p className="text-xl font-bold text-on-surface">{t.admin.editMember}</p>
                 <button onClick={closeEdit} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
                 </button>
@@ -786,8 +788,8 @@ export default function AdministrationDesktop() {
                   <Trash2 size={16} /> Supprimer
                 </button>
                 <div className="flex items-center gap-2">
-                  <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
-                  <button onClick={submitEdit} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Sauvegarder</button>
+                  <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
+                  <button onClick={submitEdit} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
                 </div>
               </div>
             </div>
@@ -821,7 +823,7 @@ export default function AdministrationDesktop() {
               <div className="flex items-center justify-end gap-3 px-7 pb-6">
                 <button onClick={closeDel}
                   className="px-5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">
-                  Annuler
+                  {t.common.cancel}
                 </button>
                 <button onClick={confirmDel} disabled={delTimer > 0}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${

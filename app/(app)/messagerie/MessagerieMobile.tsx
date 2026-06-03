@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, ArrowLeft, Send, Download, FileText, Users, X } from 'lucide-react';
+import { useT } from '@/contexts/LanguageContext';
 
 type RoleType = 'player' | 'coach' | 'staff' | 'ai';
 type Tab = 'Tous' | 'Team' | 'Staff';
@@ -148,6 +149,7 @@ const ALL_CONVERSATIONS: Conversation[] = [
 ];
 
 export default function MessagerieMobile() {
+  const t = useT();
   const [activeConv, setActiveConv]           = useState<Conversation | null>(null);
   const [input, setInput]                     = useState('');
   const [search, setSearch]                   = useState('');
@@ -294,7 +296,7 @@ export default function MessagerieMobile() {
           <div className="shrink-0 bg-surface border-t border-outline-variant px-4 py-7"
                style={{ paddingBottom: 'calc(56px + 2rem)' }}>
             <div className="flex items-center gap-2">
-              <input type="text" placeholder={`Répondre à ${activeConv.name}...`}
+              <input type="text" placeholder={t.messaging.typeMessage}
                 value={input} onChange={e => setInput(e.target.value)}
                 className="flex-1 px-4 py-3 bg-surface-container rounded-xl text-base text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none transition-all"
               />
@@ -321,7 +323,7 @@ export default function MessagerieMobile() {
               <div className="w-10 h-1 bg-outline-variant rounded-full" />
             </div>
             <div className="flex items-center justify-between px-5 py-3 border-b border-outline-variant shrink-0">
-              <p className="text-lg font-bold text-on-surface">Membres ({activeConv.members?.length})</p>
+              <p className="text-lg font-bold text-on-surface">{t.messaging.members} ({activeConv.members?.length})</p>
               <button onClick={closeMembers} className="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-container">
                 <X size={20} className="text-on-surface-variant" />
               </button>
@@ -354,7 +356,7 @@ export default function MessagerieMobile() {
 
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" size={18} />
-        <input type="text" placeholder="Rechercher ou démarrer une conversation..."
+        <input type="text" placeholder={t.messaging.searchPlaceholder}
           value={search} onChange={e => setSearch(e.target.value)}
           className="w-full pl-12 pr-4 py-3.5 bg-surface-container rounded-xl text-base text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none transition-all"
         />
@@ -364,7 +366,7 @@ export default function MessagerieMobile() {
         {(['Tous', 'Team', 'Staff'] as Tab[]).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`flex-1 py-2.5 rounded-lg text-base font-semibold transition-all ${activeTab === tab ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}>
-            {tab}
+            {tab === 'Tous' ? t.messaging.tabAll : tab === 'Team' ? t.messaging.tabTeam : t.messaging.tabStaff}
           </button>
         ))}
       </div>
@@ -387,14 +389,14 @@ export default function MessagerieMobile() {
       {/* Séparateur visible */}
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-outline-variant" />
-        <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Équipe & Staff</span>
+        <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">{t.messaging.teamAndStaff}</span>
         <div className="flex-1 h-px bg-outline-variant" />
       </div>
 
       {/* Autres conversations */}
       <div className="space-y-2">
         {filtered.length === 0 ? (
-          <div className="p-8 text-center text-base text-on-surface-variant">Aucune conversation trouvée</div>
+          <div className="p-8 text-center text-base text-on-surface-variant">{t.messaging.noConversation}</div>
         ) : filtered.map(conv => {
           const accent = conv.isGroup ? null : roleAccent(conv.roleType as string);
           return (

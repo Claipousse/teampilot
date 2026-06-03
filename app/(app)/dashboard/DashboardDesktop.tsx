@@ -2,6 +2,7 @@
 
 import { Calendar, Users, MessageSquare, MapPin, ChevronRight, Shield, AlertTriangle } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useT } from '@/contexts/LanguageContext';
 
 type EventTag = 'Match' | 'Entraînement' | 'Récupération' | 'Réunion';
 
@@ -59,6 +60,7 @@ const ADMIN_STAFF   = [
 export default function DashboardDesktop() {
   const { role } = useCurrentUser();
   const isAdmin = role === 'admin';
+  const t = useT();
 
   const totalPlayers   = 6;
   const fitPlayers     = 3;
@@ -71,9 +73,9 @@ export default function DashboardDesktop() {
       {/* En-tête */}
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-bold text-primary uppercase tracking-widest mb-1">Tableau de bord</p>
-          <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">Bonjour, Alex Graham</h1>
-          <p className="text-base text-on-surface-variant mt-1">Voici un résumé de l&apos;activité du club.</p>
+          <p className="text-sm font-bold text-primary uppercase tracking-widest mb-1">{t.dashboard.pageTitle}</p>
+          <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">{t.dashboard.greeting}, Alex Graham</h1>
+          <p className="text-base text-on-surface-variant mt-1">{t.dashboard.subtitle}</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-xl shrink-0">
           <Calendar size={18} className="text-on-surface-variant" />
@@ -86,9 +88,9 @@ export default function DashboardDesktop() {
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
         {([
-          { label: 'Joueurs',      value: totalPlayers,  sub: `${fitPlayers} disponibles`, Icon: Users,         accent: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/20' },
-          { label: 'Événements',   value: upcomingCount, sub: 'à venir ce mois',           Icon: Calendar,      accent: 'text-secondary', bg: 'bg-secondary/5', border: 'border-secondary/20' },
-          { label: 'Messages',     value: unreadCount,   sub: 'non lus',                   Icon: MessageSquare, accent: 'text-error',     bg: 'bg-error/5',     border: 'border-error/20' },
+          { label: t.dashboard.kpiPlayers,  value: totalPlayers,  sub: `${fitPlayers} ${t.dashboard.kpiAvailable}`, Icon: Users,         accent: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/20' },
+          { label: t.dashboard.kpiEvents,   value: upcomingCount, sub: t.dashboard.kpiUpcoming,                  Icon: Calendar,      accent: 'text-secondary', bg: 'bg-secondary/5', border: 'border-secondary/20' },
+          { label: t.dashboard.kpiMessages, value: unreadCount,   sub: t.dashboard.kpiUnread,                    Icon: MessageSquare, accent: 'text-error',     bg: 'bg-error/5',     border: 'border-error/20' },
         ] as const).map(kpi => (
           <div key={kpi.label} className={`${kpi.bg} border ${kpi.border} rounded-2xl p-5 flex flex-col gap-2`}>
             <div className="flex items-center justify-between">
@@ -109,10 +111,10 @@ export default function DashboardDesktop() {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
               <Calendar size={20} className="text-primary" />
-              <h2 className="text-lg font-bold text-on-surface">Prochains événements</h2>
+              <h2 className="text-lg font-bold text-on-surface">{t.dashboard.upcomingEvents}</h2>
             </div>
             <a href="/calendrier" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
-              Voir le calendrier <ChevronRight size={14} />
+              {t.dashboard.viewCalendar} <ChevronRight size={14} />
             </a>
           </div>
           <div className="space-y-2">
@@ -143,10 +145,10 @@ export default function DashboardDesktop() {
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
               <MessageSquare size={20} className="text-on-surface-variant" />
-              <h2 className="text-lg font-bold text-on-surface">Messages récents</h2>
+              <h2 className="text-lg font-bold text-on-surface">{t.dashboard.recentMessages}</h2>
             </div>
             <a href="/messagerie" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
-              Voir tout <ChevronRight size={14} />
+              {t.dashboard.viewAll} <ChevronRight size={14} />
             </a>
           </div>
           <div className="space-y-1">
@@ -176,13 +178,13 @@ export default function DashboardDesktop() {
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
             <AlertTriangle size={20} className="text-[#F97316]" />
-            <h2 className="text-lg font-bold text-on-surface">Joueurs non disponibles</h2>
+            <h2 className="text-lg font-bold text-on-surface">{t.dashboard.unavailable}</h2>
             <span className="text-xs text-on-surface-variant/60">
-              {PLAYERS_UNAVAILABLE.length} joueur{PLAYERS_UNAVAILABLE.length > 1 ? 's' : ''} concerné{PLAYERS_UNAVAILABLE.length > 1 ? 's' : ''}
+              {PLAYERS_UNAVAILABLE.length} {PLAYERS_UNAVAILABLE.length > 1 ? t.dashboard.affectedPlural : t.dashboard.affected}
             </span>
           </div>
           <a href="/joueurs" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
-            Voir la liste des joueurs <ChevronRight size={14} />
+            {t.dashboard.viewPlayersList} <ChevronRight size={14} />
           </a>
         </div>
         <div className="grid grid-cols-3 gap-3">
@@ -212,11 +214,11 @@ export default function DashboardDesktop() {
               <Shield size={16} className="text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-on-surface">Vue administrateur</h2>
-              <p className="text-xs text-on-surface-variant">Visible uniquement par les administrateurs</p>
+              <h2 className="text-lg font-bold text-on-surface">{t.dashboard.adminPanel}</h2>
+              <p className="text-xs text-on-surface-variant">{t.dashboard.adminOnly}</p>
             </div>
             <a href="/administration" className="ml-auto text-sm font-semibold text-error/80 hover:underline flex items-center gap-1">
-              Gérer <ChevronRight size={14} />
+              {t.common.manage} <ChevronRight size={14} />
             </a>
           </div>
           <div className="grid grid-cols-3 gap-4">
@@ -224,10 +226,10 @@ export default function DashboardDesktop() {
             {/* Club */}
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex flex-col gap-4">
               <div>
-                <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Club</p>
+                <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.dashboard.clubCard}</p>
                 <p className="text-base font-extrabold text-on-surface">{ADMIN_CLUB.nom}</p>
                 <p className="text-sm text-on-surface-variant mt-1">{ADMIN_CLUB.ligue}</p>
-                <p className="text-xs text-on-surface-variant/60 mt-1">Fondé en {ADMIN_CLUB.annee} · {ADMIN_CLUB.ville}</p>
+                <p className="text-xs text-on-surface-variant/60 mt-1">{t.dashboard.founded} {ADMIN_CLUB.annee} · {ADMIN_CLUB.ville}</p>
               </div>
               <div className="border-t border-outline-variant pt-4 space-y-2">
                 <div className="flex items-center gap-2">
@@ -248,26 +250,26 @@ export default function DashboardDesktop() {
             {/* Saison */}
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex flex-col gap-4">
               <div>
-                <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Saison active</p>
+                <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.dashboard.seasonCard}</p>
                 <div className="flex items-center gap-2 mb-2">
                   <p className="text-base font-extrabold text-on-surface">{ADMIN_SAISON.label}</p>
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary/10 text-secondary">{ADMIN_SAISON.statut}</span>
                 </div>
                 <p className="text-sm text-on-surface-variant">{ADMIN_SAISON.competitions}</p>
-                <p className="text-xs text-on-surface-variant/60 mt-1">Objectif : {ADMIN_SAISON.objectif}</p>
+                <p className="text-xs text-on-surface-variant/60 mt-1">{t.dashboard.objective} {ADMIN_SAISON.objectif}</p>
               </div>
               <div className="border-t border-outline-variant pt-4 space-y-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-on-surface-variant">Début</span>
+                  <span className="text-on-surface-variant">{t.dashboard.start}</span>
                   <span className="font-semibold text-on-surface">{ADMIN_SAISON.debut}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-on-surface-variant">Fin</span>
+                  <span className="text-on-surface-variant">{t.dashboard.end}</span>
                   <span className="font-semibold text-on-surface">{ADMIN_SAISON.fin}</span>
                 </div>
                 <div>
                   <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="text-on-surface-variant">Avancement</span>
+                    <span className="text-on-surface-variant">{t.dashboard.progress}</span>
                     <span className="font-semibold text-on-surface">J{ADMIN_SAISON.journeeCourante} / {ADMIN_SAISON.journee}</span>
                   </div>
                   <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
@@ -283,7 +285,7 @@ export default function DashboardDesktop() {
             {/* Staff */}
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5">
               <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">
-                Staff · <span className="normal-case font-semibold text-on-surface">{ADMIN_STAFF.length} membres</span>
+                {t.dashboard.staffCard} · <span className="normal-case font-semibold text-on-surface">{ADMIN_STAFF.length} {t.common.members}</span>
               </p>
               <div className="space-y-2.5 max-h-44 overflow-y-auto pr-1">
                 {ADMIN_STAFF.map((s, i) => (

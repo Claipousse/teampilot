@@ -2,9 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Search, Bell, X } from 'lucide-react';
+import { useLanguage, useT } from '@/contexts/LanguageContext';
 
 type SearchTab = 'Joueurs' | 'Événements' | 'Messages';
-type Lang = 'FR' | 'EN';
 type NotifKind = 'added' | 'rescheduled' | 'cancelled';
 
 type NotifEvent = {
@@ -47,10 +47,12 @@ export default function Header() {
   const [searchTab,   setSearchTab]   = useState<SearchTab>('Joueurs');
   const [query,       setQuery]       = useState('');
   const [searchOpen,  setSearchOpen]  = useState(false);
-  const [lang,        setLang]        = useState<Lang>('FR');
   const [langOpen,    setLangOpen]    = useState(false);
   const [notifOpen,   setNotifOpen]   = useState(false);
   const [notifTab,    setNotifTab]    = useState<'events' | 'messages'>('events');
+
+  const { lang, setLang } = useLanguage();
+  const t = useT();
 
   // Notifications en état pour pouvoir les supprimer
   const [events, setEvents] = useState<NotifEvent[]>(() => {
@@ -83,6 +85,12 @@ export default function Header() {
   const visibleEvents   = events.slice(0, MAX_VISIBLE);
   const visibleMessages = messages.slice(0, MAX_VISIBLE);
 
+  const getSearchTabLabel = (tab: SearchTab) => {
+    if (tab === 'Joueurs')    return t.header.tabPlayers;
+    if (tab === 'Événements') return t.header.tabEvents;
+    return t.header.tabMessages;
+  };
+
   return (
     <header className="h-22 bg-surface-container-lowest border-b border-outline-variant flex items-center px-8 gap-4 shrink-0 relative z-30">
 
@@ -91,7 +99,7 @@ export default function Header() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-outline z-10 pointer-events-none" size={20} />
         <input
           type="text"
-          placeholder={`Rechercher ${searchTab === 'Joueurs' ? 'un joueur…' : searchTab === 'Événements' ? 'un événement…' : 'une conversation…'}`}
+          placeholder={t.header.searchPlaceholder[searchTab]}
           value={query}
           onChange={e => setQuery(e.target.value)}
           onFocus={() => setSearchOpen(true)}
@@ -107,14 +115,14 @@ export default function Header() {
                       ? 'text-primary border-primary bg-primary/5'
                       : 'text-on-surface-variant border-transparent hover:text-on-surface hover:bg-surface-container'
                   }`}>
-                  {tab}
+                  {getSearchTabLabel(tab)}
                 </button>
               ))}
             </div>
             <div className="px-4 py-3 text-sm text-center min-h-[52px] flex items-center justify-center">
               {query
-                ? <span className="text-on-surface-variant">Recherche de <strong className="text-on-surface">&ldquo;{query}&rdquo;</strong> dans les {searchTab.toLowerCase()}…{/* TODO backend: connecter la recherche par catégorie */}</span>
-                : <span className="text-on-surface-variant/60">Tapez pour rechercher parmi les {searchTab.toLowerCase()}</span>
+                ? <span className="text-on-surface-variant">{t.header.searchIn} <strong className="text-on-surface">&ldquo;{query}&rdquo;</strong> {t.header.searchIn} {getSearchTabLabel(searchTab).toLowerCase()}…{/* TODO backend: connecter la recherche par catégorie */}</span>
+                : <span className="text-on-surface-variant/60">{t.header.searchHint} {getSearchTabLabel(searchTab).toLowerCase()}</span>
               }
             </div>
           </div>
@@ -130,16 +138,16 @@ export default function Header() {
             onClick={() => { setLangOpen(v => !v); setNotifOpen(false); }}
             className="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors text-2xl"
             title="Langue">
-            {lang === 'FR' ? '🇫🇷' : '🇬🇧'}
+            {lang === 'fr' ? '🇫🇷' : '🇬🇧'}
           </button>
           {langOpen && (
             <div className="absolute top-full right-0 mt-2 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg overflow-hidden z-50 min-w-[148px]">
-              {(['FR', 'EN'] as Lang[]).map((l, i) => (
+              {(['fr', 'en'] as const).map((l, i) => (
                 <button key={l}
                   onClick={() => { setLang(l); setLangOpen(false); }}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold hover:bg-surface-container transition-colors ${i > 0 ? 'border-t border-outline-variant' : ''} ${lang === l ? 'text-primary bg-primary/5' : 'text-on-surface'}`}>
-                  <span className="text-lg">{l === 'FR' ? '🇫🇷' : '🇬🇧'}</span>
-                  {l === 'FR' ? 'Français' : 'English'}
+                  <span className="text-lg">{l === 'fr' ? '🇫🇷' : '🇬🇧'}</span>
+                  {l === 'fr' ? t.header.langFr : t.header.langEn}
                   {lang === l && <span className="ml-auto w-2 h-2 rounded-full bg-primary shrink-0" />}
                 </button>
               ))}
@@ -161,7 +169,7 @@ export default function Header() {
           {notifOpen && (
             <div className="absolute top-full right-0 mt-2 w-96 bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-xl z-50 overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-outline-variant">
-                <p className="text-base font-bold text-on-surface">Notifications</p>
+                <p className="text-base font-bold text-on-surface">{t.header.notifications}</p>
                 <button onClick={() => setNotifOpen(false)}
                   className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-surface-container transition-colors">
                   <X size={16} className="text-on-surface-variant" />
@@ -174,14 +182,14 @@ export default function Header() {
                   className={`flex-1 py-2.5 text-sm font-bold transition-colors border-b-2 flex items-center justify-center gap-2 ${
                     notifTab === 'events' ? 'text-primary border-primary bg-primary/5' : 'text-on-surface-variant border-transparent hover:text-on-surface hover:bg-surface-container'
                   }`}>
-                  Événements
+                  {t.header.notifEvents}
                   {events.length > 0 && <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">{events.length}</span>}
                 </button>
                 <button onClick={() => setNotifTab('messages')}
                   className={`flex-1 py-2.5 text-sm font-bold transition-colors border-b-2 flex items-center justify-center gap-2 ${
                     notifTab === 'messages' ? 'text-primary border-primary bg-primary/5' : 'text-on-surface-variant border-transparent hover:text-on-surface hover:bg-surface-container'
                   }`}>
-                  Messages
+                  {t.header.notifMessages}
                   {msgUnread > 0 && <span className="px-1.5 py-0.5 bg-error/10 text-error text-xs font-bold rounded-full">{msgUnread}</span>}
                 </button>
               </div>
@@ -189,7 +197,7 @@ export default function Header() {
               <div className="divide-y divide-outline-variant/50">
                 {notifTab === 'events' ? (
                   events.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-on-surface-variant">Aucune notification</p>
+                    <p className="py-8 text-center text-sm text-on-surface-variant">{t.header.noNotifications}</p>
                   ) : (
                     <>
                       {visibleEvents.map(n => (
@@ -211,14 +219,14 @@ export default function Header() {
                       {events.length > MAX_VISIBLE && (
                         <a href="/calendrier"
                           className="flex items-center justify-center px-5 py-3 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors">
-                          Voir plus ({events.length - MAX_VISIBLE} de plus) →
+                          {t.header.seeMore} ({events.length - MAX_VISIBLE} {t.header.moreSuffix}) →
                         </a>
                       )}
                     </>
                   )
                 ) : (
                   messages.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-on-surface-variant">Aucun nouveau message</p>
+                    <p className="py-8 text-center text-sm text-on-surface-variant">{t.header.noMessages}</p>
                   ) : (
                     <>
                       {visibleMessages.map(m => (
@@ -244,7 +252,7 @@ export default function Header() {
                       {messages.length > MAX_VISIBLE && (
                         <a href="/messagerie"
                           className="flex items-center justify-center px-5 py-3 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors">
-                          Voir plus ({messages.length - MAX_VISIBLE} de plus) →
+                          {t.header.seeMore} ({messages.length - MAX_VISIBLE} {t.header.moreSuffix}) →
                         </a>
                       )}
                     </>

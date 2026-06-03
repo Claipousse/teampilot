@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, Send, Download, FileText, Users, X } from 'lucide-react';
+import { useT } from '@/contexts/LanguageContext';
 
 type RoleType = 'player' | 'coach' | 'staff' | 'ai';
 type Tab = 'Tous' | 'Team' | 'Staff';
@@ -150,6 +151,7 @@ const ALL_CONVERSATIONS: Conversation[] = [
 ];
 
 export default function MessagerieDesktop() {
+  const t = useT();
   const [activeTab, setActiveTab]           = useState<Tab>('Tous');
   const [activeConv, setActiveConv]         = useState<Conversation>(ALL_CONVERSATIONS[1]);
   const [input, setInput]                   = useState('');
@@ -186,13 +188,13 @@ export default function MessagerieDesktop() {
       <div className="w-80 shrink-0 border-r border-outline-variant flex flex-col">
 
         <div className="px-5 py-5 border-b border-outline-variant shrink-0">
-          <p className="text-2xl font-bold text-on-surface">Inbox</p>
+          <p className="text-2xl font-bold text-on-surface">{t.messaging.inbox}</p>
         </div>
 
         <div className="px-4 py-3 border-b border-outline-variant shrink-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={16} />
-            <input type="text" placeholder="Rechercher..." value={search}
+            <input type="text" placeholder={t.messaging.searchPlaceholder} value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 bg-surface-container rounded-xl text-sm text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none transition-all"
             />
@@ -203,7 +205,7 @@ export default function MessagerieDesktop() {
           {(['Tous', 'Team', 'Staff'] as Tab[]).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === tab ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}>
-              {tab}
+              {tab === 'Tous' ? t.messaging.tabAll : tab === 'Team' ? t.messaging.tabTeam : t.messaging.tabStaff}
             </button>
           ))}
         </div>
@@ -229,14 +231,14 @@ export default function MessagerieDesktop() {
         {/* Séparateur visible */}
         <div className="flex items-center gap-3 px-4 py-2 shrink-0">
           <div className="flex-1 h-px bg-outline-variant" />
-          <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Équipe & Staff</span>
+          <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">{t.messaging.teamAndStaff}</span>
           <div className="flex-1 h-px bg-outline-variant" />
         </div>
 
         {/* Autres conversations */}
         <div className="flex-1 overflow-y-auto">
           {filtered.length === 0 ? (
-            <div className="p-6 text-center text-sm text-on-surface-variant">Aucune conversation trouvée</div>
+            <div className="p-6 text-center text-sm text-on-surface-variant">{t.messaging.noConversation}</div>
           ) : filtered.map(conv => {
             const accent = conv.isGroup ? null : roleAccent(conv.roleType as string);
             return (
@@ -306,7 +308,7 @@ export default function MessagerieDesktop() {
           {activeConv.isGroup && (
             <button onClick={showMembers ? closeMembers : openMembers}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${showMembers ? 'bg-primary text-white' : 'border border-outline-variant text-on-surface hover:bg-surface-container'}`}>
-              <Users size={16} /> Membres
+              <Users size={16} /> {t.messaging.members}
             </button>
           )}
         </div>
@@ -386,7 +388,7 @@ export default function MessagerieDesktop() {
 
             <div className="border-t border-outline-variant px-6 py-4 shrink-0">
               <div className="flex items-center gap-3">
-                <input type="text" placeholder={`Répondre à ${activeConv.name}...`}
+                <input type="text" placeholder={t.messaging.typeMessage}
                   value={input} onChange={e => setInput(e.target.value)}
                   className="flex-1 px-5 py-3.5 bg-surface-container rounded-xl text-base text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none transition-all"
                 />
@@ -401,7 +403,7 @@ export default function MessagerieDesktop() {
           <div className={`shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${showMembers ? 'w-96 opacity-100' : 'w-0 opacity-0'}`}>
             <div className="w-96 h-full border-l border-outline-variant flex flex-col overflow-hidden">
               <div className="flex items-center justify-between px-5 py-5 border-b border-outline-variant shrink-0">
-                <p className="text-lg font-bold text-on-surface">Membres {activeConv.members ? `(${activeConv.members.length})` : ''}</p>
+                <p className="text-lg font-bold text-on-surface">{t.messaging.members} {activeConv.members ? `(${activeConv.members.length})` : ''}</p>
                 <button onClick={closeMembers} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
                 </button>

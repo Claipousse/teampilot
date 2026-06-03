@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Search, X, Pencil, Send, Trash2, Upload, AlertTriangle } from 'lucide-react';
+import { useT } from '@/contexts/LanguageContext';
 
 type PlayerStatus = 'Disponible' | 'Blessé' | 'Suspendu' | 'Incertain';
 type PositionFilter = 'Tous' | 'GK' | 'DEF' | 'MIL' | 'ATT';
@@ -135,6 +136,7 @@ const inputCls = (err?: string) =>
 const labelCls = 'text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block';
 
 export default function JoueursDesktop({ openCreate = false }: { openCreate?: boolean }) {
+  const t = useT();
   const [players, setPlayers]           = useState<Player[]>(INITIAL_PLAYERS);
   const [posFilter, setPosFilter]       = useState<PositionFilter>('Tous');
   const [statusFilter, setStatusFilter] = useState<PlayerStatus | 'Tous'>('Tous');
@@ -314,14 +316,14 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Prénom <span className="text-error">*</span></label>
+              <label className={labelCls}>{t.players.formFirstName} <span className="text-error">*</span></label>
               <input type="text" value={form.prenom}
                 onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))}
                 className={inputCls(errors.prenom)} placeholder="Ex : Marcus" />
               {errors.prenom && <p className="text-xs text-error mt-1">{errors.prenom}</p>}
             </div>
             <div>
-              <label className={labelCls}>Nom <span className="text-error">*</span></label>
+              <label className={labelCls}>{t.players.formLastName} <span className="text-error">*</span></label>
               <input type="text" value={form.nom}
                 onChange={e => setForm(f => ({ ...f, nom: e.target.value }))}
                 className={inputCls(errors.nom)} placeholder="Ex : Valentin" />
@@ -331,14 +333,14 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>N° de maillot <span className="text-error">*</span></label>
+              <label className={labelCls}>{t.players.formNumber} <span className="text-error">*</span></label>
               <input type="number" min="0" max="99" value={form.number}
                 onChange={e => setForm(f => ({ ...f, number: e.target.value }))}
                 className={inputCls(errors.number)} placeholder="Ex : 8" />
               {errors.number && <p className="text-xs text-error mt-1">{errors.number}</p>}
             </div>
             <div>
-              <label className={labelCls}>Poste <span className="text-error">*</span></label>
+              <label className={labelCls}>{t.players.formPosition} <span className="text-error">*</span></label>
               <select value={form.position}
                 onChange={e => {
                   const pos = e.target.value;
@@ -346,8 +348,8 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   setForm(f => ({ ...f, position: pos, positionShort: short }));
                 }}
                 className={`${inputCls(errors.position)} cursor-pointer`}>
-                <option value="">Sélectionner un poste...</option>
-                {POSITION_OPTIONS.map(p => <option key={p.label} value={p.label}>{p.label}</option>)}
+                <option value="">{t.players.formPosition}...</option>
+                {POSITION_OPTIONS.map(p => <option key={p.label} value={p.label}>{t.players.positions[p.label as keyof typeof t.players.positions] ?? p.label}</option>)}
               </select>
               {errors.position && <p className="text-xs text-error mt-1">{errors.position}</p>}
             </div>
@@ -355,7 +357,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Nationalité <span className="text-error">*</span></label>
+              <label className={labelCls}>{t.players.formNationality} <span className="text-error">*</span></label>
               <input type="text" value={form.nationality}
                 onChange={e => setForm(f => ({ ...f, nationality: e.target.value }))}
                 className={inputCls(errors.nationality)} placeholder="Ex : Français" />
@@ -370,12 +372,12 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
           </div>
 
           <div>
-            <label className={labelCls}>Statut <span className="text-error">*</span></label>
+            <label className={labelCls}>{t.players.formStatus} <span className="text-error">*</span></label>
             <div className="grid grid-cols-4 gap-2">
               {STATUSES_FORM.map(st => (
                 <button key={st} onClick={() => setForm(f => ({ ...f, status: st }))}
                   className={`px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${form.status === st ? STATUS_ACTIVE[st] : `bg-surface-container text-on-surface-variant border-outline-variant ${STATUS_HOVER[st]}`}`}>
-                  {st}
+                  {t.players.statuses[st]}
                 </button>
               ))}
             </div>
@@ -391,18 +393,18 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Date de naissance</label>
+              <label className={labelCls}>{t.players.formDob}</label>
               <input type="text" value={form.dob}
                 onChange={e => setForm(f => ({ ...f, dob: e.target.value }))}
                 className={inputCls()} placeholder="JJ/MM/AAAA" />
             </div>
             <div>
-              <label className={labelCls}>Pied préféré</label>
+              <label className={labelCls}>{t.players.formFoot}</label>
               <div className="grid grid-cols-3 gap-2">
                 {FOOT_OPTIONS.map(ft => (
                   <button key={ft} onClick={() => setForm(f => ({ ...f, foot: f.foot === ft ? '' : ft }))}
                     className={`px-2 py-2.5 rounded-xl text-sm font-bold transition-all border ${form.foot === ft ? 'bg-primary/10 text-primary border-primary' : 'bg-surface-container text-on-surface-variant border-outline-variant hover:text-primary hover:border-primary'}`}>
-                    {ft}
+                    {t.players.foot[ft]}
                   </button>
                 ))}
               </div>
@@ -411,13 +413,13 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Taille</label>
+              <label className={labelCls}>{t.players.formHeight}</label>
               <input type="text" value={form.height}
                 onChange={e => setForm(f => ({ ...f, height: e.target.value }))}
                 className={inputCls()} placeholder="Ex : 182 cm" />
             </div>
             <div>
-              <label className={labelCls}>Poids</label>
+              <label className={labelCls}>{t.players.formWeight}</label>
               <input type="text" value={form.weight}
                 onChange={e => setForm(f => ({ ...f, weight: e.target.value }))}
                 className={inputCls()} placeholder="Ex : 78 kg" />
@@ -449,13 +451,13 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
           </p>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>Fin de contrat</label>
+              <label className={labelCls}>{t.players.formContract}</label>
               <input type="text" value={form.contract}
                 onChange={e => setForm(f => ({ ...f, contract: e.target.value }))}
                 className={inputCls()} placeholder="JJ/MM/AAAA" />
             </div>
             <div>
-              <label className={labelCls}>Club formateur</label>
+              <label className={labelCls}>{t.players.formAcademy}</label>
               <input type="text" value={form.academy}
                 onChange={e => setForm(f => ({ ...f, academy: e.target.value }))}
                 className={inputCls()} placeholder="Ex : OL Academy" />
@@ -485,13 +487,13 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
           <h1 className="text-3xl font-extrabold text-on-surface shrink-0">Effectif</h1>
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={18} />
-            <input type="text" placeholder="Rechercher un joueur..." value={search}
+            <input type="text" placeholder={t.players.searchPlaceholder} value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-xl text-base outline-none focus:ring-2 focus:ring-primary transition-all" />
           </div>
           <button onClick={openCreateForm}
             className="ml-auto flex items-center gap-2 px-5 py-2.5 bg-error hover:bg-error/90 text-white text-base font-semibold rounded-xl transition-colors shrink-0">
-            + Ajouter un joueur
+            + {t.players.addPlayer}
           </button>
         </div>
 
@@ -515,7 +517,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
             {POSITIONS.map(pos => (
               <button key={pos} onClick={() => setPosFilter(pos)}
                 className={`px-4 py-2 rounded-lg text-base font-bold transition-all ${posFilter === pos ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}>
-                {pos}
+                {pos === 'Tous' ? t.players.posAll : pos}
               </button>
             ))}
           </div>
@@ -523,12 +525,12 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
             {STATUSES.map(st => (
               <button key={st} onClick={() => setStatusFilter(st)}
                 className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${statusFilter === st ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}>
-                {st}
+                {st === 'Tous' ? t.players.statusAll : t.players.statuses[st as keyof typeof t.players.statuses]}
               </button>
             ))}
           </div>
           <p className="text-base text-on-surface-variant ml-auto">
-            {filtered.length} joueur{filtered.length > 1 ? 's' : ''}
+            {filtered.length} {filtered.length > 1 ? t.players.playerPlural : t.players.player}
           </p>
         </div>
 
@@ -558,7 +560,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                     <p className="text-base text-on-surface-variant">{player.flag} {player.nationality}</p>
                   </div>
                   <span className={`px-4 py-2.5 rounded-xl text-base font-extrabold shrink-0 ${s.badge}`}>
-                    {player.status}
+                    {t.players.statuses[player.status]}
                   </span>
                 </div>
               </div>
@@ -606,7 +608,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                       <p className="text-2xl font-extrabold text-on-surface">{displayed.name}</p>
                       <p className="text-base text-on-surface-variant mb-3">{displayed.position}</p>
                       <span className={`px-4 py-2 rounded-xl text-base font-extrabold ${s.badge}`}>
-                        {displayed.status}
+                        {t.players.statuses[displayed.status]}
                       </span>
                     </div>
                     <div className="relative group">
@@ -623,14 +625,14 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                 <div className="p-5 space-y-5">
 
                   <div>
-                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Informations personnelles</p>
+                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.players.info}</p>
                     <div className="bg-surface-container rounded-2xl overflow-hidden divide-y divide-outline-variant/50">
                       {[
-                        { label: 'Nationalité',  value: displayed.nationality ? `${displayed.flag} ${displayed.nationality}` : undefined },
-                        { label: 'Naissance',    value: displayed.dob },
-                        { label: 'Taille',       value: displayed.height },
-                        { label: 'Poids',        value: displayed.weight },
-                        { label: 'Pied préféré', value: displayed.foot },
+                        { label: t.players.nationality, value: displayed.nationality ? `${displayed.flag} ${displayed.nationality}` : undefined },
+                        { label: t.players.dob,         value: displayed.dob },
+                        { label: t.players.height,      value: displayed.height },
+                        { label: t.players.weight,      value: displayed.weight },
+                        { label: t.players.footLabel,   value: displayed.foot ? t.players.foot[displayed.foot as keyof typeof t.players.foot] ?? displayed.foot : undefined },
                       ].map((item, i) => (
                         <div key={i} className="flex items-center justify-between px-4 py-3.5">
                           <p className="text-base text-on-surface-variant">{item.label}</p>
@@ -641,14 +643,14 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   </div>
 
                   <div>
-                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Statistiques · 2026–2027</p>
+                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.players.stats} · 2026–2027</p>
                     {displayed.positionShort === 'GK' ? (
                       <div className="grid grid-cols-2 gap-3">
                         {[
-                          { label: 'Matchs',    value: st.matches,       color: 'text-on-surface' },
-                          { label: 'CS',        value: st.cleanSheets,   color: 'text-secondary' },
-                          { label: 'Encaissés', value: st.goalsConceded, color: 'text-error' },
-                          { label: 'Minutes',   value: st.minutes !== undefined ? `${st.minutes}'` : undefined, color: 'text-on-surface-variant' },
+                          { label: t.players.matches,       value: st.matches,       color: 'text-on-surface' },
+                          { label: t.players.cleanSheets,   value: st.cleanSheets,   color: 'text-secondary' },
+                          { label: t.players.goalsConceded, value: st.goalsConceded, color: 'text-error' },
+                          { label: t.players.minutes,       value: st.minutes !== undefined ? `${st.minutes}'` : undefined, color: 'text-on-surface-variant' },
                         ].map((stat, i) => (
                           <div key={i} className="bg-surface-container rounded-xl p-4 text-center">
                             <p className={`text-4xl font-extrabold ${stat.value !== undefined ? stat.color : 'text-outline'}`}>{ph(stat.value)}</p>
@@ -659,12 +661,12 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                     ) : (
                       <div className="grid grid-cols-3 gap-3">
                         {[
-                          { label: 'Matchs',  value: st.matches,     color: 'text-on-surface' },
-                          { label: 'Buts',    value: st.goals,       color: 'text-primary' },
-                          { label: 'Passes',  value: st.assists,     color: 'text-secondary' },
-                          { label: '🟨',      value: st.yellowCards, color: 'text-[#F97316]' },
-                          { label: '🟥',      value: st.redCards,    color: 'text-error' },
-                          { label: 'Minutes', value: st.minutes !== undefined ? `${st.minutes}'` : undefined, color: 'text-on-surface-variant' },
+                          { label: t.players.matches,     value: st.matches,     color: 'text-on-surface' },
+                          { label: t.players.goals,       value: st.goals,       color: 'text-primary' },
+                          { label: t.players.assists,     value: st.assists,     color: 'text-secondary' },
+                          { label: '🟨',                  value: st.yellowCards, color: 'text-[#F97316]' },
+                          { label: '🟥',                  value: st.redCards,    color: 'text-error' },
+                          { label: t.players.minutes,     value: st.minutes !== undefined ? `${st.minutes}'` : undefined, color: 'text-on-surface-variant' },
                         ].map((stat, i) => (
                           <div key={i} className="bg-surface-container rounded-xl p-4 text-center">
                             <p className={`text-4xl font-extrabold ${stat.value !== undefined ? stat.color : 'text-outline'}`}>{ph(stat.value)}</p>
@@ -680,7 +682,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                     <div className={`rounded-2xl p-4 border ${s.bg}`}>
                       <div className="flex items-center gap-3 mb-1">
                         <div className={`w-3 h-3 rounded-full ${s.dot} shrink-0`} />
-                        <p className={`text-lg font-bold ${s.text}`}>{displayed.status}</p>
+                        <p className={`text-lg font-bold ${s.text}`}>{t.players.statuses[displayed.status]}</p>
                       </div>
                       {displayed.injury     && <p className="text-base text-on-surface-variant ml-6">{displayed.injury}</p>}
                       {displayed.returnDate && <p className="text-base text-on-surface-variant ml-6 mt-1">↩ {displayed.returnDate}</p>}
@@ -688,14 +690,14 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   </div>
 
                   <div>
-                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Contrat</p>
+                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.players.contract}</p>
                     <div className="bg-surface-container rounded-2xl overflow-hidden divide-y divide-outline-variant/50">
                       <div className="flex items-center justify-between px-4 py-3.5">
-                        <p className="text-base text-on-surface-variant">Expire le</p>
+                        <p className="text-base text-on-surface-variant">{t.players.contract}</p>
                         <p className={`text-base ${displayed.contract ? contractColor(displayed.contract) : 'text-outline'}`}>{ph(displayed.contract)}</p>
                       </div>
                       <div className="flex items-center justify-between px-4 py-3.5">
-                        <p className="text-base text-on-surface-variant">Club formateur</p>
+                        <p className="text-base text-on-surface-variant">{t.players.academy}</p>
                         <p className={`text-base font-semibold ${displayed.academy ? 'text-on-surface' : 'text-outline'}`}>{ph(displayed.academy)}</p>
                       </div>
                     </div>
@@ -725,7 +727,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
             <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col pointer-events-auto transition-all duration-200 ${editVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
 
               <div className="flex items-center justify-between px-7 py-5 border-b border-outline-variant shrink-0">
-                <p className="text-xl font-bold text-on-surface">Modifier le joueur</p>
+                <p className="text-xl font-bold text-on-surface">{t.players.editTitle}</p>
                 <button onClick={closeEdit} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
                 </button>
@@ -744,8 +746,8 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   <Trash2 size={16} /> Supprimer le joueur
                 </button>
                 <div className="flex items-center gap-2">
-                  <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
-                  <button onClick={handleEditSubmit} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Sauvegarder</button>
+                  <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
+                  <button onClick={handleEditSubmit} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
                 </div>
               </div>
 
@@ -762,7 +764,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
             <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col pointer-events-auto transition-all duration-200 ${createVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
 
               <div className="flex items-center justify-between px-7 py-5 border-b border-outline-variant shrink-0">
-                <p className="text-xl font-bold text-on-surface">Nouveau joueur</p>
+                <p className="text-xl font-bold text-on-surface">{t.players.addTitle}</p>
                 <button onClick={closeCreate} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
                 </button>
@@ -771,8 +773,8 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
               {renderFormBody(createForm, setCreateForm, createErrors, createPhotoRef)}
 
               <div className="flex items-center justify-end px-7 py-5 border-t border-outline-variant shrink-0 gap-2">
-                <button onClick={closeCreate} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
-                <button onClick={handleCreateSubmit} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Créer le joueur</button>
+                <button onClick={closeCreate} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
+                <button onClick={handleCreateSubmit} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.players.addTitle}</button>
               </div>
 
             </div>
@@ -806,7 +808,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
               <div className="flex items-center justify-end gap-3 px-7 pb-6">
                 <button onClick={closeDel}
                   className="px-5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">
-                  Annuler
+                  {t.common.cancel}
                 </button>
                 <button onClick={confirmDel} disabled={delTimer > 0}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${

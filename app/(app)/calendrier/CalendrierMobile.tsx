@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Video, Leaf, Dumbbell, Users, Trophy, Plus, X, Pencil, Trash2, MapPin, FileText } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useT } from '@/contexts/LanguageContext';
 
 type EventTag = 'Match' | 'Entraînement' | 'Récupération' | 'Réunion';
 
@@ -104,14 +105,14 @@ function getWeekDays(base: Date, offset: number) {
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(base);
     d.setDate(base.getDate() + offset * 7 + i);
-    return { label: DAYS_SHORT[i], date: d.getDate(), month: d.getMonth(), year: d.getFullYear(), key: `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}` };
+    return { dayIndex: i, date: d.getDate(), month: d.getMonth(), year: d.getFullYear(), key: `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}` };
   });
 }
 
-function getWeekLabel(days: ReturnType<typeof getWeekDays>) {
+function getWeekLabel(days: ReturnType<typeof getWeekDays>, months: readonly string[]) {
   const first = days[0]; const last = days[6];
-  if (first.month === last.month) return `${MONTHS_FR[first.month]} ${first.year}`;
-  return `${MONTHS_FR[first.month]} — ${MONTHS_FR[last.month]} ${last.year}`;
+  if (first.month === last.month) return `${months[first.month]} ${first.year}`;
+  return `${months[first.month]} — ${months[last.month]} ${last.year}`;
 }
 
 export default function CalendrierMobile({ openCreate = false }: { openCreate?: boolean }) {
@@ -148,6 +149,7 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
 
   const { role } = useCurrentUser();
   const canEdit = role === 'admin' || role === 'coach';
+  const t = useT();
 
   const weekDays = getWeekDays(baseMondayRef, weekOffset);
   const activeEvents = getEventsForKey(activeKey);
@@ -159,7 +161,7 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
 
   const openDetail = (event: MobileEvent) => {
     const d = getActiveDateObj();
-    const dayLabel = `${DAYS_FR[d.getDay()]} ${d.getDate()} ${MONTHS_FR[d.getMonth()]} ${d.getFullYear()}`;
+    const dayLabel = `${t.calendar.fullDays[d.getDay()]} ${d.getDate()} ${t.calendar.months[d.getMonth()]} ${d.getFullYear()}`;
     setDetailInfo({ event, dayLabel, dateStr: event.time });
     setTimeout(() => setDetailVisible(true), 10);
   };
@@ -212,9 +214,9 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-extrabold text-on-surface">Calendrier</h1>
+        <h1 className="text-3xl font-extrabold text-on-surface">{t.nav.calendar}</h1>
         <button onClick={openCreateForm} className="flex items-center gap-2 px-4 py-2.5 bg-error rounded-xl text-white text-sm font-bold active:scale-[0.98] transition-all">
-          + Add Event
+          + {t.calendar.addEvent}
         </button>
       </div>
 
@@ -224,7 +226,7 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
           <button onClick={() => setWeekOffset(w => w - 1)} className="w-9 h-9 flex items-center justify-center rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors">
             <ChevronLeft size={20} className="text-on-surface-variant" />
           </button>
-          <p className="text-base font-bold text-on-surface uppercase tracking-wider">{getWeekLabel(weekDays)}</p>
+          <p className="text-base font-bold text-on-surface uppercase tracking-wider">{getWeekLabel(weekDays, t.calendar.months)}</p>
           <button onClick={() => setWeekOffset(w => w + 1)} className="w-9 h-9 flex items-center justify-center rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors">
             <ChevronRight size={20} className="text-on-surface-variant" />
           </button>
@@ -236,7 +238,7 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
             return (
               <button key={d.key} onClick={() => setActiveKey(d.key)}
                 className={`flex flex-col items-center py-3 px-1 rounded-2xl transition-all ${isActive ? (hasMatch ? 'bg-error text-white shadow-md' : 'bg-primary text-white shadow-md') : hasMatch ? 'bg-error/10 text-error hover:bg-error/20' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'}`}>
-                <span className={`text-xs font-bold uppercase tracking-widest mb-1 ${isActive ? 'text-white/70' : hasMatch ? 'text-error/60' : 'text-on-surface-variant'}`}>{d.label}</span>
+                <span className={`text-xs font-bold uppercase tracking-widest mb-1 ${isActive ? 'text-white/70' : hasMatch ? 'text-error/60' : 'text-on-surface-variant'}`}>{t.calendar.days[d.dayIndex]}</span>
                 <span className="text-lg font-extrabold leading-tight">{d.date}</span>
               </button>
             );
@@ -247,12 +249,12 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
       {/* Événements du jour */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-extrabold text-on-surface">Événements du jour</h2>
-          <span className="text-base font-semibold text-on-surface-variant">{activeEvents.length} session{activeEvents.length > 1 ? 's' : ''}</span>
+          <h2 className="text-2xl font-extrabold text-on-surface">{t.calendar.eventsPlural}</h2>
+          <span className="text-base font-semibold text-on-surface-variant">{activeEvents.length} {activeEvents.length > 1 ? t.calendar.eventsPlural : t.calendar.events}</span>
         </div>
         {activeEvents.length === 0 ? (
           <div className="bg-surface-container rounded-2xl p-8 text-center">
-            <p className="text-base text-on-surface-variant">Aucun événement ce jour</p>
+            <p className="text-base text-on-surface-variant">{t.calendar.noEvents}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -326,7 +328,7 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
                   <div className="bg-surface-container rounded-2xl p-5">
                     <div className="flex items-center gap-2 mb-2.5">
                       <FileText size={14} className="text-on-surface-variant" />
-                      <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Remarques</p>
+                      <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.calendar.fieldNotes}</p>
                     </div>
                     <p className="text-base text-on-surface leading-relaxed">{detailInfo.event.remarques}</p>
                   </div>
@@ -345,7 +347,7 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
             <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col pointer-events-auto transition-all duration-200 ${editVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
 
               <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant shrink-0">
-                <p className="text-lg font-bold text-on-surface">Modifier l'événement</p>
+                <p className="text-lg font-bold text-on-surface">{t.calendar.editEvent}</p>
                 <button onClick={closeEdit} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
                 </button>
@@ -355,19 +357,19 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
 
                 {/* Titre */}
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">Titre</label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">{t.calendar.fieldTitle}</label>
                   <input type="text" value={editForm.title} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
                     className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base outline-none focus:ring-2 focus:ring-primary transition-all" />
                 </div>
 
                 {/* Catégorie */}
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">Catégorie</label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">{t.calendar.fieldType}</label>
                   <div className="grid grid-cols-2 gap-2">
                     {TAGS.map(tag => (
                       <button key={tag} onClick={() => setEditForm(f => ({ ...f, tag }))}
                         className={`px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${editForm.tag === tag ? TAG_ACTIVE[tag] : `bg-surface-container text-on-surface-variant border-outline-variant ${TAG_HOVER[tag]}`}`}>
-                        {tag}
+                        {t.calendar.tags[tag]}
                       </button>
                     ))}
                   </div>
@@ -375,18 +377,18 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
 
                 {/* Date */}
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3 block">Date</label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3 block">{t.calendar.fieldDate}</label>
                   <div className="flex items-center justify-between mb-3">
                     <button onClick={prevEditCal} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container transition-colors">
                       <ChevronLeft size={16} className="text-on-surface-variant" />
                     </button>
-                    <span className="text-sm font-bold text-on-surface">{MONTHS_FR[editCalMonth]} {editCalYear}</span>
+                    <span className="text-sm font-bold text-on-surface">{t.calendar.months[editCalMonth]} {editCalYear}</span>
                     <button onClick={nextEditCal} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container transition-colors">
                       <ChevronRight size={16} className="text-on-surface-variant" />
                     </button>
                   </div>
                   <div className="grid grid-cols-7 mb-1">
-                    {MINI_DAYS.map(d => <div key={d} className="text-center text-xs font-bold text-on-surface-variant py-1">{d}</div>)}
+                    {t.calendar.miniDays.map(d => <div key={d} className="text-center text-xs font-bold text-on-surface-variant py-1">{d}</div>)}
                   </div>
                   <div className="grid grid-cols-7 gap-1">
                     {getCalGrid(editCalYear, editCalMonth).map((day, i) => {
@@ -404,7 +406,7 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
 
                 {/* Heure */}
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3 block">Heure</label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3 block">{t.calendar.fieldHour}</label>
                   <div className="flex items-center justify-center gap-4 bg-surface-container rounded-2xl py-4">
                     <div className="flex flex-col items-center gap-2">
                       <button onClick={() => setEditForm(f => ({ ...f, hour: (f.hour + 1) % 24 }))} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container-high transition-colors">
@@ -430,22 +432,22 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
 
                 {/* Lieu */}
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">Lieu <span className="font-normal normal-case tracking-normal opacity-60">(optionnel)</span></label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">{t.calendar.fieldLocation} <span className="font-normal normal-case tracking-normal opacity-60">({t.common.optional})</span></label>
                   <div className="relative">
                     <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
                     <input type="text" value={editForm.lieu} onChange={e => setEditForm(f => ({ ...f, lieu: e.target.value }))}
-                      placeholder="Ex : Terrain principal..."
+                      placeholder={t.calendar.fieldLocationPlaceholder}
                       className="w-full pl-10 pr-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base outline-none focus:ring-2 focus:ring-primary transition-all placeholder:text-outline" />
                   </div>
                 </div>
 
                 {/* Remarques */}
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">Remarques <span className="font-normal normal-case tracking-normal opacity-60">(optionnel)</span></label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">{t.calendar.fieldNotes} <span className="font-normal normal-case tracking-normal opacity-60">({t.common.optional})</span></label>
                   <div className="relative">
                     <FileText size={16} className="absolute left-4 top-3.5 text-on-surface-variant" />
                     <textarea value={editForm.remarques} onChange={e => setEditForm(f => ({ ...f, remarques: e.target.value }))}
-                      rows={3} placeholder="Informations complémentaires, consignes..."
+                      rows={3} placeholder={t.calendar.fieldNotesPlaceholder}
                       className="w-full pl-10 pr-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base outline-none focus:ring-2 focus:ring-primary transition-all placeholder:text-outline resize-none" />
                   </div>
                 </div>
@@ -454,11 +456,11 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
 
               <div className="flex items-center justify-between px-6 py-4 border-t border-outline-variant shrink-0">
                 <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold">
-                  <Trash2 size={16} /> Supprimer
+                  <Trash2 size={16} /> {t.common.delete}
                 </button>
                 <div className="flex items-center gap-2">
-                  <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
-                  <button className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Sauvegarder</button>
+                  <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
+                  <button className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
                 </div>
               </div>
 
@@ -475,7 +477,7 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
             <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col pointer-events-auto transition-all duration-200 ${createVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
 
               <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant shrink-0">
-                <p className="text-lg font-bold text-on-surface">Nouvel événement</p>
+                <p className="text-lg font-bold text-on-surface">{t.calendar.createEvent}</p>
                 <button onClick={closeCreateForm} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
                 </button>
@@ -484,33 +486,33 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
               <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">Titre</label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">{t.calendar.fieldTitle}</label>
                   <input type="text" value={createForm.title} onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))}
-                    placeholder="Ex : Entraînement tactique, Match amical..."
+                    placeholder={t.calendar.fieldTitlePlaceholder}
                     className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base outline-none focus:ring-2 focus:ring-primary transition-all placeholder:text-outline" />
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">Catégorie</label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">{t.calendar.fieldType}</label>
                   <div className="grid grid-cols-2 gap-2">
                     {TAGS.map(tag => (
                       <button key={tag} onClick={() => setCreateForm(f => ({ ...f, tag }))}
                         className={`px-3 py-2.5 rounded-xl text-sm font-bold transition-all border ${createForm.tag === tag ? TAG_ACTIVE[tag] : `bg-surface-container text-on-surface-variant border-outline-variant ${TAG_HOVER[tag]}`}`}>
-                        {tag}
+                        {t.calendar.tags[tag]}
                       </button>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3 block">Date</label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3 block">{t.calendar.fieldDate}</label>
                   <div className="flex items-center justify-between mb-3">
                     <button onClick={prevCreateCal} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container transition-colors"><ChevronLeft size={16} className="text-on-surface-variant" /></button>
-                    <span className="text-sm font-bold text-on-surface">{MONTHS_FR[createCalMonth]} {createCalYear}</span>
+                    <span className="text-sm font-bold text-on-surface">{t.calendar.months[createCalMonth]} {createCalYear}</span>
                     <button onClick={nextCreateCal} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container transition-colors"><ChevronRight size={16} className="text-on-surface-variant" /></button>
                   </div>
                   <div className="grid grid-cols-7 mb-1">
-                    {MINI_DAYS.map(d => <div key={d} className="text-center text-xs font-bold text-on-surface-variant py-1">{d}</div>)}
+                    {t.calendar.miniDays.map(d => <div key={d} className="text-center text-xs font-bold text-on-surface-variant py-1">{d}</div>)}
                   </div>
                   <div className="grid grid-cols-7 gap-1">
                     {getCalGrid(createCalYear, createCalMonth).map((day, i) => {
@@ -527,7 +529,7 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3 block">Heure</label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3 block">{t.calendar.fieldHour}</label>
                   <div className="flex items-center justify-center gap-4 bg-surface-container rounded-2xl py-4">
                     <div className="flex flex-col items-center gap-2">
                       <button onClick={() => setCreateForm(f => ({ ...f, hour: (f.hour + 1) % 24 }))} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container-high transition-colors"><ChevronUp size={18} className="text-on-surface-variant" /></button>
@@ -544,21 +546,21 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">Lieu <span className="font-normal normal-case tracking-normal opacity-60">(optionnel)</span></label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">{t.calendar.fieldLocation} <span className="font-normal normal-case tracking-normal opacity-60">({t.common.optional})</span></label>
                   <div className="relative">
                     <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
                     <input type="text" value={createForm.lieu} onChange={e => setCreateForm(f => ({ ...f, lieu: e.target.value }))}
-                      placeholder="Ex : Terrain principal..."
+                      placeholder={t.calendar.fieldLocationPlaceholder}
                       className="w-full pl-10 pr-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base outline-none focus:ring-2 focus:ring-primary transition-all placeholder:text-outline" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">Remarques <span className="font-normal normal-case tracking-normal opacity-60">(optionnel)</span></label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">{t.calendar.fieldNotes} <span className="font-normal normal-case tracking-normal opacity-60">({t.common.optional})</span></label>
                   <div className="relative">
                     <FileText size={16} className="absolute left-4 top-3.5 text-on-surface-variant" />
                     <textarea value={createForm.remarques} onChange={e => setCreateForm(f => ({ ...f, remarques: e.target.value }))}
-                      rows={3} placeholder="Informations complémentaires, consignes..."
+                      rows={3} placeholder={t.calendar.fieldNotesPlaceholder}
                       className="w-full pl-10 pr-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base outline-none focus:ring-2 focus:ring-primary transition-all placeholder:text-outline resize-none" />
                   </div>
                 </div>
@@ -566,8 +568,8 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
               </div>
 
               <div className="flex items-center justify-end px-6 py-4 border-t border-outline-variant shrink-0 gap-2">
-                <button onClick={closeCreateForm} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
-                <button className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Créer</button>
+                <button onClick={closeCreateForm} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
+                <button className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.add}</button>
               </div>
 
             </div>

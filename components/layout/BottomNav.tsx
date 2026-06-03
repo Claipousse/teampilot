@@ -7,19 +7,21 @@ import {
   MessageSquare, Shield,
 } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-
-const navItems = [
-  { label: 'Club',      href: '/dashboard',     icon: LayoutDashboard, adminOnly: false },
-  { label: 'Calendrier', href: '/calendrier',   icon: Calendar,        adminOnly: false },
-  { label: 'Joueurs',   href: '/joueurs',        icon: Users,           adminOnly: false },
-  { label: 'Messages',  href: '/messagerie',     icon: MessageSquare,   adminOnly: false },
-  { label: 'Admin',     href: '/administration', icon: Shield,          adminOnly: true  },
-];
+import { useT } from '@/contexts/LanguageContext';
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { role } = useCurrentUser();
   const isAdmin = role === 'admin';
+  const t = useT();
+
+  const navItems = [
+    { label: t.nav.club,       href: '/dashboard',     icon: LayoutDashboard, adminOnly: false },
+    { label: t.nav.calendar,   href: '/calendrier',    icon: Calendar,        adminOnly: false },
+    { label: t.nav.players,    href: '/joueurs',        icon: Users,           adminOnly: false },
+    { label: t.nav.messaging,  href: '/messagerie',     icon: MessageSquare,   adminOnly: false },
+    { label: t.nav.adminShort, href: '/administration', icon: Shield,          adminOnly: true  },
+  ];
 
   const visibleItems = navItems.filter(item => !item.adminOnly || isAdmin);
 

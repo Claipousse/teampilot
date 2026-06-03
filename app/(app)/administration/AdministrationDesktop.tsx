@@ -99,7 +99,7 @@ export default function AdministrationDesktop() {
 
           <div className="flex flex-col gap-4 flex-1">
 
-            <a href="/joueurs" className="flex items-center justify-between p-5 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group">
+            <a href="/joueurs?new=true" className="flex items-center justify-between p-5 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
                   <UserPlus size={22} className="text-primary" />

@@ -99,7 +99,7 @@ export default function AdministrationMobile() {
 
         <div className="space-y-3">
 
-          <a href="/joueurs" className="flex items-center justify-between p-4 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group">
+          <a href="/joueurs?new=true" className="flex items-center justify-between p-4 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group">
             <div className="flex items-center gap-4">
               <div className="w-11 h-11 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
                 <UserPlus size={20} className="text-primary" />

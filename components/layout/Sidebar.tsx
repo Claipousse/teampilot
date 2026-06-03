@@ -29,12 +29,12 @@ export default function Sidebar() {
 
       {/* Logo */}
       <div className="px-4 xl:px-6 py-4 xl:py-6 border-b border-white/10">
-        <div className="flex items-center gap-3 xl:gap-4">
+        <Link href="/dashboard" className="flex items-center gap-3 xl:gap-4">
           <div className="w-11 h-11 xl:w-13 xl:h-13 bg-primary rounded-xl flex items-center justify-center shrink-0">
             <Image src="/logo-icon.png" alt="TeamPilot" width={30} height={30} />
           </div>
           <p className="text-white font-bold text-base xl:text-xl leading-tight">TeamPilot</p>
-        </div>
+        </Link>
       </div>
 
       {/* Navigation */}

@@ -31,7 +31,7 @@ export default function AppLayout({
             <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shrink-0">
               <Image src="/logo-icon.png" alt="TeamPilot" width={24} height={24} />
             </div>
-            <span className="text-base font-bold text-primary">TeamPilot AI</span>
+            <span className="text-base font-bold text-primary">TeamPilot</span>
           </div>
 
           {/* Actions droite */}

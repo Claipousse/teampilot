@@ -112,7 +112,7 @@ export default function AdministrationMobile() {
             <ChevronRight size={18} className="text-on-surface-variant shrink-0" />
           </a>
 
-          <a href="/calendrier" className="flex items-center justify-between p-4 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group">
+          <a href="/calendrier?new=true" className="flex items-center justify-between p-4 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group">
             <div className="flex items-center gap-4">
               <div className="w-11 h-11 bg-secondary/10 rounded-xl flex items-center justify-center shrink-0">
                 <CalendarPlus size={20} className="text-secondary" />

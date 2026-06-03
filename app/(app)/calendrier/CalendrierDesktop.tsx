@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, X, Pencil, Trash2, MapPin, FileText } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -131,7 +131,7 @@ function generateWeeks(year: number, month: number): CalCell[][] {
   return weeks;
 }
 
-export default function CalendrierDesktop() {
+export default function CalendrierDesktop({ openCreate = false }: { openCreate?: boolean }) {
   const today = new Date();
   const [current, setCurrent] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [dayDetail, setDayDetail]       = useState<DayDetail | null>(null);
@@ -148,6 +148,17 @@ export default function CalendrierDesktop() {
   });
   const [editCalMonth, setEditCalMonth] = useState(today.getMonth());
   const [editCalYear,  setEditCalYear]  = useState(today.getFullYear());
+
+  const [createOpen,    setCreateOpen]    = useState(false);
+  const [createVisible, setCreateVisible] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    title: '', tag: 'Entraînement' as EventTag,
+    lieu: '', remarques: '',
+    day: today.getDate(), month: today.getMonth(), year: today.getFullYear(),
+    hour: 10, minute: 0,
+  });
+  const [createCalMonth, setCreateCalMonth] = useState(today.getMonth());
+  const [createCalYear,  setCreateCalYear]  = useState(today.getFullYear());
 
   const { role } = useCurrentUser();
   const canEdit  = role === 'admin' || role === 'coach';
@@ -180,6 +191,21 @@ export default function CalendrierDesktop() {
   const prevEditCal = () => { if (editCalMonth === 0) { setEditCalMonth(11); setEditCalYear(y => y - 1); } else setEditCalMonth(m => m - 1); };
   const nextEditCal = () => { if (editCalMonth === 11) { setEditCalMonth(0); setEditCalYear(y => y + 1); } else setEditCalMonth(m => m + 1); };
 
+  const openCreateForm = () => {
+    const now = new Date();
+    setCreateForm({ title: '', tag: 'Entraînement', lieu: '', remarques: '', day: now.getDate(), month: now.getMonth(), year: now.getFullYear(), hour: 10, minute: 0 });
+    setCreateCalMonth(now.getMonth());
+    setCreateCalYear(now.getFullYear());
+    setCreateOpen(true);
+    setTimeout(() => setCreateVisible(true), 10);
+  };
+  const closeCreateForm = () => { setCreateVisible(false); setTimeout(() => setCreateOpen(false), 200); };
+  const prevCreateCal = () => { if (createCalMonth === 0) { setCreateCalMonth(11); setCreateCalYear(y => y - 1); } else setCreateCalMonth(m => m - 1); };
+  const nextCreateCal = () => { if (createCalMonth === 11) { setCreateCalMonth(0); setCreateCalYear(y => y + 1); } else setCreateCalMonth(m => m + 1); };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (openCreate) openCreateForm(); }, []);
+
   const weeks = generateWeeks(current.getFullYear(), current.getMonth());
 
   return (
@@ -197,7 +223,7 @@ export default function CalendrierDesktop() {
           <button onClick={next} className="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant hover:bg-surface-container transition-colors"><ChevronRight size={18} /></button>
         </div>
         <div className="ml-auto shrink-0">
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-error hover:bg-error/90 text-white text-base font-semibold rounded-xl transition-colors">
+          <button onClick={openCreateForm} className="flex items-center gap-2 px-5 py-2.5 bg-error hover:bg-error/90 text-white text-base font-semibold rounded-xl transition-colors">
             <Plus size={18} /> Add Event
           </button>
         </div>
@@ -493,6 +519,125 @@ export default function CalendrierDesktop() {
                   <button onClick={closeEdit} className="px-5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
                   <button className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Sauvegarder</button>
                 </div>
+              </div>
+
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Modal création ── */}
+      {createOpen && (
+        <>
+          <div className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${createVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={closeCreateForm} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col pointer-events-auto transition-all duration-200 ${createVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+
+              <div className="flex items-center justify-between px-8 py-5 border-b border-outline-variant shrink-0">
+                <p className="text-xl font-bold text-on-surface">Nouvel événement</p>
+                <button onClick={closeCreateForm} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
+                  <X size={18} className="text-on-surface-variant" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">Titre</label>
+                  <input type="text" value={createForm.title} onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))}
+                    placeholder="Ex : Entraînement tactique, Match amical..."
+                    className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base outline-none focus:ring-2 focus:ring-primary transition-all placeholder:text-outline" />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-4 block">Date & Heure</label>
+                  <div className="flex gap-6">
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-3">
+                        <button onClick={prevCreateCal} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container transition-colors">
+                          <ChevronLeft size={16} className="text-on-surface-variant" />
+                        </button>
+                        <span className="text-sm font-bold text-on-surface">{MONTHS_FR[createCalMonth]} {createCalYear}</span>
+                        <button onClick={nextCreateCal} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container transition-colors">
+                          <ChevronRight size={16} className="text-on-surface-variant" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-7 mb-1">
+                        {MINI_DAYS.map(d => <div key={d} className="text-center text-xs font-bold text-on-surface-variant py-1">{d}</div>)}
+                      </div>
+                      <div className="grid grid-cols-7 gap-1">
+                        {getCalGrid(createCalYear, createCalMonth).map((day, i) => {
+                          const sel = day !== null && day === createForm.day && createCalMonth === createForm.month && createCalYear === createForm.year;
+                          return (
+                            <button key={i} disabled={day === null}
+                              onClick={() => day && setCreateForm(f => ({ ...f, day, month: createCalMonth, year: createCalYear }))}
+                              className={`h-9 w-full rounded-lg text-sm font-semibold transition-all ${!day ? 'invisible' : sel ? 'bg-primary text-white shadow-sm' : 'hover:bg-surface-container text-on-surface'}`}>
+                              {day || ''}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="w-52 flex flex-col justify-center gap-2">
+                      <p className="text-xs font-bold text-on-surface-variant text-center uppercase tracking-widest">Heure</p>
+                      <div className="flex items-center justify-center gap-5 bg-surface-container rounded-2xl py-6">
+                        <div className="flex flex-col items-center gap-3">
+                          <button onClick={() => setCreateForm(f => ({ ...f, hour: (f.hour + 1) % 24 }))} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container-high transition-colors"><ChevronUp size={18} className="text-on-surface-variant" /></button>
+                          <span className="text-4xl font-extrabold text-on-surface w-14 text-center tabular-nums">{String(createForm.hour).padStart(2, '0')}</span>
+                          <button onClick={() => setCreateForm(f => ({ ...f, hour: (f.hour - 1 + 24) % 24 }))} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container-high transition-colors"><ChevronDown size={18} className="text-on-surface-variant" /></button>
+                        </div>
+                        <span className="text-4xl font-extrabold text-on-surface-variant pb-1">:</span>
+                        <div className="flex flex-col items-center gap-3">
+                          <button onClick={() => setCreateForm(f => ({ ...f, minute: (f.minute + 5) % 60 }))} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container-high transition-colors"><ChevronUp size={18} className="text-on-surface-variant" /></button>
+                          <span className="text-4xl font-extrabold text-on-surface w-14 text-center tabular-nums">{String(createForm.minute).padStart(2, '0')}</span>
+                          <button onClick={() => setCreateForm(f => ({ ...f, minute: (f.minute - 5 + 60) % 60 }))} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container-high transition-colors"><ChevronDown size={18} className="text-on-surface-variant" /></button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3 block">Catégorie</label>
+                  <div className="grid grid-cols-4 gap-3">
+                    {TAGS.map(tag => (
+                      <button key={tag} onClick={() => setCreateForm(f => ({ ...f, tag }))}
+                        className={`px-4 py-3 rounded-xl text-sm font-bold transition-all border ${createForm.tag === tag ? TAG_ACTIVE[tag] : `bg-surface-container text-on-surface-variant border-outline-variant ${TAG_HOVER[tag]}`}`}>
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">
+                    Lieu <span className="font-normal normal-case tracking-normal opacity-60">(optionnel)</span>
+                  </label>
+                  <div className="relative">
+                    <MapPin size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+                    <input type="text" value={createForm.lieu} onChange={e => setCreateForm(f => ({ ...f, lieu: e.target.value }))}
+                      placeholder="Ex : Terrain principal, Salle de réunion..."
+                      className="w-full pl-10 pr-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base outline-none focus:ring-2 focus:ring-primary transition-all placeholder:text-outline" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">
+                    Remarques <span className="font-normal normal-case tracking-normal opacity-60">(optionnel)</span>
+                  </label>
+                  <div className="relative">
+                    <FileText size={16} className="absolute left-4 top-3.5 text-on-surface-variant" />
+                    <textarea value={createForm.remarques} onChange={e => setCreateForm(f => ({ ...f, remarques: e.target.value }))}
+                      rows={4} placeholder="Informations complémentaires, consignes, notes..."
+                      className="w-full pl-10 pr-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base outline-none focus:ring-2 focus:ring-primary transition-all placeholder:text-outline resize-none" />
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="flex items-center justify-end px-8 py-5 border-t border-outline-variant shrink-0 gap-3">
+                <button onClick={closeCreateForm} className="px-5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
+                <button className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Créer</button>
               </div>
 
             </div>

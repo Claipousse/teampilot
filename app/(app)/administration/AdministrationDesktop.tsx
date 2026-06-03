@@ -112,7 +112,7 @@ export default function AdministrationDesktop() {
               <ChevronRight size={20} className="text-on-surface-variant shrink-0 group-hover:translate-x-0.5 transition-transform" />
             </a>
 
-            <a href="/calendrier" className="flex items-center justify-between p-5 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group">
+            <a href="/calendrier?new=true" className="flex items-center justify-between p-5 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors group">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center shrink-0">
                   <CalendarPlus size={22} className="text-secondary" />

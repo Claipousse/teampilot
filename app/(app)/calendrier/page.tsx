@@ -1,14 +1,21 @@
 import CalendrierDesktop from './CalendrierDesktop';
 import CalendrierMobile from './CalendrierMobile';
 
-export default function CalendrierPage() {
+export default async function CalendrierPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ new?: string }>;
+}) {
+  const params = await searchParams;
+  const openCreate = params?.new === 'true';
+
   return (
     <>
       <div className="hidden lg:block h-full">
-        <CalendrierDesktop />
+        <CalendrierDesktop openCreate={openCreate} />
       </div>
       <div className="lg:hidden">
-        <CalendrierMobile />
+        <CalendrierMobile openCreate={openCreate} />
       </div>
     </>
   );

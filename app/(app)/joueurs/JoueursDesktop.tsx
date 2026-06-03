@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Search, X, Pencil, Send, Trash2, Upload } from 'lucide-react';
+import { Search, X, Pencil, Send, Trash2, Upload, AlertTriangle } from 'lucide-react';
 
 type PlayerStatus = 'Disponible' | 'Blessé' | 'Suspendu' | 'Incertain';
 type PositionFilter = 'Tous' | 'GK' | 'DEF' | 'MIL' | 'ATT';
@@ -97,7 +97,7 @@ const STATUS_HOVER: Record<PlayerStatus, string> = {
 const ph = (v: string | number | undefined) =>
   v !== undefined && v !== '' ? String(v) : '—';
 
-const players: Player[] = [
+const INITIAL_PLAYERS: Player[] = [
   { id: 1, initials: 'MV', number: 8,  name: 'Marcus V.',  position: 'Milieu Central',    positionShort: 'MIL', nationality: 'Anglais',   flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', dob: '15/03/1998', height: '182 cm', weight: '78 kg', foot: 'Droit',  status: 'Disponible', contract: '30/06/2027', academy: 'Manchester Academy', stats: { matches: 22, goals: 4,  assists: 9, yellowCards: 3, redCards: 0, minutes: 1850 }, notes: 'Excellent visionnaire du jeu.' },
   { id: 2, initials: 'JR', number: 3,  name: 'Julian R.',  position: 'Arrière Gauche',    positionShort: 'DEF', nationality: 'Espagnol',  flag: '🇪🇸', dob: '22/07/2000', height: '175 cm', weight: '72 kg', foot: 'Gauche', status: 'Blessé',     injury: 'Ischio-jambiers', returnDate: 'Dans 3 semaines', contract: '30/06/2025', academy: 'Atletico Madrid B', stats: { matches: 14, goals: 0, assists: 3, yellowCards: 2, redCards: 0, minutes: 1170 }, notes: 'Récupération en bonne voie.' },
   { id: 3, initials: 'KL', number: 9,  name: 'Kevin L.',   position: 'Attaquant Centre',  positionShort: 'ATT', nationality: 'Français',  flag: '🇫🇷', dob: '08/11/1996', height: '186 cm', weight: '82 kg', foot: 'Droit',  status: 'Disponible', contract: '30/06/2028', academy: 'OL Academy',          stats: { matches: 22, goals: 11, assists: 4, yellowCards: 1, redCards: 0, minutes: 1940 }, notes: 'Meilleur buteur de la saison.' },
@@ -135,6 +135,7 @@ const inputCls = (err?: string) =>
 const labelCls = 'text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block';
 
 export default function JoueursDesktop({ openCreate = false }: { openCreate?: boolean }) {
+  const [players, setPlayers]           = useState<Player[]>(INITIAL_PLAYERS);
   const [posFilter, setPosFilter]       = useState<PositionFilter>('Tous');
   const [statusFilter, setStatusFilter] = useState<PlayerStatus | 'Tous'>('Tous');
   const [search, setSearch]             = useState('');
@@ -143,10 +144,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
   const [panelVisible, setPanelVisible] = useState(false);
   const [notes, setNotes]               = useState<Record<number, string>>({});
 
-  const [editOpen,    setEditOpen]    = useState(false);
-  const [editVisible, setEditVisible] = useState(false);
-  const [editForm,    setEditForm]    = useState<PlayerForm>(EMPTY_FORM);
-  const [editErrors,  setEditErrors]  = useState<FormErrors>({});
+  const [editOpen,      setEditOpen]      = useState(false);
+  const [editVisible,   setEditVisible]   = useState(false);
+  const [editForm,      setEditForm]      = useState<PlayerForm>(EMPTY_FORM);
+  const [editErrors,    setEditErrors]    = useState<FormErrors>({});
+  const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
 
   const [createOpen,    setCreateOpen]    = useState(false);
@@ -154,6 +156,14 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
   const [createForm,    setCreateForm]    = useState<PlayerForm>(EMPTY_FORM);
   const [createErrors,  setCreateErrors]  = useState<FormErrors>({});
   const createPhotoRef = useRef<HTMLInputElement>(null);
+
+  // Delete confirmation
+  const [delOpen,    setDelOpen]    = useState(false);
+  const [delVisible, setDelVisible] = useState(false);
+  const [delName,    setDelName]    = useState('');
+  const [delTimer,   setDelTimer]   = useState(3);
+  const delTimerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const onDelConfirmed = useRef<(() => void) | null>(null);
 
   const openDetailPanel = (p: Player) => {
     setDisplayed(p); setSelected(p);
@@ -165,7 +175,34 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
     setTimeout(() => { setSelected(null); setDisplayed(null); }, 300);
   };
 
+  const openDel = (name: string, onConfirmed: () => void) => {
+    onDelConfirmed.current = onConfirmed;
+    setDelName(name);
+    setDelOpen(true);
+    setTimeout(() => setDelVisible(true), 10);
+  };
+  const closeDel = () => {
+    setDelVisible(false);
+    if (delTimerRef.current) clearInterval(delTimerRef.current);
+    setTimeout(() => { setDelOpen(false); setDelName(''); }, 200);
+  };
+  const confirmDel = () => {
+    if (delTimer > 0) return;
+    onDelConfirmed.current?.();
+    closeDel();
+  };
+
+  useEffect(() => {
+    if (!delOpen) return;
+    setDelTimer(3);
+    delTimerRef.current = setInterval(() => {
+      setDelTimer(prev => { if (prev <= 1) { clearInterval(delTimerRef.current!); return 0; } return prev - 1; });
+    }, 1000);
+    return () => { if (delTimerRef.current) clearInterval(delTimerRef.current); };
+  }, [delOpen]);
+
   const openEdit = (player: Player) => {
+    setEditingPlayerId(player.id);
     const nameParts = player.name.split(' ');
     setEditForm({
       prenom: nameParts[0] ?? '',
@@ -191,7 +228,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
     setEditOpen(true);
     setTimeout(() => setEditVisible(true), 10);
   };
-  const closeEdit = () => { setEditVisible(false); setTimeout(() => setEditOpen(false), 200); };
+  const closeEdit = () => { setEditVisible(false); setTimeout(() => { setEditOpen(false); setEditingPlayerId(null); }, 200); };
 
   const openCreateForm = () => {
     setCreateForm(EMPTY_FORM);
@@ -697,7 +734,13 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
               {renderFormBody(editForm, setEditForm, editErrors, editPhotoRef)}
 
               <div className="flex items-center justify-between px-7 py-5 border-t border-outline-variant shrink-0">
-                <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold">
+                <button
+                  onClick={() => openDel(editForm.prenom + ' ' + editForm.nom, () => {
+                    setPlayers(prev => prev.filter(p => p.id !== editingPlayerId));
+                    closeEdit();
+                    closeDetailPanel();
+                  })}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold">
                   <Trash2 size={16} /> Supprimer le joueur
                 </button>
                 <div className="flex items-center gap-2">
@@ -732,6 +775,47 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                 <button onClick={handleCreateSubmit} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Créer le joueur</button>
               </div>
 
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Modal confirmation suppression ── */}
+      {delOpen && (
+        <>
+          <div className={`fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm transition-opacity duration-200 ${delVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 pointer-events-none">
+            <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto transition-all duration-200 ${delVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} overflow-hidden`}>
+              <div className="bg-error/5 border-b border-error/20 px-7 py-5 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-error/10 flex items-center justify-center shrink-0">
+                  <AlertTriangle size={24} className="text-error" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-error">Suppression irréversible</p>
+                  <p className="text-sm text-on-surface-variant">Cette action ne peut pas être annulée</p>
+                </div>
+              </div>
+              <div className="px-7 py-6 space-y-4">
+                <p className="text-base text-on-surface">
+                  Vous êtes sur le point de supprimer définitivement <strong className="text-error">{delName}</strong>.
+                </p>
+                <p className="text-sm text-on-surface-variant leading-relaxed">
+                  Une fois supprimé, ce joueur sera retiré de l&apos;effectif et toutes ses données seront perdues. Cette opération est irréversible.
+                </p>
+              </div>
+              <div className="flex items-center justify-end gap-3 px-7 pb-6">
+                <button onClick={closeDel}
+                  className="px-5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">
+                  Annuler
+                </button>
+                <button onClick={confirmDel} disabled={delTimer > 0}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
+                    delTimer > 0 ? 'bg-error/30 text-error/50 cursor-not-allowed' : 'bg-error hover:bg-error/90 text-white cursor-pointer'
+                  }`}>
+                  <Trash2 size={16} />
+                  {delTimer > 0 ? `Confirmer (${delTimer}s)` : 'Confirmer'}
+                </button>
+              </div>
             </div>
           </div>
         </>

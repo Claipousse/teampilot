@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, X, Pencil } from 'lucide-react';
+import { Search, X, Pencil, Send } from 'lucide-react';
 
 type PlayerStatus = 'Disponible' | 'Blessé' | 'Suspendu' | 'Incertain';
 type PositionFilter = 'Tous' | 'GK' | 'DEF' | 'MIL' | 'ATT';
@@ -233,11 +233,19 @@ export default function JoueursDesktop() {
                         <span className="text-white text-base font-bold">#{displayed.number}</span>
                       </div>
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="text-2xl font-extrabold text-on-surface">{displayed.name}</p>
                       <p className="text-base text-on-surface-variant mb-3">{displayed.position}</p>
                       <span className={`px-4 py-2 rounded-xl text-base font-extrabold ${s.badge}`}>
                         {displayed.status}
+                      </span>
+                    </div>
+                    <div className="relative group">
+                      <button className="w-13 h-13 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary/10 transition-colors">
+                        <Send size={24} className="text-on-surface-variant" />
+                      </button>
+                      <span className="absolute right-full top-1/2 -translate-y-1/2 mr-2 px-2.5 py-1.5 bg-inverse-surface text-inverse-on-surface text-xs font-semibold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10">
+                        Envoyer un message
                       </span>
                     </div>
                   </div>

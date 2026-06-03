@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Pencil } from 'lucide-react';
+import { X, Pencil, Send } from 'lucide-react';
 
 type PlayerStatus = 'Disponible' | 'Blessé' | 'Suspendu' | 'Incertain';
 
@@ -196,11 +196,19 @@ export default function JoueursMobile() {
                   <p className="text-base text-on-surface-variant">{displayed.position}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button className="flex items-center gap-1.5 px-4 py-2 bg-error text-white text-base font-semibold rounded-xl">
+              <div className="flex items-center gap-3">
+                <button className="flex items-center gap-1.5 px-4 py-2.5 bg-error text-white text-base font-semibold rounded-xl">
                   <Pencil size={15} /> Modifier
                 </button>
-                <button onClick={closeModal} className="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-container">
+                <div className="relative group">
+                  <button className="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container transition-colors">
+                    <Send size={19} className="text-on-surface-variant" />
+                  </button>
+                  <span className="absolute right-full top-1/2 -translate-y-1/2 mr-2 px-2.5 py-1.5 bg-inverse-surface text-inverse-on-surface text-xs font-semibold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10">
+                    Envoyer un message
+                  </span>
+                </div>
+                <button onClick={closeModal} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-container">
                   <X size={20} className="text-on-surface-variant" />
                 </button>
               </div>

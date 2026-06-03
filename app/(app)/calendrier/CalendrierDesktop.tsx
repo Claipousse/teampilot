@@ -212,19 +212,15 @@ export default function CalendrierDesktop({ openCreate = false }: { openCreate?:
     <div className="flex flex-col h-full min-h-0">
 
       {/* Header */}
-      <div className="flex items-center gap-6 mb-5 shrink-0">
-        <div className="w-52 shrink-0">
-          <h1 className="text-4xl font-extrabold text-on-surface tracking-tight leading-tight">
-            {MONTHS[current.getMonth()]}<br />{current.getFullYear()}
-          </h1>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button onClick={prev} className="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant hover:bg-surface-container transition-colors"><ChevronLeft size={18} /></button>
-          <button onClick={next} className="w-9 h-9 flex items-center justify-center rounded-xl border border-outline-variant hover:bg-surface-container transition-colors"><ChevronRight size={18} /></button>
-        </div>
+      <div className="flex items-center gap-2 mb-2 shrink-0">
+        <button onClick={prev} className="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container transition-colors shrink-0"><ChevronLeft size={16} /></button>
+        <h1 className="text-xl font-extrabold text-on-surface tracking-tight whitespace-nowrap">
+          {MONTHS_FR[current.getMonth()]} {current.getFullYear()}
+        </h1>
+        <button onClick={next} className="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container transition-colors shrink-0"><ChevronRight size={16} /></button>
         <div className="ml-auto shrink-0">
-          <button onClick={openCreateForm} className="flex items-center gap-2 px-5 py-2.5 bg-error hover:bg-error/90 text-white text-base font-semibold rounded-xl transition-colors">
-            <Plus size={18} /> Add Event
+          <button onClick={openCreateForm} className="flex items-center gap-2 px-4 py-2 bg-error hover:bg-error/90 text-white text-sm font-semibold rounded-xl transition-colors">
+            <Plus size={16} /> Add Event
           </button>
         </div>
       </div>
@@ -236,54 +232,57 @@ export default function CalendrierDesktop({ openCreate = false }: { openCreate?:
         <div className="flex-1 min-w-0 bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden flex flex-col">
           <div className="grid grid-cols-7 border-b border-outline-variant shrink-0">
             {DAYS.map((day, i) => (
-              <div key={day} className={`py-3 text-center text-sm font-bold uppercase tracking-widest ${i >= 5 ? 'text-primary' : 'text-on-surface-variant'}`}>{day}</div>
+              <div key={day} className={`py-2 text-center text-xs font-bold uppercase tracking-widest ${i >= 5 ? 'text-primary' : 'text-on-surface-variant'}`}>{day}</div>
             ))}
           </div>
-          <div className="flex-1 min-h-0 flex flex-col">
-            {weeks.map((week, wi) => (
-              <div key={wi} className={`grid grid-cols-7 flex-1 ${wi < weeks.length - 1 ? 'border-b border-outline-variant' : ''}`}>
-                {week.map((cell, ci) => {
-                  const visible = cell.events.slice(0, MAX_VISIBLE);
-                  const hidden  = cell.events.length - MAX_VISIBLE;
-                  return (
-                    <div key={ci} className={`p-2 flex flex-col gap-1 min-h-0 overflow-hidden ${ci < 6 ? 'border-r border-outline-variant' : ''} ${cell.outside ? 'bg-surface-container/40' : cell.isMatch ? 'bg-error/5' : ''}`}>
-                      <div className="flex items-center justify-between shrink-0">
-                        <p className={`text-sm font-bold ${cell.outside ? 'text-on-surface-variant/30' : cell.isMatch ? 'text-error' : cell.weekend ? 'text-primary' : 'text-on-surface'}`}>{cell.day}</p>
-                        {cell.isMatch && !cell.outside && <span className="text-[10px] font-bold text-error uppercase tracking-wide">⚽ Match</span>}
-                      </div>
-                      {!cell.outside && (
-                        <>
-                          <div className="flex flex-col gap-1 flex-1 min-h-0">
-                            {visible.map((event, ei) => (
-                              <div key={ei} onClick={() => openDetail(event, cell.day)}
-                                className={`group px-1.5 py-1 rounded-lg font-medium flex items-center justify-between gap-1 cursor-pointer ${event.color}`}>
-                                <div className="flex-1 min-w-0">
-                                  {event.time && <p className="font-bold text-xs leading-none mb-0.5">{event.time}</p>}
-                                  <p className="font-semibold leading-tight truncate text-sm">{event.title}</p>
-                                </div>
-                                {canEdit && (
-                                  <button
-                                    onClick={e => { e.stopPropagation(); openEdit(event, cell.day); }}
-                                    className="transform-gpu opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0 w-5 h-5 flex items-center justify-center rounded hover:bg-black/15"
-                                  >
-                                    <Pencil size={11} className="text-current" />
-                                  </button>
-                                )}
-                              </div>
-                            ))}
+          <div
+            className="flex-1 min-h-0"
+            style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridTemplateRows: `repeat(${weeks.length}, 1fr)` }}
+          >
+            {weeks.flat().map((cell, i) => {
+              const col     = i % 7;
+              const row     = Math.floor(i / 7);
+              const visible = cell.events.slice(0, MAX_VISIBLE);
+              const hidden  = cell.events.length - MAX_VISIBLE;
+              const isLastCol = col === 6;
+              const isLastRow = row === weeks.length - 1;
+              return (
+                <div key={i} className={`p-2 flex flex-col gap-1 overflow-hidden ${!isLastCol ? 'border-r border-outline-variant' : ''} ${!isLastRow ? 'border-b border-outline-variant' : ''} ${cell.outside ? 'bg-surface-container/40' : cell.isMatch ? 'bg-error/5' : ''}`}>
+                  <div className="flex items-center justify-between shrink-0">
+                    <p className={`text-sm font-bold ${cell.outside ? 'text-on-surface-variant/30' : cell.isMatch ? 'text-error' : cell.weekend ? 'text-primary' : 'text-on-surface'}`}>{cell.day}</p>
+                    {cell.isMatch && !cell.outside && <span className="text-[10px] font-bold text-error uppercase tracking-wide">⚽ Match</span>}
+                  </div>
+                  {!cell.outside && (
+                    <>
+                      <div className="flex flex-col gap-1 flex-1 min-h-0 overflow-hidden">
+                        {visible.map((event, ei) => (
+                          <div key={ei} onClick={() => openDetail(event, cell.day)}
+                            className={`group px-1.5 py-1 rounded-lg font-medium flex items-center justify-between gap-1 cursor-pointer ${event.color}`}>
+                            <div className="flex-1 min-w-0">
+                              {event.time && <p className="font-bold text-xs leading-none mb-0.5">{event.time}</p>}
+                              <p className="font-semibold leading-tight truncate text-sm">{event.title}</p>
+                            </div>
+                            {canEdit && (
+                              <button
+                                onClick={e => { e.stopPropagation(); openEdit(event, cell.day); }}
+                                className="transform-gpu opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0 w-5 h-5 flex items-center justify-center rounded hover:bg-black/15"
+                              >
+                                <Pencil size={11} className="text-current" />
+                              </button>
+                            )}
                           </div>
-                          {hidden > 0 && (
-                            <button onClick={() => openPanel(cell)} className="mt-auto w-full text-center text-sm font-bold text-primary hover:bg-primary/10 transition-colors py-1 rounded-lg">
-                              +{hidden} voir plus
-                            </button>
-                          )}
-                        </>
+                        ))}
+                      </div>
+                      {hidden > 0 && (
+                        <button onClick={() => openPanel(cell)} className="mt-auto w-full text-center text-xs font-bold text-primary hover:bg-primary/10 transition-colors py-0.5 rounded-lg shrink-0">
+                          +{hidden} voir plus
+                        </button>
                       )}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+                    </>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 

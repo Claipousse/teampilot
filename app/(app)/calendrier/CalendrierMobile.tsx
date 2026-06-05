@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Video, Leaf, Dumbbell, Users, Trophy, Plus, X, Pencil, Trash2, MapPin, FileText } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -14,6 +14,7 @@ const DAYS_SHORT = ['LUN','MAR','MER','JEU','VEN','SAM','DIM'];
 const MINI_DAYS  = ['Lu','Ma','Me','Je','Ve','Sa','Di'];
 
 type MobileEvent = {
+  id?: number;
   time: string;
   title: string;
   tag: EventTag;
@@ -56,6 +57,13 @@ function getCalGrid(year: number, month: number): (number | null)[] {
   for (let d = 1; d <= last.getDate(); d++) grid.push(d);
   return grid;
 }
+
+const TAG_MOBILE: Record<EventTag, { border: string; IconComp: LucideIcon; iconColor: string; iconBg: string }> = {
+  'Match':        { border: 'border-l-error',     IconComp: Trophy,   iconColor: 'text-error',     iconBg: 'bg-error/10' },
+  'Entraînement': { border: 'border-l-primary',   IconComp: Dumbbell, iconColor: 'text-primary',   iconBg: 'bg-primary/10' },
+  'Récupération': { border: 'border-l-secondary', IconComp: Leaf,     iconColor: 'text-secondary', iconBg: 'bg-secondary/10' },
+  'Réunion':      { border: 'border-l-primary',   IconComp: Video,    iconColor: 'text-primary',   iconBg: 'bg-primary/10' },
+};
 
 const EVENT_POOLS: MobileEvent[][] = [
   [
@@ -147,11 +155,43 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
   const [createCalMonth, setCreateCalMonth] = useState(today.getMonth());
   const [createCalYear,  setCreateCalYear]  = useState(today.getFullYear());
 
+  const [eventsMap, setEventsMap] = useState<Record<string, MobileEvent[]>>({});
+
   const { isAdmin: canEdit } = useCurrentUser();
   const t = useT();
 
+  const pad = (n: number) => String(n).padStart(2, '0');
+
   const weekDays = getWeekDays(baseMondayRef, weekOffset);
-  const activeEvents = getEventsForKey(activeKey);
+  const activeEvents = eventsMap[activeKey] ?? getEventsForKey(activeKey);
+
+  const fetchEventsForMonth = useCallback(async (year: number, month: number) => {
+    const res = await fetch(`/api/backend/events?year=${year}&month=${month + 1}`);
+    if (!res.ok) return;
+    const events = await res.json();
+    setEventsMap(prev => {
+      const next = { ...prev };
+      for (const e of events) {
+        const [y, m, d] = e.event_date.split('-').map(Number);
+        const key = `${y}-${m - 1}-${d}`;
+        const tm = TAG_MOBILE[e.tag as EventTag] ?? TAG_MOBILE['Réunion'];
+        if (!next[key]) next[key] = [];
+        if (!next[key].some(ev => ev.id === e.id)) {
+          next[key] = [...next[key], { id: e.id, time: e.event_time, title: e.title, tag: e.tag as EventTag, ...tm, lieu: e.location ?? undefined, remarques: e.notes ?? undefined, isMatch: e.tag === 'Match' }];
+        }
+      }
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    const months = new Set(weekDays.map(d => `${d.year}-${d.month}`));
+    months.forEach(m => {
+      const [y, mo] = m.split('-').map(Number);
+      fetchEventsForMonth(y, mo);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weekOffset, fetchEventsForMonth]);
 
   const getActiveDateObj = () => {
     const parts = activeKey.split('-').map(Number);
@@ -454,12 +494,28 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
               </div>
 
               <div className="flex items-center justify-between px-6 py-4 border-t border-outline-variant shrink-0">
-                <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold">
+                <button onClick={async () => {
+                  if (!editEvent?.id) return;
+                  await fetch(`/api/backend/events/${editEvent.id}`, { method: 'DELETE' });
+                  setEventsMap(prev => {
+                    const next = { ...prev };
+                    for (const key of Object.keys(next)) next[key] = next[key].filter(e => e.id !== editEvent.id);
+                    return next;
+                  });
+                  closeEdit(); closeDetail();
+                }} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold">
                   <Trash2 size={16} /> {t.common.delete}
                 </button>
                 <div className="flex items-center gap-2">
                   <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
-                  <button className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
+                  <button onClick={async () => {
+                    if (!editEvent?.id) return;
+                    await fetch(`/api/backend/events/${editEvent.id}`, {
+                      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ title: editForm.title, tag: editForm.tag, event_date: `${editForm.year}-${pad(editForm.month + 1)}-${pad(editForm.day)}`, event_time: `${pad(editForm.hour)}:${pad(editForm.minute)}`, location: editForm.lieu || null, notes: editForm.remarques || null }),
+                    });
+                    await fetchEventsForMonth(editForm.year, editForm.month); closeEdit();
+                  }} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
                 </div>
               </div>
 
@@ -568,7 +624,14 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
 
               <div className="flex items-center justify-end px-6 py-4 border-t border-outline-variant shrink-0 gap-2">
                 <button onClick={closeCreateForm} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
-                <button className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.add}</button>
+                <button onClick={async () => {
+                  if (!createForm.title.trim()) return;
+                  await fetch('/api/backend/events', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: createForm.title, tag: createForm.tag, event_date: `${createForm.year}-${pad(createForm.month + 1)}-${pad(createForm.day)}`, event_time: `${pad(createForm.hour)}:${pad(createForm.minute)}`, location: createForm.lieu || null, notes: createForm.remarques || null }),
+                  });
+                  await fetchEventsForMonth(createForm.year, createForm.month); closeCreateForm();
+                }} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.add}</button>
               </div>
 
             </div>

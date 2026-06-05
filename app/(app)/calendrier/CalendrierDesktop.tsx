@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, X, Pencil, Trash2, MapPin, FileText } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useT } from '@/contexts/LanguageContext';
@@ -8,6 +8,7 @@ import { useT } from '@/contexts/LanguageContext';
 type EventTag = 'Match' | 'Entraînement' | 'Récupération' | 'Réunion';
 
 type CalEvent = {
+  id?: number;
   time: string;
   title: string;
   tag: EventTag;
@@ -43,8 +44,14 @@ const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','A
 const DAYS_FR   = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
 const DAYS      = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
 const MINI_DAYS = ['Lu','Ma','Me','Je','Ve','Sa','Di'];
-const MATCH_DAYS = new Set([5, 19]);
 const MAX_VISIBLE = 2;
+
+const TAG_COLOR: Record<EventTag, string> = {
+  'Match':        'bg-error text-white',
+  'Entraînement': 'border-l-4 border-primary bg-primary/10 text-primary',
+  'Récupération': 'border-l-4 border-secondary bg-secondary/10 text-secondary',
+  'Réunion':      'border-l-4 border-outline bg-surface-container text-on-surface',
+};
 
 const TAGS: EventTag[] = ['Match', 'Entraînement', 'Récupération', 'Réunion'];
 
@@ -78,35 +85,8 @@ function getCalGrid(year: number, month: number): (number | null)[] {
   return grid;
 }
 
-const EVENT_TEMPLATES: Record<number, CalEvent[]> = {
-  1:  [{ time: '09:00', title: 'Recovery Session',        tag: 'Récupération', color: 'border-l-4 border-primary bg-primary/10 text-primary',       lieu: 'Centre médical · Salle 2',      remarques: 'Séance légère, focus sur les ischio-jambiers. Hydratation obligatoire.' }],
-  2:  [{ time: '14:00', title: 'Tactical Review',          tag: 'Réunion',      color: 'border-l-4 border-outline bg-surface-container text-on-surface', lieu: 'Salle vidéo · Bâtiment B' }],
-  5:  [
-    { time: '10:00', title: 'Pre-Match Training',          tag: 'Entraînement', color: 'border-l-4 border-error bg-error/10 text-error',              lieu: 'Terrain principal',             remarques: 'Activation physique 60 min, intensité modérée. Pas de contacts.' },
-    { time: '15:00', title: 'Match Away',                  tag: 'Match',        color: 'bg-error text-white',                                          lieu: 'Etihad Stadium (extérieur)',    remarques: 'Départ bus 12h00. Tenue : maillot extérieur bleu.' },
-  ],
-  7:  [{ time: '11:00', title: 'Tactical Analysis',        tag: 'Réunion',      color: 'border-l-4 border-primary bg-primary/10 text-primary',         lieu: 'Salle vidéo · Bâtiment B',     remarques: 'Analyse du dernier match. Présence obligatoire.' }],
-  9:  [{ time: '09:30', title: 'Gym Session',              tag: 'Entraînement', color: 'border-l-4 border-primary bg-primary/10 text-primary',         lieu: 'Salle de musculation' }],
-  10: [{ time: '10:00', title: 'Outdoor Drill',            tag: 'Entraînement', color: 'border-l-4 border-secondary bg-secondary/10 text-secondary',   lieu: 'Terrain 2',                    remarques: 'Exercices de finition. Groupes de 4.' }],
-  14: [{ time: '10:00', title: 'Set Piece Training',       tag: 'Entraînement', color: 'border-l-4 border-primary bg-primary/10 text-primary',         lieu: 'Terrain principal' }],
-  16: [{ time: '09:00', title: 'Strength & Conditioning',  tag: 'Entraînement', color: 'border-l-4 border-primary bg-primary/10 text-primary',         lieu: 'Salle de musculation',         remarques: 'Cycle force — semaine 3/4. Programme individuel.' }],
-  17: [
-    { time: '08:00', title: 'Physio Assessment',           tag: 'Récupération', color: 'border-l-4 border-secondary bg-secondary/10 text-secondary',   lieu: 'Aile médicale',                remarques: 'Bilan complet de mi-saison. Tous les joueurs concernés.' },
-    { time: '11:00', title: 'Tactical Meeting',            tag: 'Réunion',      color: 'border-l-4 border-outline bg-surface-container text-on-surface', lieu: 'Salle de conférence A' },
-    { time: '15:00', title: 'Recovery Pool',               tag: 'Récupération', color: 'border-l-4 border-secondary bg-secondary/10 text-secondary',   lieu: 'Centre aquatique' },
-  ],
-  19: [
-    { time: '11:00', title: 'Pre-Match Activation',        tag: 'Entraînement', color: 'border-l-4 border-error bg-error/10 text-error',              lieu: 'Terrain principal' },
-    { time: '17:00', title: 'Home Match',                  tag: 'Match',        color: 'bg-error text-white',                                          lieu: 'Stade principal (domicile)',    remarques: 'Échauffement 16h00. Accueil presse 14h30.' },
-  ],
-  22: [{ time: '10:30', title: 'Tactical Debrief',         tag: 'Réunion',      color: 'border-l-4 border-outline bg-surface-container text-on-surface', lieu: 'Salle vidéo · Bâtiment B',  remarques: "Revue du match. Points positifs et axes d'amélioration." }],
-  23: [{ time: '09:00', title: 'Pressing Drills',          tag: 'Entraînement', color: 'border-l-4 border-primary bg-primary/10 text-primary',         lieu: 'Terrain 2' }],
-  25: [{ time: '11:00', title: 'Squad Assessment',         tag: 'Récupération', color: 'border-l-4 border-secondary bg-secondary/10 text-secondary',   lieu: 'Aile médicale',                remarques: 'Évaluation physique trimestrielle.' }],
-  28: [{ time: '09:00', title: 'Pre-Match Training',       tag: 'Entraînement', color: 'border-l-4 border-primary bg-primary/10 text-primary',         lieu: 'Terrain principal' }],
-  30: [{ time: '10:00', title: 'Activation Session',       tag: 'Entraînement', color: 'border-l-4 border-secondary bg-secondary/10 text-secondary',   lieu: 'Terrain 1' }],
-};
 
-function generateWeeks(year: number, month: number): CalCell[][] {
+function generateWeeks(year: number, month: number, eventsMap: Record<number, CalEvent[]>): CalCell[][] {
   const firstDay = new Date(year, month, 1);
   const lastDay  = new Date(year, month + 1, 0);
   const firstDayOfWeek = (firstDay.getDay() + 6) % 7;
@@ -118,7 +98,8 @@ function generateWeeks(year: number, month: number): CalCell[][] {
   }
   for (let d = 1; d <= lastDay.getDate(); d++) {
     const date = new Date(year, month, d);
-    week.push({ day: d, outside: false, weekend: date.getDay() === 0 || date.getDay() === 6, isMatch: MATCH_DAYS.has(d), events: EVENT_TEMPLATES[d] || [] });
+    const dayEvents = eventsMap[d] ?? [];
+    week.push({ day: d, outside: false, weekend: date.getDay() === 0 || date.getDay() === 6, isMatch: dayEvents.some(e => e.tag === 'Match'), events: dayEvents });
     if (week.length === 7) { weeks.push(week); week = []; }
   }
   if (week.length > 0) {
@@ -161,8 +142,29 @@ export default function CalendrierDesktop({ openCreate = false }: { openCreate?:
   const [createCalMonth, setCreateCalMonth] = useState(today.getMonth());
   const [createCalYear,  setCreateCalYear]  = useState(today.getFullYear());
 
+  const [eventsMap, setEventsMap] = useState<Record<number, CalEvent[]>>({});
+
   const { isAdmin: canEdit } = useCurrentUser();
   const t = useT();
+
+  const fetchEvents = useCallback(async () => {
+    const year = current.getFullYear();
+    const month = current.getMonth() + 1;
+    const res = await fetch(`/api/backend/events?year=${year}&month=${month}`);
+    if (!res.ok) return;
+    const events = await res.json();
+    const map: Record<number, CalEvent[]> = {};
+    for (const e of events) {
+      const day = parseInt(e.event_date.split('-')[2]);
+      if (!map[day]) map[day] = [];
+      map[day].push({ id: e.id, time: e.event_time, title: e.title, tag: e.tag as EventTag, color: TAG_COLOR[e.tag as EventTag], lieu: e.location ?? undefined, remarques: e.notes ?? undefined });
+    }
+    setEventsMap(map);
+  }, [current]);
+
+  useEffect(() => { fetchEvents(); }, [fetchEvents]);
+
+  const pad = (n: number) => String(n).padStart(2, '0');
 
   const prev = () => setCurrent(new Date(current.getFullYear(), current.getMonth() - 1, 1));
   const next = () => setCurrent(new Date(current.getFullYear(), current.getMonth() + 1, 1));
@@ -207,7 +209,7 @@ export default function CalendrierDesktop({ openCreate = false }: { openCreate?:
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (openCreate) openCreateForm(); }, []);
 
-  const weeks = generateWeeks(current.getFullYear(), current.getMonth());
+  const weeks = generateWeeks(current.getFullYear(), current.getMonth(), eventsMap);
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -512,12 +514,23 @@ export default function CalendrierDesktop({ openCreate = false }: { openCreate?:
 
               {/* Footer */}
               <div className="flex items-center justify-between px-8 py-5 border-t border-outline-variant shrink-0">
-                <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold">
+                <button onClick={async () => {
+                  if (!editEvent?.id) return;
+                  await fetch(`/api/backend/events/${editEvent.id}`, { method: 'DELETE' });
+                  await fetchEvents(); closeEdit(); closeDetail();
+                }} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold">
                   <Trash2 size={16} /> {t.common.delete}
                 </button>
                 <div className="flex items-center gap-3">
                   <button onClick={closeEdit} className="px-5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
-                  <button className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
+                  <button onClick={async () => {
+                    if (!editEvent?.id) return;
+                    await fetch(`/api/backend/events/${editEvent.id}`, {
+                      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ title: editForm.title, tag: editForm.tag, event_date: `${editForm.year}-${pad(editForm.month + 1)}-${pad(editForm.day)}`, event_time: `${pad(editForm.hour)}:${pad(editForm.minute)}`, location: editForm.lieu || null, notes: editForm.remarques || null }),
+                    });
+                    await fetchEvents(); closeEdit();
+                  }} className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
                 </div>
               </div>
 
@@ -637,7 +650,14 @@ export default function CalendrierDesktop({ openCreate = false }: { openCreate?:
 
               <div className="flex items-center justify-end px-8 py-5 border-t border-outline-variant shrink-0 gap-3">
                 <button onClick={closeCreateForm} className="px-5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
-                <button className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.add}</button>
+                <button onClick={async () => {
+                  if (!createForm.title.trim()) return;
+                  await fetch('/api/backend/events', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: createForm.title, tag: createForm.tag, event_date: `${createForm.year}-${pad(createForm.month + 1)}-${pad(createForm.day)}`, event_time: `${pad(createForm.hour)}:${pad(createForm.minute)}`, location: createForm.lieu || null, notes: createForm.remarques || null }),
+                  });
+                  await fetchEvents(); closeCreateForm();
+                }} className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.add}</button>
               </div>
 
             </div>

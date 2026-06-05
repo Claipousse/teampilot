@@ -1,13 +1,16 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Pencil, Send, Trash2, Upload, AlertTriangle } from 'lucide-react';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useT } from '@/contexts/LanguageContext';
 
 type PlayerStatus = 'Disponible' | 'Blessé' | 'Suspendu' | 'Incertain';
 
 type Player = {
   id: number;
+  firstName: string;
+  lastName: string;
   initials: string;
   number: number;
   name: string;
@@ -42,9 +45,10 @@ type PlayerForm = {
   injury: string; returnDate: string;
   contract: string; academy: string;
   notes: string; photoUrl: string;
+  email: string; password: string;
 };
 
-type FormErrors = Partial<Record<'prenom' | 'nom' | 'number' | 'position' | 'nationality' | 'status', string>>;
+type FormErrors = Partial<Record<'prenom' | 'nom' | 'number' | 'position' | 'nationality' | 'status' | 'email' | 'password', string>>;
 
 const EMPTY_FORM: PlayerForm = {
   prenom: '', nom: '', number: '',
@@ -55,6 +59,7 @@ const EMPTY_FORM: PlayerForm = {
   injury: '', returnDate: '',
   contract: '', academy: '',
   notes: '', photoUrl: '',
+  email: '', password: '',
 };
 
 const POSITION_OPTIONS: { label: string; short: 'GK' | 'DEF' | 'MIL' | 'ATT' }[] = [
@@ -97,32 +102,46 @@ const STATUS_HOVER: Record<PlayerStatus, string> = {
 
 const ph = (v: string | number | undefined) => (v !== undefined && v !== '') ? String(v) : '—';
 
-const INITIAL_PLAYERS: Player[] = [
-  { id: 1, initials: 'MV', number: 8,  name: 'Marcus V.',  position: 'Milieu Central',    positionShort: 'MIL', nationality: 'Anglais',   flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', dob: '15/03/1998', height: '182 cm', weight: '78 kg', foot: 'Droit',  status: 'Disponible', contract: '30/06/2027', academy: 'Manchester Academy', stats: { matches: 22, goals: 4,  assists: 9, yellowCards: 3, redCards: 0, minutes: 1850 }, notes: 'Excellent visionnaire du jeu.' },
-  { id: 2, initials: 'JR', number: 3,  name: 'Julian R.',  position: 'Arrière Gauche',    positionShort: 'DEF', nationality: 'Espagnol',  flag: '🇪🇸', dob: '22/07/2000', height: '175 cm', weight: '72 kg', foot: 'Gauche', status: 'Blessé',     injury: 'Ischio-jambiers', returnDate: 'Dans 3 semaines', contract: '30/06/2025', academy: 'Atletico Madrid B', stats: { matches: 14, goals: 0, assists: 3, yellowCards: 2, redCards: 0, minutes: 1170 }, notes: "Récupération en bonne voie." },
-  { id: 3, initials: 'KL', number: 9,  name: 'Kevin L.',   position: 'Attaquant Centre',  positionShort: 'ATT', nationality: 'Français',  flag: '🇫🇷', dob: '08/11/1996', height: '186 cm', weight: '82 kg', foot: 'Droit',  status: 'Disponible', contract: '30/06/2028', academy: 'OL Academy',          stats: { matches: 22, goals: 11, assists: 4, yellowCards: 1, redCards: 0, minutes: 1940 }, notes: 'En grande forme.' },
-  { id: 4, initials: 'SK', number: 1,  name: 'Stefan K.',  position: 'Gardien de but',    positionShort: 'GK',  nationality: 'Allemand',  flag: '🇩🇪', dob: '14/05/1995', height: '192 cm', weight: '88 kg', foot: 'Droit',  status: 'Disponible', contract: '30/06/2028', academy: 'Bayern Youth',        stats: { matches: 22, cleanSheets: 9, goalsConceded: 18, minutes: 1980 },               notes: 'Fiable sur toute la ligne.' },
-  { id: 5, initials: 'AM', number: 5,  name: 'Alex M.',    position: 'Défenseur Central', positionShort: 'DEF', nationality: 'Brésilien', flag: '🇧🇷', dob: '30/01/1997', height: '188 cm', weight: '84 kg', foot: 'Droit',  status: 'Suspendu',   injury: '2 matchs de suspension', contract: '30/06/2026', academy: 'Flamengo Youth',      stats: { matches: 19, goals: 2, assists: 1, yellowCards: 5, redCards: 1, minutes: 1710 },  notes: 'Doit gérer son agressivité.' },
-  { id: 6, initials: 'TO', number: 11, name: 'Tom O.',     position: 'Ailier Droit',      positionShort: 'ATT', nationality: 'Anglais',   flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', dob: '19/09/2001', height: '178 cm', weight: '74 kg', foot: 'Gauche', status: 'Incertain',  injury: 'Gêne musculaire cuisse', returnDate: 'Décision avant le match', contract: '30/06/2027', academy: 'Chelsea Academy', stats: { matches: 18, goals: 6, assists: 7, yellowCards: 1, redCards: 0, minutes: 1420 }, notes: 'À surveiller avant le prochain match.' },
-];
+function playerFromApi(p: any): Player {
+  return {
+    id: p.id, firstName: p.first_name, lastName: p.last_name,
+    initials: (p.first_name[0] + p.last_name[0]).toUpperCase(),
+    name: `${p.first_name} ${p.last_name.charAt(0)}.`,
+    number: p.shirt_number, position: p.position,
+    positionShort: p.position_short as Player['positionShort'],
+    nationality: p.nationality, flag: p.nationality_flag ?? undefined,
+    dob: p.date_of_birth ?? undefined,
+    height: p.height_cm ? `${p.height_cm} cm` : undefined,
+    weight: p.weight_kg ? `${p.weight_kg} kg` : undefined,
+    foot: p.preferred_foot ?? undefined, status: p.status as PlayerStatus,
+    injury: p.injury_description ?? undefined,
+    returnDate: p.return_date_estimate ?? undefined,
+    contract: p.contract_end_date ?? undefined,
+    academy: p.academy ?? undefined, photoUrl: p.photo_url ?? undefined,
+    notes: p.notes ?? undefined,
+    stats: { matches: p.matches, goals: p.goals, assists: p.assists, yellowCards: p.yellow_cards, redCards: p.red_cards, minutes: p.minutes_played, cleanSheets: p.clean_sheets, goalsConceded: p.goals_conceded },
+  };
+}
 
 function contractColor(date?: string): string {
   if (!date) return 'text-on-surface-variant';
-  const [, m, y] = date.split('/').map(Number);
+  const [y, m] = date.split('-').map(Number);
   const months = (y - 2026) * 12 + (m - 6);
   if (months < 0)  return 'text-error font-bold';
   if (months < 12) return 'text-[#F97316] font-bold';
   return 'text-secondary font-semibold';
 }
 
-function validateForm(form: PlayerForm): FormErrors {
+function validateForm(form: PlayerForm, isEdit: boolean): FormErrors {
   const e: FormErrors = {};
-  if (!form.prenom.trim())      e.prenom     = 'Champ obligatoire';
-  if (!form.nom.trim())         e.nom        = 'Champ obligatoire';
-  if (!form.number.trim())      e.number     = 'Champ obligatoire';
-  if (!form.position)           e.position   = 'Champ obligatoire';
-  if (!form.nationality.trim()) e.nationality = 'Champ obligatoire';
-  if (!form.status)             e.status     = 'Champ obligatoire';
+  if (!form.prenom.trim())      e.prenom      = 'Champ obligatoire';
+  if (!form.nom.trim())         e.nom         = 'Champ obligatoire';
+  if (!form.number.trim())      e.number      = 'Champ obligatoire';
+  if (!form.position)           e.position    = 'Champ obligatoire';
+  if (!form.nationality.trim()) e.nationality  = 'Champ obligatoire';
+  if (!form.status)             e.status      = 'Champ obligatoire';
+  if (!isEdit && !form.email.trim())    e.email    = 'Champ obligatoire';
+  if (!isEdit && !form.password.trim()) e.password = 'Champ obligatoire';
   return e;
 }
 
@@ -133,7 +152,8 @@ const labelCls = 'text-xs font-bold text-on-surface-variant uppercase tracking-w
 
 export default function JoueursMobile({ openCreate = false }: { openCreate?: boolean }) {
   const t = useT();
-  const [players, setPlayers]       = useState<Player[]>(INITIAL_PLAYERS);
+  const { isAdmin } = useCurrentUser();
+  const [players, setPlayers]       = useState<Player[]>([]);
   const [posFilter, setPosFilter]   = useState<typeof POSITIONS[number]>('Tous');
   const [displayed, setDisplayed]   = useState<Player | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -159,6 +179,12 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
   const [delTimer,   setDelTimer]   = useState(3);
   const delTimerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const onDelConfirmed = useRef<(() => void) | null>(null);
+
+  const fetchPlayers = useCallback(async () => {
+    const res = await fetch('/api/backend/players');
+    if (res.ok) setPlayers((await res.json()).map(playerFromApi));
+  }, []);
+  useEffect(() => { fetchPlayers(); }, [fetchPlayers]);
 
   const openDetailModal = (p: Player) => {
     setDisplayed(p);
@@ -198,26 +224,18 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
 
   const openEdit = (player: Player) => {
     setEditingPlayerId(player.id);
-    const nameParts = player.name.split(' ');
     setEditForm({
-      prenom: nameParts[0] ?? '',
-      nom: (nameParts[1] ?? '').replace('.', ''),
-      number: String(player.number),
-      position: player.position,
-      positionShort: player.positionShort,
-      nationality: player.nationality ?? '',
-      flag: player.flag ?? '',
-      status: player.status,
+      prenom: player.firstName, nom: player.lastName,
+      number: String(player.number), position: player.position,
+      positionShort: player.positionShort, nationality: player.nationality ?? '',
+      flag: player.flag ?? '', status: player.status,
       dob: player.dob ?? '',
-      height: player.height ?? '',
-      weight: player.weight ?? '',
-      foot: player.foot ?? '',
-      injury: player.injury ?? '',
-      returnDate: player.returnDate ?? '',
-      contract: player.contract ?? '',
-      academy: player.academy ?? '',
-      notes: player.notes ?? '',
-      photoUrl: player.photoUrl ?? '',
+      height: player.height?.replace(' cm', '') ?? '',
+      weight: player.weight?.replace(' kg', '') ?? '',
+      foot: player.foot ?? '', injury: player.injury ?? '',
+      returnDate: player.returnDate ?? '', contract: player.contract ?? '',
+      academy: player.academy ?? '', notes: player.notes ?? '',
+      photoUrl: player.photoUrl ?? '', email: '', password: '',
     });
     setEditErrors({});
     setEditOpen(true);
@@ -233,15 +251,56 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
   };
   const closeCreate = () => { setCreateVisible(false); setTimeout(() => setCreateOpen(false), 200); };
 
-  const handleEditSubmit = () => {
-    const errs = validateForm(editForm);
+  const handleEditSubmit = async () => {
+    const errs = validateForm(editForm, true);
     if (Object.keys(errs).length > 0) { setEditErrors(errs); return; }
-    closeEdit();
+    const res = await fetch(`/api/backend/players/${editingPlayerId}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        first_name: editForm.prenom, last_name: editForm.nom,
+        shirt_number: parseInt(editForm.number), position: editForm.position,
+        position_short: editForm.positionShort, nationality: editForm.nationality,
+        nationality_flag: editForm.flag || null, date_of_birth: editForm.dob || null,
+        height_cm: editForm.height ? parseInt(editForm.height) : null,
+        weight_kg: editForm.weight ? parseInt(editForm.weight) : null,
+        preferred_foot: editForm.foot || null, status: editForm.status,
+        injury_description: editForm.injury || null, return_date_estimate: editForm.returnDate || null,
+        contract_end_date: editForm.contract || null, academy: editForm.academy || null, notes: editForm.notes || null,
+      }),
+    });
+    if (res.ok) {
+      const updated = playerFromApi(await res.json());
+      setPlayers(prev => prev.map(p => p.id === editingPlayerId ? updated : p));
+      if (displayed?.id === editingPlayerId) setDisplayed(updated);
+      closeEdit();
+    }
   };
-  const handleCreateSubmit = () => {
-    const errs = validateForm(createForm);
+  const handleCreateSubmit = async () => {
+    const errs = validateForm(createForm, false);
     if (Object.keys(errs).length > 0) { setCreateErrors(errs); return; }
-    closeCreate();
+    const res = await fetch('/api/backend/players', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        first_name: createForm.prenom, last_name: createForm.nom,
+        shirt_number: parseInt(createForm.number), position: createForm.position,
+        position_short: createForm.positionShort, nationality: createForm.nationality,
+        nationality_flag: createForm.flag || null, date_of_birth: createForm.dob || null,
+        height_cm: createForm.height ? parseInt(createForm.height) : null,
+        weight_kg: createForm.weight ? parseInt(createForm.weight) : null,
+        preferred_foot: createForm.foot || null, status: createForm.status,
+        injury_description: createForm.injury || null, return_date_estimate: createForm.returnDate || null,
+        contract_end_date: createForm.contract || null, academy: createForm.academy || null, notes: createForm.notes || null,
+        email: createForm.email, password: createForm.password,
+      }),
+    });
+    if (res.ok) {
+      const created = await res.json();
+      setPlayers(prev => [...prev, playerFromApi(created)]);
+      closeCreate();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      setCreateErrors({ email: err.detail ?? 'Erreur lors de la création.' });
+    }
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps

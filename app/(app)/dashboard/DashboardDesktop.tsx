@@ -1,40 +1,12 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import { Calendar, Users, MessageSquare, MapPin, ChevronRight, Shield, AlertTriangle } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useAuth } from '@/contexts/AuthContext';
 import { useT } from '@/contexts/LanguageContext';
 
 type EventTag = 'Match' | 'Entraînement' | 'Récupération' | 'Réunion';
-
-// ─── Données mock ──────────────────────────────────────────────────────────────
-
-const UPCOMING_EVENTS: { id: number; date: string; time: string; title: string; tag: EventTag; lieu: string }[] = [
-  { id: 1, date: '05/06', time: '10:00', title: 'Pre-Match Training',    tag: 'Entraînement', lieu: 'Terrain principal' },
-  { id: 2, date: '05/06', time: '15:00', title: 'Match Away',            tag: 'Match',        lieu: 'Etihad Stadium (extérieur)' },
-  { id: 3, date: '07/06', time: '11:00', title: 'Tactical Analysis',     tag: 'Réunion',      lieu: 'Salle vidéo · Bâtiment B' },
-  { id: 4, date: '09/06', time: '09:30', title: 'Gym Session',           tag: 'Entraînement', lieu: 'Salle de musculation' },
-  { id: 5, date: '19/06', time: '17:00', title: 'Home Match',            tag: 'Match',        lieu: 'Stade principal (domicile)' },
-];
-
-const RECENT_MESSAGES: { id: number; initials: string; name: string; preview: string; time: string; unread: boolean; avatarBg: string; initBg: string }[] = [
-  { id: 1, initials: '✦', name: 'Tactical AI',     preview: 'Le planning de la semaine prochaine est disponible.',  time: '8:06',  unread: true,  avatarBg: 'bg-primary',               initBg: 'text-white' },
-  { id: 2, initials: 'CM', name: 'Coach Marcus',   preview: 'On reprend à 14h sur le terrain 2.',                   time: '10:45', unread: true,  avatarBg: 'bg-surface-container-high', initBg: 'text-on-surface-variant' },
-  { id: 3, initials: 'SB', name: 'Sarah Bernard',  preview: 'Bilan médical de Julian R. après scanner.',            time: '9:12',  unread: false, avatarBg: 'bg-surface-container-high', initBg: 'text-on-surface-variant' },
-  { id: 4, initials: 'ST', name: 'Staff Tactique', preview: 'Coach Marcus: Réunion demain 9h.',                     time: 'Hier',  unread: false, avatarBg: 'bg-primary/10',             initBg: 'text-primary' },
-];
-
-const PLAYERS_UNAVAILABLE = [
-  { id: 2, initials: 'JR', name: 'Julian R.',  position: 'Arrière Gauche',    status: 'Blessé'   as const, detail: 'Ischio-jambiers · Dans 3 semaines' },
-  { id: 5, initials: 'AM', name: 'Alex M.',    position: 'Défenseur Central', status: 'Suspendu' as const, detail: '2 matchs de suspension' },
-  { id: 6, initials: 'TO', name: 'Tom O.',     position: 'Ailier Droit',      status: 'Incertain' as const, detail: 'Gêne musculaire cuisse' },
-];
-
-const STATUS_BADGE: Record<string, string> = {
-  'Disponible': 'bg-secondary/10 text-secondary',
-  'Blessé':     'bg-error/10 text-error',
-  'Suspendu':   'bg-[#F97316]/10 text-[#F97316]',
-  'Incertain':  'bg-primary/10 text-primary',
-};
 
 const TAG_STYLE: Record<EventTag, { border: string; badge: string; text: string }> = {
   'Match':        { border: 'border-l-4 border-error',     badge: 'bg-error/10',     text: 'text-error' },
@@ -43,28 +15,52 @@ const TAG_STYLE: Record<EventTag, { border: string; badge: string; text: string 
   'Réunion':      { border: 'border-l-4 border-outline',   badge: 'bg-surface-container', text: 'text-on-surface' },
 };
 
-const ADMIN_CLUB    = { nom: 'Metropolis United FC', ligue: 'Elite Pro League', annee: '1924', ville: 'London, UK', email: 'admin@metropolisunited.com', phone: '+44 20 7946 0012', adresse: 'United Training Complex, SE1 7PB' };
-const ADMIN_SAISON  = { label: '2026/2027', statut: 'En cours', competitions: 'Premier League · FA Cup', objectif: 'Top 4 · Quart FA Cup', debut: '01/08/2026', fin: '31/05/2027', journee: 38, journeeCourante: 15 };
-const ADMIN_STAFF   = [
-  { prenom: 'Thomas',  nom: 'Laurent',  role: 'Coach Principal' },
-  { prenom: 'Sophie',  nom: 'Moreau',   role: 'Kinésithérapeute' },
-  { prenom: 'David',   nom: 'Park',     role: 'Analyste Vidéo' },
-  { prenom: 'Claire',  nom: 'Dupuis',   role: 'Médecin' },
-  { prenom: 'Marcus',  nom: 'Osei',     role: 'Préparateur Physique' },
-  { prenom: 'Julie',   nom: 'Renard',   role: 'Scout' },
-  { prenom: 'Antoine', nom: 'Blanc',    role: 'Coach Adjoint' },
-];
+const STATUS_BADGE: Record<string, string> = {
+  'Blessé':    'bg-error/10 text-error',
+  'Suspendu':  'bg-[#F97316]/10 text-[#F97316]',
+  'Incertain': 'bg-primary/10 text-primary',
+};
 
-// ─── Composant ─────────────────────────────────────────────────────────────────
+const SS_SEASON: Record<string, string> = {
+  'À venir':  'bg-[#F97316]/10 text-[#F97316]',
+  'En cours': 'bg-secondary/10 text-secondary',
+  'Terminée': 'bg-error/10 text-error',
+};
+
+function fmtDate(iso?: string) { return iso ? iso.split('-').reverse().join('/') : '—'; }
+function fmtEventDate(iso: string) {
+  const [, m, d] = iso.split('-');
+  return `${d}/${m}`;
+}
 
 export default function DashboardDesktop() {
   const { isAdmin } = useCurrentUser();
+  const { user: auth } = useAuth();
   const t = useT();
 
-  const totalPlayers   = 6;
-  const fitPlayers     = 3;
-  const upcomingCount  = UPCOMING_EVENTS.length;
-  const unreadCount    = RECENT_MESSAGES.filter(m => m.unread).length;
+  const [kpis,       setKpis]       = useState({ total_players: 0, available_players: 0, upcoming_events_count: 0, unread_messages: 0 });
+  const [upcoming,   setUpcoming]   = useState<any[]>([]);
+  const [unavailable, setUnavailable] = useState<any[]>([]);
+  const [summary,    setSummary]    = useState<any>(null);
+
+  const fetchAll = useCallback(async () => {
+    const [kRes, uRes, unRes] = await Promise.all([
+      fetch('/api/backend/dashboard/kpis'),
+      fetch('/api/backend/dashboard/upcoming-events'),
+      fetch('/api/backend/dashboard/unavailable-players'),
+    ]);
+    if (kRes.ok)  setKpis(await kRes.json());
+    if (uRes.ok)  setUpcoming(await uRes.json());
+    if (unRes.ok) setUnavailable(await unRes.json());
+    if (isAdmin) {
+      const sRes = await fetch('/api/backend/dashboard/admin-summary');
+      if (sRes.ok) setSummary(await sRes.json());
+    }
+  }, [isAdmin]);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  const fullName = auth ? `${auth.firstName} ${auth.lastName}` : '';
 
   return (
     <div className="flex flex-col gap-6 h-full overflow-y-auto">
@@ -73,7 +69,7 @@ export default function DashboardDesktop() {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-bold text-primary uppercase tracking-widest mb-1">{t.dashboard.pageTitle}</p>
-          <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">{t.dashboard.greeting}, Alex Graham</h1>
+          <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">{t.dashboard.greeting}{fullName ? `, ${fullName}` : ''}</h1>
           <p className="text-base text-on-surface-variant mt-1">{t.dashboard.subtitle}</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-xl shrink-0">
@@ -87,9 +83,9 @@ export default function DashboardDesktop() {
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
         {([
-          { label: t.dashboard.kpiPlayers,  value: totalPlayers,  sub: `${fitPlayers} ${t.dashboard.kpiAvailable}`, Icon: Users,         accent: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/20' },
-          { label: t.dashboard.kpiEvents,   value: upcomingCount, sub: t.dashboard.kpiUpcoming,                  Icon: Calendar,      accent: 'text-secondary', bg: 'bg-secondary/5', border: 'border-secondary/20' },
-          { label: t.dashboard.kpiMessages, value: unreadCount,   sub: t.dashboard.kpiUnread,                    Icon: MessageSquare, accent: 'text-error',     bg: 'bg-error/5',     border: 'border-error/20' },
+          { label: t.dashboard.kpiPlayers,  value: kpis.total_players,          sub: `${kpis.available_players} ${t.dashboard.kpiAvailable}`, Icon: Users,         accent: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/20' },
+          { label: t.dashboard.kpiEvents,   value: kpis.upcoming_events_count,  sub: t.dashboard.kpiUpcoming,                                  Icon: Calendar,      accent: 'text-secondary', bg: 'bg-secondary/5', border: 'border-secondary/20' },
+          { label: t.dashboard.kpiMessages, value: kpis.unread_messages,        sub: t.dashboard.kpiUnread,                                    Icon: MessageSquare, accent: 'text-error',     bg: 'bg-error/5',     border: 'border-error/20' },
         ] as const).map(kpi => (
           <div key={kpi.label} className={`${kpi.bg} border ${kpi.border} rounded-2xl p-5 flex flex-col gap-2`}>
             <div className="flex items-center justify-between">
@@ -105,7 +101,6 @@ export default function DashboardDesktop() {
       {/* Événements + Messages */}
       <div className="grid grid-cols-5 gap-4">
 
-        {/* Prochains événements */}
         <div className="col-span-3 bg-surface-container-lowest border border-outline-variant rounded-2xl p-6">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
@@ -116,30 +111,35 @@ export default function DashboardDesktop() {
               {t.dashboard.viewCalendar} <ChevronRight size={14} />
             </a>
           </div>
-          <div className="space-y-2">
-            {UPCOMING_EVENTS.map(ev => {
-              const ts = TAG_STYLE[ev.tag];
-              return (
-                <div key={ev.id}
-                  className={`flex items-center gap-4 p-4 rounded-xl ${ts.border} bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer`}>
-                  <div className="shrink-0 w-14 text-center">
-                    <p className="text-xs font-bold text-on-surface-variant">{ev.date}</p>
-                    <p className="text-base font-extrabold text-on-surface leading-tight">{ev.time}</p>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-on-surface truncate">{ev.title}</p>
-                    <div className="flex items-center gap-1 text-xs text-on-surface-variant mt-0.5">
-                      <MapPin size={11} className="shrink-0" /><span className="truncate">{ev.lieu}</span>
+          {upcoming.length === 0 ? (
+            <p className="text-sm text-on-surface-variant text-center py-6">Aucun événement à venir</p>
+          ) : (
+            <div className="space-y-2">
+              {upcoming.map((ev: any) => {
+                const ts = TAG_STYLE[ev.tag as EventTag] ?? TAG_STYLE['Réunion'];
+                return (
+                  <div key={ev.id} className={`flex items-center gap-4 p-4 rounded-xl ${ts.border} bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer`}>
+                    <div className="shrink-0 w-14 text-center">
+                      <p className="text-xs font-bold text-on-surface-variant">{fmtEventDate(ev.event_date)}</p>
+                      <p className="text-base font-extrabold text-on-surface leading-tight">{ev.event_time}</p>
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-on-surface truncate">{ev.title}</p>
+                      {ev.location && (
+                        <div className="flex items-center gap-1 text-xs text-on-surface-variant mt-0.5">
+                          <MapPin size={11} className="shrink-0" /><span className="truncate">{ev.location}</span>
+                        </div>
+                      )}
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold shrink-0 ${ts.badge} ${ts.text}`}>{ev.tag}</span>
                   </div>
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold shrink-0 ${ts.badge} ${ts.text}`}>{ev.tag}</span>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Messages récents */}
+        {/* Messages récents — statique Phase 4 */}
         <div className="col-span-2 bg-surface-container-lowest border border-outline-variant rounded-2xl p-6">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
@@ -150,25 +150,7 @@ export default function DashboardDesktop() {
               {t.dashboard.viewAll} <ChevronRight size={14} />
             </a>
           </div>
-          <div className="space-y-1">
-            {RECENT_MESSAGES.map(msg => (
-              <div key={msg.id} className="flex items-start gap-3 p-3 rounded-xl hover:bg-surface-container transition-colors cursor-pointer">
-                <div className={`w-10 h-10 rounded-full ${msg.avatarBg} flex items-center justify-center text-sm font-bold ${msg.initBg} shrink-0 relative`}>
-                  <span>{msg.initials}</span>
-                  {msg.unread && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-error rounded-full border-2 border-surface-container-lowest" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-0.5">
-                    <p className={`text-sm font-bold truncate ${msg.unread ? 'text-on-surface' : 'text-on-surface-variant'}`}>{msg.name}</p>
-                    <span className="text-xs text-on-surface-variant/60 shrink-0 ml-2">{msg.time}</span>
-                  </div>
-                  <p className={`text-xs truncate ${msg.unread ? 'text-on-surface-variant' : 'text-on-surface-variant/50'}`}>{msg.preview}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <p className="text-sm text-on-surface-variant text-center py-4">Messagerie disponible en Phase 4</p>
         </div>
       </div>
 
@@ -179,30 +161,40 @@ export default function DashboardDesktop() {
             <AlertTriangle size={20} className="text-[#F97316]" />
             <h2 className="text-lg font-bold text-on-surface">{t.dashboard.unavailable}</h2>
             <span className="text-xs text-on-surface-variant/60">
-              {PLAYERS_UNAVAILABLE.length} {PLAYERS_UNAVAILABLE.length > 1 ? t.dashboard.affectedPlural : t.dashboard.affected}
+              {unavailable.length} {unavailable.length > 1 ? t.dashboard.affectedPlural : t.dashboard.affected}
             </span>
           </div>
           <a href="/joueurs" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
             {t.dashboard.viewPlayersList} <ChevronRight size={14} />
           </a>
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          {PLAYERS_UNAVAILABLE.map(p => (
-            <div key={p.id} className="flex items-center gap-4 p-4 bg-surface-container rounded-xl">
-              <div className="w-11 h-11 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
-                <span className="text-sm font-bold text-on-surface-variant">{p.initials}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                  <p className="text-sm font-bold text-on-surface">{p.name}</p>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${STATUS_BADGE[p.status]}`}>{p.status}</span>
+        {unavailable.length === 0 ? (
+          <p className="text-sm text-on-surface-variant text-center py-4">Tous les joueurs sont disponibles</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-3">
+            {unavailable.map((p: any) => {
+              const initials = (p.first_name[0] + p.last_name[0]).toUpperCase();
+              return (
+                <div key={p.id} className="flex items-center gap-4 p-4 bg-surface-container rounded-xl">
+                  <div className="w-11 h-11 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
+                    {p.photo_url
+                      ? <img src={p.photo_url} alt="" className="w-full h-full object-cover rounded-full" />
+                      : <span className="text-sm font-bold text-on-surface-variant">{initials}</span>
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <p className="text-sm font-bold text-on-surface">{p.first_name} {p.last_name.charAt(0)}.</p>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${STATUS_BADGE[p.status] ?? ''}`}>{p.status}</span>
+                    </div>
+                    <p className="text-xs text-on-surface-variant truncate">{p.position}</p>
+                    {p.injury_description && <p className="text-xs text-on-surface-variant/60 truncate">{p.injury_description}</p>}
+                  </div>
                 </div>
-                <p className="text-xs text-on-surface-variant truncate">{p.position}</p>
-                <p className="text-xs text-on-surface-variant/60 truncate">{p.detail}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Panneau Admin */}
@@ -226,22 +218,18 @@ export default function DashboardDesktop() {
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex flex-col gap-4">
               <div>
                 <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.dashboard.clubCard}</p>
-                <p className="text-base font-extrabold text-on-surface">{ADMIN_CLUB.nom}</p>
-                <p className="text-sm text-on-surface-variant mt-1">{ADMIN_CLUB.ligue}</p>
-                <p className="text-xs text-on-surface-variant/60 mt-1">{t.dashboard.founded} {ADMIN_CLUB.annee} · {ADMIN_CLUB.ville}</p>
+                <p className="text-base font-extrabold text-on-surface">{summary?.club?.name ?? '—'}</p>
+                <p className="text-sm text-on-surface-variant mt-1">{summary?.club?.league ?? '—'}</p>
+                <p className="text-xs text-on-surface-variant/60 mt-1">{summary?.club?.founded_year ? `${t.dashboard.founded} ${summary.club.founded_year}` : ''}{summary?.club?.city ? ` · ${summary.club.city}` : ''}</p>
               </div>
               <div className="border-t border-outline-variant pt-4 space-y-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest w-16 shrink-0">Email</span>
-                  <span className="text-xs text-on-surface truncate">{ADMIN_CLUB.email}</span>
+                  <span className="text-xs text-on-surface truncate">{summary?.club?.email ?? '—'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest w-16 shrink-0">Tél.</span>
-                  <span className="text-xs text-on-surface">{ADMIN_CLUB.phone}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest w-16 shrink-0">Adresse</span>
-                  <span className="text-xs text-on-surface">{ADMIN_CLUB.adresse}</span>
+                  <span className="text-xs text-on-surface">{summary?.club?.phone ?? '—'}</span>
                 </div>
               </div>
             </div>
@@ -250,50 +238,44 @@ export default function DashboardDesktop() {
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex flex-col gap-4">
               <div>
                 <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.dashboard.seasonCard}</p>
-                <div className="flex items-center gap-2 mb-2">
-                  <p className="text-base font-extrabold text-on-surface">{ADMIN_SAISON.label}</p>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-secondary/10 text-secondary">{ADMIN_SAISON.statut}</span>
-                </div>
-                <p className="text-sm text-on-surface-variant">{ADMIN_SAISON.competitions}</p>
-                <p className="text-xs text-on-surface-variant/60 mt-1">{t.dashboard.objective} {ADMIN_SAISON.objectif}</p>
+                {summary?.season ? (
+                  <>
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className="text-base font-extrabold text-on-surface">{summary.season.label}</p>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${SS_SEASON[summary.season.status] ?? ''}`}>{summary.season.status}</span>
+                    </div>
+                    <p className="text-sm text-on-surface-variant">{summary.season.competitions}</p>
+                    <p className="text-xs text-on-surface-variant/60 mt-1">{t.dashboard.objective} {summary.season.objective}</p>
+                  </>
+                ) : <p className="text-sm text-on-surface-variant">—</p>}
               </div>
-              <div className="border-t border-outline-variant pt-4 space-y-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-on-surface-variant">{t.dashboard.start}</span>
-                  <span className="font-semibold text-on-surface">{ADMIN_SAISON.debut}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-on-surface-variant">{t.dashboard.end}</span>
-                  <span className="font-semibold text-on-surface">{ADMIN_SAISON.fin}</span>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between text-xs mb-1.5">
-                    <span className="text-on-surface-variant">{t.dashboard.progress}</span>
-                    <span className="font-semibold text-on-surface">J{ADMIN_SAISON.journeeCourante} / {ADMIN_SAISON.journee}</span>
+              {summary?.season && (
+                <div className="border-t border-outline-variant pt-4 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-on-surface-variant">{t.dashboard.start}</span>
+                    <span className="font-semibold text-on-surface">{fmtDate(summary.season.start_date)}</span>
                   </div>
-                  <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-secondary rounded-full transition-all"
-                      style={{ width: `${Math.round((ADMIN_SAISON.journeeCourante / ADMIN_SAISON.journee) * 100)}%` }}
-                    />
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-on-surface-variant">{t.dashboard.end}</span>
+                    <span className="font-semibold text-on-surface">{fmtDate(summary.season.end_date)}</span>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Staff */}
             <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5">
               <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">
-                {t.dashboard.staffCard} · <span className="normal-case font-semibold text-on-surface">{ADMIN_STAFF.length} {t.common.members}</span>
+                {t.dashboard.staffCard} · <span className="normal-case font-semibold text-on-surface">{summary?.staff?.length ?? 0} {t.common.members}</span>
               </p>
               <div className="space-y-2.5 max-h-44 overflow-y-auto pr-1">
-                {ADMIN_STAFF.map((s, i) => (
+                {(summary?.staff ?? []).map((s: any, i: number) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-primary">{s.prenom[0]}{s.nom[0]}</span>
+                      <span className="text-xs font-bold text-primary">{s.first_name[0]}{s.last_name[0]}</span>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-on-surface truncate">{s.prenom} {s.nom}</p>
+                      <p className="text-sm font-semibold text-on-surface truncate">{s.first_name} {s.last_name}</p>
                       <p className="text-xs text-on-surface-variant truncate">{s.role}</p>
                     </div>
                   </div>

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, club, seasons, staff
 
-app = FastAPI(title="TeampilotAI API", version="1.0.0")
+app = FastAPI(title="TeampilotAI API", version="1.0.0", redirect_slashes=False)
 
 app.add_middleware(
     CORSMiddleware,

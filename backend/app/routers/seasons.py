@@ -13,7 +13,7 @@ def _make_label(start: str, end: str) -> str:
     return f"{start[:4]}/{end[:4]}"
 
 
-@router.get("/", response_model=list[SeasonRead], dependencies=[Depends(get_current_user)])
+@router.get("", response_model=list[SeasonRead], dependencies=[Depends(get_current_user)])
 async def list_seasons(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Season).order_by(Season.start_date.desc()))
     return result.scalars().all()
@@ -28,7 +28,7 @@ async def get_active_season(db: AsyncSession = Depends(get_db)):
     return season
 
 
-@router.post("/", response_model=SeasonRead, dependencies=[Depends(require_admin)])
+@router.post("", response_model=SeasonRead, dependencies=[Depends(require_admin)])
 async def create_season(data: SeasonCreate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Club).where(Club.id == 1))
     club = result.scalar_one_or_none()

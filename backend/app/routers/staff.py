@@ -11,7 +11,7 @@ from app.services.auth_service import hash_password
 router = APIRouter(prefix="/staff", tags=["staff"])
 
 
-@router.get("/", response_model=list[StaffMemberRead], dependencies=[Depends(get_current_user)])
+@router.get("", response_model=list[StaffMemberRead], dependencies=[Depends(get_current_user)])
 async def list_staff(search: str = "", role: str = "", db: AsyncSession = Depends(get_db)):
     q = select(StaffMember).where(StaffMember.is_active == True)
     if role:
@@ -24,7 +24,7 @@ async def list_staff(search: str = "", role: str = "", db: AsyncSession = Depend
     return members
 
 
-@router.post("/", response_model=StaffMemberRead, dependencies=[Depends(require_admin)])
+@router.post("", response_model=StaffMemberRead, dependencies=[Depends(require_admin)])
 async def create_staff(data: StaffMemberCreate, db: AsyncSession = Depends(get_db)):
     existing = await db.execute(select(User).where(User.email == data.email))
     if existing.scalar_one_or_none():

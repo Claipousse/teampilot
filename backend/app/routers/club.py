@@ -20,12 +20,12 @@ async def _get_or_create_club(db: AsyncSession) -> Club:
     return club
 
 
-@router.get("/", response_model=ClubRead, dependencies=[Depends(get_current_user)])
+@router.get("", response_model=ClubRead, dependencies=[Depends(get_current_user)])
 async def get_club(db: AsyncSession = Depends(get_db)):
     return await _get_or_create_club(db)
 
 
-@router.patch("/", response_model=ClubRead, dependencies=[Depends(require_admin)])
+@router.patch("", response_model=ClubRead, dependencies=[Depends(require_admin)])
 async def update_club(data: ClubUpdate, db: AsyncSession = Depends(get_db)):
     club = await _get_or_create_club(db)
     for field, value in data.model_dump(exclude_none=True).items():

@@ -15,8 +15,8 @@ async def seed():
         admin = User(
             email="admin@teampilot.com",
             hashed_password=hash_password("admin123"),
-            first_name="Alex",
-            last_name="Graham",
+            first_name="Clément",
+            last_name="Conrié",
             is_admin=True,
             type="staff",
         )

@@ -111,7 +111,7 @@ function playerFromApi(p: any): Player {
     firstName: p.first_name,
     lastName: p.last_name,
     initials: (p.first_name[0] + p.last_name[0]).toUpperCase(),
-    name: `${p.first_name} ${p.last_name.charAt(0)}.`,
+    name: `${p.last_name} ${p.first_name.charAt(0)}.`,
     number: p.shirt_number,
     position: p.position,
     positionShort: p.position_short as Player['positionShort'],

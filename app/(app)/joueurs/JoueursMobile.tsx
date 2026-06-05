@@ -106,7 +106,7 @@ function playerFromApi(p: any): Player {
   return {
     id: p.id, firstName: p.first_name, lastName: p.last_name,
     initials: (p.first_name[0] + p.last_name[0]).toUpperCase(),
-    name: `${p.first_name} ${p.last_name.charAt(0)}.`,
+    name: `${p.last_name} ${p.first_name.charAt(0)}.`,
     number: p.shirt_number, position: p.position,
     positionShort: p.position_short as Player['positionShort'],
     nationality: p.nationality, flag: p.nationality_flag ?? undefined,
@@ -318,7 +318,8 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
     form: PlayerForm,
     setForm: React.Dispatch<React.SetStateAction<PlayerForm>>,
     errors: FormErrors,
-    photoRef: React.RefObject<HTMLInputElement | null>
+    photoRef: React.RefObject<HTMLInputElement | null>,
+    isEdit = false,
   ) => {
     const initials = (form.prenom.charAt(0) + form.nom.charAt(0)).toUpperCase() || '?';
     return (
@@ -434,9 +435,9 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
 
           <div>
             <label className={labelCls}>{t.players.formDob}</label>
-            <input type="text" value={form.dob}
+            <input type="date" value={form.dob}
               onChange={e => setForm(f => ({ ...f, dob: e.target.value }))}
-              className={inputCls()} placeholder="JJ/MM/AAAA" />
+              className={inputCls()} />
           </div>
 
           <div>
@@ -491,9 +492,9 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
           </p>
           <div>
             <label className={labelCls}>{t.players.formContract}</label>
-            <input type="text" value={form.contract}
+            <input type="date" value={form.contract}
               onChange={e => setForm(f => ({ ...f, contract: e.target.value }))}
-              className={inputCls()} placeholder="JJ/MM/AAAA" />
+              className={inputCls()} />
           </div>
           <div>
             <label className={labelCls}>{t.players.formAcademy}</label>
@@ -502,6 +503,29 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
               className={inputCls()} placeholder="Ex : OL Academy" />
           </div>
         </div>
+
+        {/* Compte — création seulement */}
+        {!isEdit && (
+          <div className="space-y-4 pt-2 border-t border-outline-variant">
+            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">
+              Compte d&apos;accès <span className="text-error font-normal normal-case">— obligatoire</span>
+            </p>
+            <div>
+              <label className={labelCls}>Email <span className="text-error">*</span></label>
+              <input type="email" value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                className={inputCls(errors.email)} placeholder="joueur@club.com" />
+              {errors.email && <p className="text-xs text-error mt-1">{errors.email}</p>}
+            </div>
+            <div>
+              <label className={labelCls}>Mot de passe <span className="text-error">*</span></label>
+              <input type="password" value={form.password}
+                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                className={inputCls(errors.password)} placeholder="Minimum 6 caractères" />
+              {errors.password && <p className="text-xs text-error mt-1">{errors.password}</p>}
+            </div>
+          </div>
+        )}
 
         {/* Notes optionnel */}
         <div className="space-y-2 pt-2 border-t border-outline-variant">
@@ -520,10 +544,12 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
 
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-extrabold text-on-surface">Effectif</h1>
-        <button onClick={openCreateForm}
-          className="px-4 py-2.5 bg-error rounded-xl text-white text-base font-bold active:scale-[0.98] transition-all">
-          + {t.common.add}
-        </button>
+        {isAdmin && (
+          <button onClick={openCreateForm}
+            className="px-4 py-2.5 bg-error rounded-xl text-white text-base font-bold active:scale-[0.98] transition-all">
+            + {t.common.add}
+          </button>
+        )}
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
@@ -618,10 +644,12 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <button onClick={() => openEdit(displayed)}
-                  className="flex items-center gap-1.5 px-4 py-2.5 bg-error text-white text-base font-semibold rounded-xl">
-                  <Pencil size={15} /> Modifier
-                </button>
+                {isAdmin && (
+                  <button onClick={() => openEdit(displayed)}
+                    className="flex items-center gap-1.5 px-4 py-2.5 bg-error text-white text-base font-semibold rounded-xl">
+                    <Pencil size={15} /> Modifier
+                  </button>
+                )}
                 <div className="relative group">
                   <a href="/messagerie" className="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container transition-colors hover:bg-primary/10">
                     <Send size={19} className="text-on-surface-variant" />
@@ -705,7 +733,7 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                 <div className="bg-surface-container rounded-2xl overflow-hidden divide-y divide-outline-variant/50">
                   <div className="flex items-center justify-between px-4 py-3.5">
                     <p className="text-base text-on-surface-variant">Expire le</p>
-                    <p className={`text-base ${displayed.contract ? contractColor(displayed.contract) : 'text-outline'}`}>{ph(displayed.contract)}</p>
+                    <p className={`text-base ${displayed.contract ? contractColor(displayed.contract) : 'text-outline'}`}>{displayed.contract ? displayed.contract.split('-').reverse().join('/') : '—'}</p>
                   </div>
                   <div className="flex items-center justify-between px-4 py-3.5">
                     <p className="text-base text-on-surface-variant">Club formateur</p>
@@ -742,11 +770,12 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                 </button>
               </div>
 
-              {renderFormBody(editForm, setEditForm, editErrors, editPhotoRef)}
+              {renderFormBody(editForm, setEditForm, editErrors, editPhotoRef, true)}
 
               <div className="flex items-center justify-between px-5 py-4 border-t border-outline-variant shrink-0">
                 <button
-                  onClick={() => openDel(editForm.prenom + ' ' + editForm.nom, () => {
+                  onClick={() => openDel(editForm.prenom + ' ' + editForm.nom, async () => {
+                    await fetch(`/api/backend/players/${editingPlayerId}`, { method: 'DELETE' });
                     setPlayers(prev => prev.filter(p => p.id !== editingPlayerId));
                     closeEdit();
                     closeDetailModal();

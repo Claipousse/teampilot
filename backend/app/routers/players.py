@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select
 from app.dependencies.db import get_db
 from app.dependencies.auth import get_current_user, require_admin
 from app.models.player import Player
@@ -28,15 +28,6 @@ async def list_players(
         players = [p for p in players if s in f"{p.first_name} {p.last_name}".lower() or s in p.position.lower()]
     return players
 
-
-@router.get("/summary", dependencies=[Depends(get_current_user)])
-async def players_summary(db: AsyncSession = Depends(get_db)):
-    total     = await db.scalar(select(func.count()).select_from(Player).where(Player.is_active == True)) or 0
-    available = await db.scalar(select(func.count()).select_from(Player).where(Player.is_active == True, Player.status == "Disponible")) or 0
-    injured   = await db.scalar(select(func.count()).select_from(Player).where(Player.is_active == True, Player.status == "Blessé")) or 0
-    suspended = await db.scalar(select(func.count()).select_from(Player).where(Player.is_active == True, Player.status == "Suspendu")) or 0
-    uncertain = await db.scalar(select(func.count()).select_from(Player).where(Player.is_active == True, Player.status == "Incertain")) or 0
-    return {"total": total, "available": available, "injured": injured, "suspended": suspended, "uncertain": uncertain}
 
 
 @router.post("", response_model=PlayerRead, dependencies=[Depends(require_admin)])

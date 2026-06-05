@@ -147,8 +147,7 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
   const [createCalMonth, setCreateCalMonth] = useState(today.getMonth());
   const [createCalYear,  setCreateCalYear]  = useState(today.getFullYear());
 
-  const { role } = useCurrentUser();
-  const canEdit = role === 'admin' || role === 'coach';
+  const { isAdmin: canEdit } = useCurrentUser();
   const t = useT();
 
   const weekDays = getWeekDays(baseMondayRef, weekOffset);

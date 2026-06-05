@@ -161,8 +161,7 @@ export default function CalendrierDesktop({ openCreate = false }: { openCreate?:
   const [createCalMonth, setCreateCalMonth] = useState(today.getMonth());
   const [createCalYear,  setCreateCalYear]  = useState(today.getFullYear());
 
-  const { role } = useCurrentUser();
-  const canEdit  = role === 'admin' || role === 'coach';
+  const { isAdmin: canEdit } = useCurrentUser();
   const t = useT();
 
   const prev = () => setCurrent(new Date(current.getFullYear(), current.getMonth() - 1, 1));

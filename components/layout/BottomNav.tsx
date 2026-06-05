@@ -11,8 +11,7 @@ import { useT } from '@/contexts/LanguageContext';
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const { role } = useCurrentUser();
-  const isAdmin = role === 'admin';
+  const { isAdmin } = useCurrentUser();
   const t = useT();
 
   const navItems = [

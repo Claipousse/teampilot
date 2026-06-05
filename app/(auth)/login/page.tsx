@@ -1,11 +1,34 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    if (res.ok) {
+      router.push('/dashboard');
+    } else {
+      setError('Email ou mot de passe incorrect.');
+    }
+    setLoading(false);
+  };
 
   return (
     <div className="h-screen flex overflow-hidden">
@@ -54,7 +77,7 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <form className="space-y-7">
+            <form className="space-y-7" onSubmit={handleSubmit}>
 
               <div className="space-y-2">
                 <label htmlFor="email" className="text-xs font-semibold text-on-surface-variant uppercase tracking-widest block">
@@ -66,6 +89,9 @@ export default function LoginPage() {
                     id="email"
                     name="email"
                     type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
                     placeholder="manager@teampilot.ai"
                     className="w-full pl-14 pr-5 py-5 bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all text-base text-on-surface outline-none placeholder:text-outline"
                   />
@@ -73,18 +99,18 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label htmlFor="password" className="text-xs font-semibold text-on-surface-variant uppercase tracking-widest block">
-                    Password
-                  </label>
-                  <a href="#" className="text-sm text-primary hover:underline font-medium">Forgot password?</a>
-                </div>
+                <label htmlFor="password" className="text-xs font-semibold text-on-surface-variant uppercase tracking-widest block">
+                  Password
+                </label>
                 <div className="relative">
                   <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-outline" size={20} />
                   <input
                     id="password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
                     placeholder="••••••••"
                     className="w-full pl-14 pr-14 py-5 bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all text-base text-on-surface outline-none placeholder:text-outline"
                   />
@@ -98,17 +124,17 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <input id="remember" name="remember" type="checkbox" className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary" />
-                <label htmlFor="remember" className="text-base text-on-surface-variant">Remember this device for 30 days</label>
-              </div>
+              {error && (
+                <p className="text-sm text-error font-medium">{error}</p>
+              )}
 
               <button
                 type="submit"
-                className="w-full py-5 bg-primary hover:bg-primary-container text-white text-lg font-semibold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                disabled={loading}
+                className="w-full py-5 bg-primary hover:bg-primary/90 text-white text-lg font-semibold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign In to Dashboard
-                <ArrowRight size={20} />
+                {loading ? 'Connexion...' : 'Sign In to Dashboard'}
+                {!loading && <ArrowRight size={20} />}
               </button>
 
             </form>

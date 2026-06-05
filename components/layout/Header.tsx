@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, Bell, X } from 'lucide-react';
 import { useLanguage, useT } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 type SearchTab = 'Joueurs' | 'Événements' | 'Messages';
 type NotifKind = 'added' | 'rescheduled' | 'cancelled';
@@ -53,6 +54,11 @@ export default function Header() {
 
   const { lang, setLang } = useLanguage();
   const t = useT();
+  const { user, logout } = useAuth();
+
+  const fullName = user ? `${user.firstName} ${user.lastName}` : '—';
+  const initials = user ? `${user.firstName[0]}${user.lastName[0]}` : '?';
+  const roleLabel = user?.isAdmin ? 'Admin' : user?.type === 'staff' ? 'Staff' : 'Joueur';
 
   // Notifications en état pour pouvoir les supprimer
   const [events, setEvents] = useState<NotifEvent[]>(() => {
@@ -268,12 +274,16 @@ export default function Header() {
         {/* Profil */}
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <p className="text-lg font-bold text-on-surface leading-tight">Alex Graham</p>
-            <p className="text-sm text-primary uppercase tracking-widest font-semibold">Head Coach</p>
+            <p className="text-lg font-bold text-on-surface leading-tight">{fullName}</p>
+            <p className="text-sm text-primary uppercase tracking-widest font-semibold">{roleLabel}</p>
           </div>
-          <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shrink-0">
-            <span className="text-white text-base font-bold">AG</span>
-          </div>
+          <button
+            onClick={logout}
+            className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shrink-0 hover:bg-primary/80 transition-colors"
+            title="Se déconnecter"
+          >
+            <span className="text-white text-base font-bold">{initials}</span>
+          </button>
         </div>
 
       </div>

@@ -58,8 +58,7 @@ const ADMIN_STAFF   = [
 // ─── Composant ─────────────────────────────────────────────────────────────────
 
 export default function DashboardDesktop() {
-  const { role } = useCurrentUser();
-  const isAdmin = role === 'admin';
+  const { isAdmin } = useCurrentUser();
   const t = useT();
 
   const totalPlayers   = 6;

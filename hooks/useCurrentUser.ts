@@ -1,14 +1,16 @@
-// TODO: remplacer par un vrai appel auth (session, JWT, contexte, etc.)
-// Le hook doit retourner { role } à partir de la session utilisateur réelle.
-
-export type UserRole = 'admin' | 'coach' | 'player';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface CurrentUser {
-  role: UserRole;
+  isAdmin: boolean;
+  type: 'player' | 'staff';
+  playerId?: number;
 }
 
 export function useCurrentUser(): CurrentUser {
+  const { user } = useAuth();
   return {
-    role: 'admin',
+    isAdmin: user?.isAdmin ?? false,
+    type: user?.type ?? 'staff',
+    playerId: user?.playerId,
   };
 }

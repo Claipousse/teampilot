@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Pencil, UserPlus, CalendarPlus, Search, X, Trash2, Upload, Plus, AlertTriangle } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Pencil, UserPlus, CalendarPlus, Search, X, Trash2, Upload, Plus, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useT } from '@/contexts/LanguageContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -25,21 +25,22 @@ type SaisonErrors = Partial<Record<keyof SaisonData, string>>;
 type StaffMember = {
   id: number; prenom: string; nom: string; role: string;
   email: string; phone: string; since: string;
-  photoUrl?: string; notes?: string;
+  photoUrl?: string; notes?: string; isAdmin: boolean;
 };
 type StaffForm = {
   prenom: string; nom: string; role: string;
   email: string; phone: string; since: string;
   photoUrl: string; notes: string;
+  password: string; isAdmin: boolean;
 };
-type StaffErrors = Partial<Record<'prenom' | 'nom' | 'role' | 'email', string>>;
+type StaffErrors = Partial<Record<'prenom' | 'nom' | 'role' | 'email' | 'password', string>>;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STAFF_ROLES = [
   'Coach Principal', 'Coach Adjoint', 'Préparateur Physique',
   'Médecin', 'Kinésithérapeute', 'Manager', 'Modérateur',
-  'Scout', 'Analyste Vidéo', 'Intendant', 'Directeur Sportif', 'Psychologue',
+  'Scout', 'Analyste Vidéo', 'Intendant', 'Directeur Sportif', 'Psychologue', 'Dirigeant',
 ] as const;
 
 const SAISON_STATUTS: SaisonStatus[] = ['À venir', 'En cours', 'Terminée'];
@@ -50,55 +51,47 @@ const SS: Record<SaisonStatus, { active: string; hover: string; badge: string; t
   'Terminée': { active: 'bg-error/10 text-error border-error',             hover: 'hover:text-error hover:border-error',            badge: 'bg-error/10 text-error',          text: 'text-error',      dot: 'bg-error' },
 };
 
-const EMPTY_STAFF: StaffForm = { prenom: '', nom: '', role: '', email: '', phone: '', since: '', photoUrl: '', notes: '' };
+const EMPTY_CLUB: ClubData = { nom: '', annee: '', ligue: '', email: '', phone: '', adresse: '', ville: '', logoUrl: '' };
+const EMPTY_SAISON: SaisonData = { debut: '', fin: '', competitions: '', objectif: '', statut: 'En cours' };
+const EMPTY_STAFF: StaffForm = { prenom: '', nom: '', role: '', email: '', phone: '', since: '', photoUrl: '', notes: '', password: '', isAdmin: false };
 
 const inputCls = (err?: string) =>
   `w-full px-4 py-3 bg-surface-container border ${err ? 'border-error' : 'border-outline-variant'} rounded-xl text-base text-on-surface outline-none focus:ring-2 focus:ring-primary transition-all`;
 const labelCls = 'text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block';
 
-// ─── Initial data ─────────────────────────────────────────────────────────────
+// ─── API helpers ──────────────────────────────────────────────────────────────
 
-const INIT_CLUB: ClubData = {
-  nom: 'Metropolis United FC', annee: '1924', ligue: 'Elite Pro League',
-  email: 'admin@metropolisunited.com', phone: '+44 20 7946 0012',
-  adresse: 'United Training Complex', ville: 'London, SE1 7PB, UK',
-  logoUrl: '',
-};
-
-const INIT_SAISON: SaisonData = {
-  debut: '01/08/2026', fin: '31/05/2027',
-  competitions: 'Premier League · FA Cup', objectif: 'Top 4 · Quart FA Cup',
-  statut: 'En cours',
-};
-
-const INIT_STAFF: StaffMember[] = [
-  { id: 1, prenom: 'Thomas',  nom: 'Laurent', role: 'Coach Principal',    email: 'tlaurent@club.com',  phone: '+44 20 1234 5678', since: '01/07/2022', notes: 'En poste depuis 3 saisons.' },
-  { id: 2, prenom: 'Sophie',  nom: 'Moreau',  role: 'Kinésithérapeute',   email: 'smoreau@club.com',   phone: '+44 20 2345 6789', since: '15/08/2023' },
-  { id: 3, prenom: 'David',   nom: 'Park',    role: 'Analyste Vidéo',     email: 'dpark@club.com',     phone: '+44 20 3456 7890', since: '01/01/2024' },
-  { id: 4, prenom: 'Claire',  nom: 'Dupuis',  role: 'Médecin',            email: 'cdupuis@club.com',   phone: '+44 20 4567 8901', since: '01/09/2021' },
-];
+function clubFromApi(a: Record<string, string>): ClubData {
+  return { nom: a.name ?? '', annee: a.founded_year ?? '', ligue: a.league ?? '', email: a.email ?? '', phone: a.phone ?? '', adresse: a.address ?? '', ville: a.city ?? '', logoUrl: a.logo_url ?? '' };
+}
+function staffFromApi(a: Record<string, string | boolean | null>): StaffMember {
+  return { id: a.id as unknown as number, prenom: (a.first_name as string) ?? '', nom: (a.last_name as string) ?? '', role: (a.role as string) ?? '', email: (a.email as string) ?? '', phone: (a.phone as string) ?? '', since: (a.since_date as string) ?? '', photoUrl: (a.photo_url as string) ?? undefined, notes: (a.notes as string) ?? undefined, isAdmin: (a.is_admin as boolean) ?? false };
+}
+function fmtDate(iso?: string) { return iso ? iso.split('-').reverse().join('/') : ''; }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AdministrationDesktop() {
   const t = useT();
+
   // Club
-  const [club,         setClub]         = useState<ClubData>(INIT_CLUB);
+  const [club,         setClub]         = useState<ClubData>(EMPTY_CLUB);
   const [clubOpen,     setClubOpen]     = useState(false);
   const [clubVisible,  setClubVisible]  = useState(false);
-  const [clubForm,     setClubForm]     = useState<ClubData>(INIT_CLUB);
+  const [clubForm,     setClubForm]     = useState<ClubData>(EMPTY_CLUB);
   const [clubErrors,   setClubErrors]   = useState<ClubErrors>({});
   const clubLogoRef = useRef<HTMLInputElement>(null);
 
   // Saison
-  const [saison,       setSaison]       = useState<SaisonData>(INIT_SAISON);
+  const [saison,       setSaison]       = useState<SaisonData>(EMPTY_SAISON);
+  const [saisonId,     setSaisonId]     = useState<number | null>(null);
   const [saisonOpen,   setSaisonOpen]   = useState(false);
   const [saisonVisible,setSaisonVisible]= useState(false);
-  const [saisonForm,   setSaisonForm]   = useState<SaisonData>(INIT_SAISON);
+  const [saisonForm,   setSaisonForm]   = useState<SaisonData>(EMPTY_SAISON);
   const [saisonErrors, setSaisonErrors] = useState<SaisonErrors>({});
 
   // Staff
-  const [staff,           setStaff]           = useState<StaffMember[]>(INIT_STAFF);
+  const [staff,           setStaff]           = useState<StaffMember[]>([]);
   const [staffSearch,     setStaffSearch]     = useState('');
   const [roleFilters,     setRoleFilters]     = useState<string[]>([]);
   const [roleFilterOpen,  setRoleFilterOpen]  = useState(false);
@@ -116,13 +109,31 @@ export default function AdministrationDesktop() {
   const [editingId,       setEditingId]       = useState<number | null>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
 
-  // Delete confirmation
   const [delOpen,    setDelOpen]    = useState(false);
   const [delVisible, setDelVisible] = useState(false);
   const [delName,    setDelName]    = useState('');
   const [delTimer,   setDelTimer]   = useState(3);
   const delTimerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
   const onDelConfirmed = useRef<(() => void) | null>(null);
+
+  // ── Initial fetch ─────────────────────────────────────────────────────────
+
+  const fetchData = useCallback(async () => {
+    const [clubRes, seasonRes, staffRes] = await Promise.all([
+      fetch('/api/backend/club'),
+      fetch('/api/backend/seasons/active'),
+      fetch('/api/backend/staff'),
+    ]);
+    if (clubRes.ok) setClub(clubFromApi(await clubRes.json()));
+    if (seasonRes.ok) {
+      const s = await seasonRes.json();
+      setSaisonId(s.id);
+      setSaison({ debut: s.start_date, fin: s.end_date, competitions: s.competitions, objectif: s.objective, statut: s.status as SaisonStatus });
+    }
+    if (staffRes.ok) setStaff((await staffRes.json()).map(staffFromApi));
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   // Close role filter on outside click
   useEffect(() => {
@@ -135,18 +146,16 @@ export default function AdministrationDesktop() {
 
   // ── Computed ────────────────────────────────────────────────────────────────
 
-  const saisonLabel = (() => {
-    const y1 = saison.debut.split('/')[2] ?? '';
-    const y2 = saison.fin.split('/')[2] ?? '';
-    return y1 && y2 ? `${y1} — ${y2}` : '— — —';
-  })();
-  const ss = SS[saison.statut];
+  const saisonLabel = saison.debut && saison.fin
+    ? `${saison.debut.substring(0, 4)} — ${saison.fin.substring(0, 4)}`
+    : '— — —';
+  const ss = SS[saison.statut] ?? SS['En cours'];
 
   // ── Club modal ───────────────────────────────────────────────────────────────
 
   const openClub = () => { setClubForm(club); setClubErrors({}); setClubOpen(true); setTimeout(() => setClubVisible(true), 10); };
   const closeClub = () => { setClubVisible(false); setTimeout(() => setClubOpen(false), 200); };
-  const submitClub = () => {
+  const submitClub = async () => {
     const e: ClubErrors = {};
     if (!clubForm.nom.trim())    e.nom    = 'Champ obligatoire';
     if (!clubForm.annee.trim())  e.annee  = 'Champ obligatoire';
@@ -156,52 +165,87 @@ export default function AdministrationDesktop() {
     if (!clubForm.adresse.trim()) e.adresse = 'Champ obligatoire';
     if (!clubForm.ville.trim())  e.ville  = 'Champ obligatoire';
     if (Object.keys(e).length) { setClubErrors(e); return; }
-    setClub(clubForm); /* TODO backend: PATCH /club */
-    closeClub();
+    const res = await fetch('/api/backend/club', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: clubForm.nom, founded_year: clubForm.annee, league: clubForm.ligue, email: clubForm.email, phone: clubForm.phone, address: clubForm.adresse, city: clubForm.ville }),
+    });
+    if (res.ok) { setClub(clubForm); closeClub(); }
   };
 
   // ── Saison modal ─────────────────────────────────────────────────────────────
 
   const openSaison = () => { setSaisonForm(saison); setSaisonErrors({}); setSaisonOpen(true); setTimeout(() => setSaisonVisible(true), 10); };
   const closeSaison = () => { setSaisonVisible(false); setTimeout(() => setSaisonOpen(false), 200); };
-  const submitSaison = () => {
+  const submitSaison = async () => {
     const e: SaisonErrors = {};
-    if (!saisonForm.debut.trim())        e.debut        = 'Champ obligatoire';
-    if (!saisonForm.fin.trim())          e.fin          = 'Champ obligatoire';
+    if (!saisonForm.debut)              e.debut        = 'Champ obligatoire';
+    if (!saisonForm.fin)                e.fin          = 'Champ obligatoire';
     if (!saisonForm.competitions.trim()) e.competitions = 'Champ obligatoire';
-    if (!saisonForm.objectif.trim())     e.objectif     = 'Champ obligatoire';
-    if (!saisonForm.statut)              e.statut       = 'Champ obligatoire';
+    if (!saisonForm.objectif.trim())    e.objectif     = 'Champ obligatoire';
     if (Object.keys(e).length) { setSaisonErrors(e); return; }
-    setSaison(saisonForm); /* TODO backend: PATCH /saison */
-    closeSaison();
+    const body = { start_date: saisonForm.debut, end_date: saisonForm.fin, competitions: saisonForm.competitions, objective: saisonForm.objectif, status: saisonForm.statut };
+    let res: Response;
+    if (saisonId) {
+      res = await fetch(`/api/backend/seasons/${saisonId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    } else {
+      res = await fetch('/api/backend/seasons', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (res.ok) {
+        const created = await res.json();
+        setSaisonId(created.id);
+        await fetch(`/api/backend/seasons/${created.id}/activate`, { method: 'PATCH' });
+      }
+    }
+    if (res.ok) { setSaison(saisonForm); closeSaison(); }
   };
 
   // ── Staff add ────────────────────────────────────────────────────────────────
 
   const openAdd = () => { setAddForm(EMPTY_STAFF); setAddErrors({}); setAddOpen(true); setTimeout(() => setAddVisible(true), 10); };
   const closeAdd = () => { setAddVisible(false); setTimeout(() => setAddOpen(false), 200); };
-  const submitAdd = () => {
-    const e = validateStaff(addForm);
+  const submitAdd = async () => {
+    const e = validateStaff(addForm, false);
     if (Object.keys(e).length) { setAddErrors(e); return; }
-    setStaff(prev => [...prev, { id: Date.now(), ...addForm, photoUrl: addForm.photoUrl || undefined, notes: addForm.notes || undefined }]); /* TODO backend: POST /staff */
-    closeAdd();
+    const res = await fetch('/api/backend/staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ first_name: addForm.prenom, last_name: addForm.nom, role: addForm.role, email: addForm.email, phone: addForm.phone || null, since_date: addForm.since || null, notes: addForm.notes || null, is_admin: addForm.isAdmin, password: addForm.password }),
+    });
+    if (res.ok) {
+      const created = await res.json();
+      setStaff(prev => [...prev, staffFromApi(created)]);
+      closeAdd();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      setAddErrors({ email: err.detail ?? 'Erreur lors de la création.' });
+    }
   };
 
   // ── Staff edit ───────────────────────────────────────────────────────────────
 
   const openEdit = (m: StaffMember) => {
     setEditingId(m.id);
-    setEditForm({ prenom: m.prenom, nom: m.nom, role: m.role, email: m.email, phone: m.phone, since: m.since, photoUrl: m.photoUrl ?? '', notes: m.notes ?? '' });
+    setEditForm({ prenom: m.prenom, nom: m.nom, role: m.role, email: m.email, phone: m.phone, since: m.since, photoUrl: m.photoUrl ?? '', notes: m.notes ?? '', password: '', isAdmin: m.isAdmin });
     setEditErrors({});
     setEditOpen(true);
     setTimeout(() => setEditVisible(true), 10);
   };
   const closeEdit = () => { setEditVisible(false); setTimeout(() => { setEditOpen(false); setEditingId(null); }, 200); };
-  const submitEdit = () => {
-    const e = validateStaff(editForm);
+  const submitEdit = async () => {
+    const e = validateStaff(editForm, true);
     if (Object.keys(e).length) { setEditErrors(e); return; }
-    setStaff(prev => prev.map(m => m.id === editingId ? { ...m, ...editForm, photoUrl: editForm.photoUrl || undefined, notes: editForm.notes || undefined } : m)); /* TODO backend: PATCH /staff/:id */
-    closeEdit();
+    const body: Record<string, unknown> = { first_name: editForm.prenom, last_name: editForm.nom, role: editForm.role, email: editForm.email, phone: editForm.phone || null, since_date: editForm.since || null, notes: editForm.notes || null, is_admin: editForm.isAdmin };
+    if (editForm.password) body.password = editForm.password;
+    const res = await fetch(`/api/backend/staff/${editingId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setStaff(prev => prev.map(m => m.id === editingId ? staffFromApi(updated) : m));
+      closeEdit();
+    }
   };
 
   // ── Delete confirmation ───────────────────────────────────────────────────────
@@ -234,12 +278,13 @@ export default function AdministrationDesktop() {
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
-  function validateStaff(f: StaffForm): StaffErrors {
+  function validateStaff(f: StaffForm, isEdit: boolean): StaffErrors {
     const e: StaffErrors = {};
     if (!f.prenom.trim()) e.prenom = 'Champ obligatoire';
     if (!f.nom.trim())    e.nom    = 'Champ obligatoire';
     if (!f.role)          e.role   = 'Champ obligatoire';
     if (!f.email.trim())  e.email  = 'Champ obligatoire';
+    if (!isEdit && !f.password.trim()) e.password = 'Mot de passe obligatoire';
     return e;
   }
 
@@ -255,7 +300,8 @@ export default function AdministrationDesktop() {
     form: StaffForm,
     setForm: React.Dispatch<React.SetStateAction<StaffForm>>,
     errors: StaffErrors,
-    photoRef: React.RefObject<HTMLInputElement | null>
+    photoRef: React.RefObject<HTMLInputElement | null>,
+    isEdit: boolean,
   ) => {
     const initials = (form.prenom.charAt(0) + form.nom.charAt(0)).toUpperCase() || '?';
     return (
@@ -330,9 +376,39 @@ export default function AdministrationDesktop() {
           </div>
           <div>
             <label className={labelCls}>{t.admin.fieldSince} <span className="font-normal normal-case opacity-60">({t.common.optional})</span></label>
-            <input type="text" value={form.since} onChange={e => setForm(f => ({ ...f, since: e.target.value }))}
-              className={inputCls()} placeholder="JJ/MM/AAAA" />
+            <input type="date" value={form.since} onChange={e => setForm(f => ({ ...f, since: e.target.value }))}
+              className={inputCls()} />
           </div>
+        </div>
+
+        {/* Accès & Sécurité */}
+        <div className="space-y-4 pt-2 border-t border-outline-variant">
+          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Accès &amp; Sécurité</p>
+          <div>
+            <label className={labelCls}>
+              Mot de passe {isEdit
+                ? <span className="font-normal normal-case opacity-60">(laisser vide pour ne pas changer)</span>
+                : <span className="text-error">*</span>}
+            </label>
+            <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+              className={inputCls(errors.password)} placeholder={isEdit ? '••••••••' : 'Minimum 6 caractères'} />
+            {errors.password && <p className="text-xs text-error mt-1">{errors.password}</p>}
+          </div>
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div
+              onClick={() => setForm(f => ({ ...f, isAdmin: !f.isAdmin }))}
+              className={`w-11 h-6 rounded-full transition-colors relative ${form.isAdmin ? 'bg-[#B45309]' : 'bg-outline-variant'}`}
+            >
+              <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${form.isAdmin ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-on-surface flex items-center gap-1.5">
+                <ShieldCheck size={15} className={form.isAdmin ? 'text-[#B45309]' : 'text-outline'} />
+                Droits administrateur
+              </p>
+              <p className="text-xs text-on-surface-variant/60">Accès à l&apos;administration, CRUD complet</p>
+            </div>
+          </label>
         </div>
 
         {/* Notes */}
@@ -363,8 +439,10 @@ export default function AdministrationDesktop() {
               }
             </div>
             <div>
-              <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">{club.nom}</h1>
-              <p className="text-base text-on-surface-variant mt-1">Fondé en {club.annee} · {club.ligue}</p>
+              <h1 className="text-3xl font-extrabold text-on-surface tracking-tight">{club.nom || '—'}</h1>
+              <p className="text-base text-on-surface-variant mt-1">
+                {club.annee ? `Fondé en ${club.annee}` : ''}{club.annee && club.ligue ? ' · ' : ''}{club.ligue}
+              </p>
             </div>
           </div>
           <button onClick={openClub}
@@ -375,12 +453,12 @@ export default function AdministrationDesktop() {
         <div className="grid grid-cols-2 gap-6 mt-6 pt-6 border-t border-outline-variant">
           <div>
             <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Contact principal</p>
-            <p className="text-base font-semibold text-on-surface">{club.email}</p>
+            <p className="text-base font-semibold text-on-surface">{club.email || '—'}</p>
             <p className="text-sm text-on-surface-variant">{club.phone}</p>
           </div>
           <div>
             <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Siège social</p>
-            <p className="text-base font-semibold text-on-surface">{club.adresse}</p>
+            <p className="text-base font-semibold text-on-surface">{club.adresse || '—'}</p>
             <p className="text-sm text-on-surface-variant">{club.ville}</p>
           </div>
         </div>
@@ -403,10 +481,10 @@ export default function AdministrationDesktop() {
           </div>
           <div className="flex-1">
             {[
-              { label: t.admin.fieldSeasonStart, value: saison.debut },
-              { label: t.admin.fieldSeasonEnd,   value: saison.fin },
-              { label: t.admin.fieldCompetitions, value: saison.competitions },
-              { label: t.admin.fieldObjective,   value: saison.objectif },
+              { label: t.admin.fieldSeasonStart, value: fmtDate(saison.debut) || '—' },
+              { label: t.admin.fieldSeasonEnd,   value: fmtDate(saison.fin) || '—' },
+              { label: t.admin.fieldCompetitions, value: saison.competitions || '—' },
+              { label: t.admin.fieldObjective,   value: saison.objectif || '—' },
             ].map((row, i) => (
               <div key={i} className="flex items-center justify-between py-4 border-b border-outline-variant">
                 <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">{row.label}</p>
@@ -455,7 +533,6 @@ export default function AdministrationDesktop() {
 
       {/* ── Gérer le staff ── */}
       <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6">
-        {/* Titre + compteur */}
         <div className="flex items-baseline gap-3 mb-4">
           <h2 className="text-xl font-bold text-on-surface">{t.admin.manageStaff}</h2>
           <span className="text-xs text-on-surface-variant/60">
@@ -463,7 +540,6 @@ export default function AdministrationDesktop() {
           </span>
         </div>
 
-        {/* Contrôles sur une ligne */}
         <div className="flex items-center gap-3 mb-5 flex-wrap">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" size={16} />
@@ -472,7 +548,6 @@ export default function AdministrationDesktop() {
               className="pl-9 pr-4 py-2.5 bg-surface-container border border-outline-variant rounded-xl text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary transition-all w-52" />
           </div>
 
-          {/* Filtre rôles */}
           <div ref={roleFilterRef} className="relative">
             <button onClick={() => setRoleFilterOpen(v => !v)}
               className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl text-sm font-semibold transition-colors ${
@@ -537,12 +612,15 @@ export default function AdministrationDesktop() {
                     }
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-base font-bold text-on-surface">{m.prenom} {m.nom}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-base font-bold text-on-surface">{m.prenom} {m.nom}</p>
+                      {m.isAdmin && <span className="text-xs font-bold text-[#B45309] bg-[#B45309]/10 px-2 py-0.5 rounded-full">Admin</span>}
+                    </div>
                     <p className="text-sm text-on-surface-variant">{t.admin.roles[m.role as keyof typeof t.admin.roles] ?? m.role}</p>
                   </div>
                   <p className="text-sm text-on-surface-variant hidden lg:block min-w-0 truncate max-w-[200px]">{m.email}</p>
                   {m.phone && <p className="text-sm text-on-surface-variant hidden xl:block shrink-0">{m.phone}</p>}
-                  {m.since && <p className="text-sm text-on-surface-variant/60 shrink-0 hidden xl:block">Depuis {m.since}</p>}
+                  {m.since && <p className="text-sm text-on-surface-variant/60 shrink-0 hidden xl:block">Depuis {fmtDate(m.since)}</p>}
                   <button onClick={() => openEdit(m)}
                     className="ml-auto shrink-0 flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors opacity-0 group-hover:opacity-100">
                     <Pencil size={14} /> Modifier
@@ -572,13 +650,9 @@ export default function AdministrationDesktop() {
               </div>
 
               <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
-                {/* Logo */}
                 <div className="flex items-center gap-5 pb-6 border-b border-outline-variant">
                   <div className="w-20 h-20 rounded-2xl bg-surface-container-high flex items-center justify-center overflow-hidden shrink-0 border-2 border-outline-variant">
-                    {clubForm.logoUrl
-                      ? <img src={clubForm.logoUrl} alt="" className="w-full h-full object-cover" />
-                      : <span className="text-3xl">🏟️</span>
-                    }
+                    {clubForm.logoUrl ? <img src={clubForm.logoUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-3xl">🏟️</span>}
                   </div>
                   <div className="space-y-2">
                     <input ref={clubLogoRef} type="file" accept="image/*" className="hidden" onChange={e => {
@@ -587,69 +661,57 @@ export default function AdministrationDesktop() {
                       reader.onload = ev => setClubForm(f => ({ ...f, logoUrl: ev.target?.result as string }));
                       reader.readAsDataURL(file);
                     }} />
-                    <button onClick={() => clubLogoRef.current?.click()}
-                      className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors">
+                    <button onClick={() => clubLogoRef.current?.click()} className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors">
                       <Upload size={15} className="text-on-surface-variant" /> Changer le logo
                     </button>
-                    {clubForm.logoUrl && (
-                      <button onClick={() => setClubForm(f => ({ ...f, logoUrl: '' }))} className="text-xs text-error hover:underline block">Retirer le logo</button>
-                    )}
+                    {clubForm.logoUrl && <button onClick={() => setClubForm(f => ({ ...f, logoUrl: '' }))} className="text-xs text-error hover:underline block">Retirer le logo</button>}
                     <p className="text-xs text-on-surface-variant/60">JPG, PNG ou WebP</p>
                   </div>
                 </div>
 
-                {/* Identité */}
                 <div className="space-y-4">
                   <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Identité du club</p>
                   <div>
                     <label className={labelCls}>Nom du club <span className="text-error">*</span></label>
-                    <input type="text" value={clubForm.nom} onChange={e => setClubForm(f => ({ ...f, nom: e.target.value }))}
-                      className={inputCls(clubErrors.nom)} placeholder="Ex : Metropolis United FC" />
+                    <input type="text" value={clubForm.nom} onChange={e => setClubForm(f => ({ ...f, nom: e.target.value }))} className={inputCls(clubErrors.nom)} placeholder="Ex : Metropolis United FC" />
                     {clubErrors.nom && <p className="text-xs text-error mt-1">{clubErrors.nom}</p>}
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className={labelCls}>Année de fondation <span className="text-error">*</span></label>
-                      <input type="text" value={clubForm.annee} onChange={e => setClubForm(f => ({ ...f, annee: e.target.value }))}
-                        className={inputCls(clubErrors.annee)} placeholder="Ex : 1924" />
+                      <input type="text" value={clubForm.annee} onChange={e => setClubForm(f => ({ ...f, annee: e.target.value }))} className={inputCls(clubErrors.annee)} placeholder="Ex : 1924" />
                       {clubErrors.annee && <p className="text-xs text-error mt-1">{clubErrors.annee}</p>}
                     </div>
                     <div>
                       <label className={labelCls}>Ligue / Compétition <span className="text-error">*</span></label>
-                      <input type="text" value={clubForm.ligue} onChange={e => setClubForm(f => ({ ...f, ligue: e.target.value }))}
-                        className={inputCls(clubErrors.ligue)} placeholder="Ex : Elite Pro League" />
+                      <input type="text" value={clubForm.ligue} onChange={e => setClubForm(f => ({ ...f, ligue: e.target.value }))} className={inputCls(clubErrors.ligue)} placeholder="Ex : Elite Pro League" />
                       {clubErrors.ligue && <p className="text-xs text-error mt-1">{clubErrors.ligue}</p>}
                     </div>
                   </div>
                 </div>
 
-                {/* Contact */}
                 <div className="space-y-4 pt-2 border-t border-outline-variant">
                   <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Contact</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className={labelCls}>Email <span className="text-error">*</span></label>
-                      <input type="email" value={clubForm.email} onChange={e => setClubForm(f => ({ ...f, email: e.target.value }))}
-                        className={inputCls(clubErrors.email)} placeholder="admin@club.com" />
+                      <input type="email" value={clubForm.email} onChange={e => setClubForm(f => ({ ...f, email: e.target.value }))} className={inputCls(clubErrors.email)} placeholder="admin@club.com" />
                       {clubErrors.email && <p className="text-xs text-error mt-1">{clubErrors.email}</p>}
                     </div>
                     <div>
                       <label className={labelCls}>Téléphone <span className="text-error">*</span></label>
-                      <input type="text" value={clubForm.phone} onChange={e => setClubForm(f => ({ ...f, phone: e.target.value }))}
-                        className={inputCls(clubErrors.phone)} placeholder="+44 20 7946 0012" />
+                      <input type="text" value={clubForm.phone} onChange={e => setClubForm(f => ({ ...f, phone: e.target.value }))} className={inputCls(clubErrors.phone)} placeholder="+44 20 7946 0012" />
                       {clubErrors.phone && <p className="text-xs text-error mt-1">{clubErrors.phone}</p>}
                     </div>
                   </div>
                   <div>
                     <label className={labelCls}>Adresse <span className="text-error">*</span></label>
-                    <input type="text" value={clubForm.adresse} onChange={e => setClubForm(f => ({ ...f, adresse: e.target.value }))}
-                      className={inputCls(clubErrors.adresse)} placeholder="Ex : United Training Complex" />
+                    <input type="text" value={clubForm.adresse} onChange={e => setClubForm(f => ({ ...f, adresse: e.target.value }))} className={inputCls(clubErrors.adresse)} placeholder="Ex : United Training Complex" />
                     {clubErrors.adresse && <p className="text-xs text-error mt-1">{clubErrors.adresse}</p>}
                   </div>
                   <div>
                     <label className={labelCls}>Ville / Code postal <span className="text-error">*</span></label>
-                    <input type="text" value={clubForm.ville} onChange={e => setClubForm(f => ({ ...f, ville: e.target.value }))}
-                      className={inputCls(clubErrors.ville)} placeholder="Ex : London, SE1 7PB, UK" />
+                    <input type="text" value={clubForm.ville} onChange={e => setClubForm(f => ({ ...f, ville: e.target.value }))} className={inputCls(clubErrors.ville)} placeholder="Ex : London, SE1 7PB, UK" />
                     {clubErrors.ville && <p className="text-xs text-error mt-1">{clubErrors.ville}</p>}
                   </div>
                 </div>
@@ -673,13 +735,9 @@ export default function AdministrationDesktop() {
               <div className="flex items-center justify-between px-7 py-5 border-b border-outline-variant shrink-0">
                 <div className="flex items-center gap-3">
                   <p className="text-xl font-bold text-on-surface">Modifier la saison active</p>
-                  {(() => {
-                    const y1 = saisonForm.debut.split('/')[2] ?? '';
-                    const y2 = saisonForm.fin.split('/')[2] ?? '';
-                    const label = y1 && y2 ? `${y1} — ${y2}` : '— — —';
-                    const style = SS[saisonForm.statut] ?? SS['En cours'];
-                    return <span className={`px-3 py-1 text-sm font-bold rounded-full ${style.badge}`}>{label}</span>;
-                  })()}
+                  <span className={`px-3 py-1 text-sm font-bold rounded-full ${SS[saisonForm.statut]?.badge ?? ''}`}>
+                    {saisonForm.debut && saisonForm.fin ? `${saisonForm.debut.substring(0, 4)} — ${saisonForm.fin.substring(0, 4)}` : '— — —'}
+                  </span>
                 </div>
                 <button onClick={closeSaison} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
@@ -692,28 +750,24 @@ export default function AdministrationDesktop() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className={labelCls}>Début de saison <span className="text-error">*</span></label>
-                      <input type="text" value={saisonForm.debut} onChange={e => setSaisonForm(f => ({ ...f, debut: e.target.value }))}
-                        className={inputCls(saisonErrors.debut)} placeholder="JJ/MM/AAAA" />
+                      <input type="date" value={saisonForm.debut} onChange={e => setSaisonForm(f => ({ ...f, debut: e.target.value }))} className={inputCls(saisonErrors.debut)} />
                       {saisonErrors.debut && <p className="text-xs text-error mt-1">{saisonErrors.debut}</p>}
                     </div>
                     <div>
                       <label className={labelCls}>Fin de saison <span className="text-error">*</span></label>
-                      <input type="text" value={saisonForm.fin} onChange={e => setSaisonForm(f => ({ ...f, fin: e.target.value }))}
-                        className={inputCls(saisonErrors.fin)} placeholder="JJ/MM/AAAA" />
+                      <input type="date" value={saisonForm.fin} onChange={e => setSaisonForm(f => ({ ...f, fin: e.target.value }))} className={inputCls(saisonErrors.fin)} />
                       {saisonErrors.fin && <p className="text-xs text-error mt-1">{saisonErrors.fin}</p>}
                     </div>
                   </div>
-                  <p className="text-xs text-on-surface-variant/60 -mt-2">L&apos;intitulé de saison (ex : 2026 — 2027) est calculé automatiquement depuis ces dates.</p>
+                  <p className="text-xs text-on-surface-variant/60 -mt-2">L&apos;intitulé de saison est calculé automatiquement depuis ces dates.</p>
                   <div>
                     <label className={labelCls}>Compétitions <span className="text-error">*</span></label>
-                    <input type="text" value={saisonForm.competitions} onChange={e => setSaisonForm(f => ({ ...f, competitions: e.target.value }))}
-                      className={inputCls(saisonErrors.competitions)} placeholder="Ex : Premier League · FA Cup" />
+                    <input type="text" value={saisonForm.competitions} onChange={e => setSaisonForm(f => ({ ...f, competitions: e.target.value }))} className={inputCls(saisonErrors.competitions)} placeholder="Ex : Premier League · FA Cup" />
                     {saisonErrors.competitions && <p className="text-xs text-error mt-1">{saisonErrors.competitions}</p>}
                   </div>
                   <div>
                     <label className={labelCls}>Objectif <span className="text-error">*</span></label>
-                    <input type="text" value={saisonForm.objectif} onChange={e => setSaisonForm(f => ({ ...f, objectif: e.target.value }))}
-                      className={inputCls(saisonErrors.objectif)} placeholder="Ex : Top 4 · Quart FA Cup" />
+                    <input type="text" value={saisonForm.objectif} onChange={e => setSaisonForm(f => ({ ...f, objectif: e.target.value }))} className={inputCls(saisonErrors.objectif)} placeholder="Ex : Top 4 · Quart FA Cup" />
                     {saisonErrors.objectif && <p className="text-xs text-error mt-1">{saisonErrors.objectif}</p>}
                   </div>
                   <div>
@@ -729,7 +783,6 @@ export default function AdministrationDesktop() {
                         );
                       })}
                     </div>
-                    {saisonErrors.statut && <p className="text-xs text-error mt-1">{saisonErrors.statut}</p>}
                   </div>
                 </div>
               </div>
@@ -755,7 +808,7 @@ export default function AdministrationDesktop() {
                   <X size={18} className="text-on-surface-variant" />
                 </button>
               </div>
-              {renderStaffForm(addForm, setAddForm, addErrors, addPhotoRef)}
+              {renderStaffForm(addForm, setAddForm, addErrors, addPhotoRef, false)}
               <div className="flex items-center justify-end px-7 py-5 border-t border-outline-variant shrink-0 gap-2">
                 <button onClick={closeAdd} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                 <button onClick={submitAdd} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.add}</button>
@@ -777,11 +830,12 @@ export default function AdministrationDesktop() {
                   <X size={18} className="text-on-surface-variant" />
                 </button>
               </div>
-              {renderStaffForm(editForm, setEditForm, editErrors, editPhotoRef)}
+              {renderStaffForm(editForm, setEditForm, editErrors, editPhotoRef, true)}
               <div className="flex items-center justify-between px-7 py-5 border-t border-outline-variant shrink-0">
                 <button
-                  onClick={() => openDel(`${editForm.prenom} ${editForm.nom}`, () => {
-                    setStaff(prev => prev.filter(m => m.id !== editingId)); /* TODO backend: DELETE /staff/:id */
+                  onClick={() => openDel(`${editForm.prenom} ${editForm.nom}`, async () => {
+                    await fetch(`/api/backend/staff/${editingId}`, { method: 'DELETE' });
+                    setStaff(prev => prev.filter(m => m.id !== editingId));
                     closeEdit();
                   })}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold">
@@ -817,20 +871,13 @@ export default function AdministrationDesktop() {
                   Vous êtes sur le point de supprimer définitivement <strong className="text-error">{delName}</strong>.
                 </p>
                 <p className="text-sm text-on-surface-variant leading-relaxed">
-                  Une fois supprimé, ce membre sera retiré de toutes les listes et ses données seront perdues. Cette opération est irréversible.
+                  Une fois supprimé, ce membre sera retiré de toutes les listes et son compte désactivé.
                 </p>
               </div>
               <div className="flex items-center justify-end gap-3 px-7 pb-6">
-                <button onClick={closeDel}
-                  className="px-5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">
-                  {t.common.cancel}
-                </button>
+                <button onClick={closeDel} className="px-5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                 <button onClick={confirmDel} disabled={delTimer > 0}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${
-                    delTimer > 0
-                      ? 'bg-error/30 text-error/50 cursor-not-allowed'
-                      : 'bg-error hover:bg-error/90 text-white cursor-pointer'
-                  }`}>
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${delTimer > 0 ? 'bg-error/30 text-error/50 cursor-not-allowed' : 'bg-error hover:bg-error/90 text-white cursor-pointer'}`}>
                   <Trash2 size={16} />
                   {delTimer > 0 ? `Confirmer (${delTimer}s)` : 'Confirmer'}
                 </button>

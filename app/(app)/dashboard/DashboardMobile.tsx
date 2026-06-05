@@ -41,16 +41,19 @@ export default function DashboardMobile() {
   const [upcoming,    setUpcoming]    = useState<any[]>([]);
   const [unavailable, setUnavailable] = useState<any[]>([]);
   const [summary,     setSummary]     = useState<any>(null);
+  const [recentConvs, setRecentConvs] = useState<any[]>([]);
 
   const fetchAll = useCallback(async () => {
-    const [kRes, uRes, unRes] = await Promise.all([
+    const [kRes, uRes, unRes, mRes] = await Promise.all([
       fetch('/api/backend/dashboard/kpis'),
       fetch('/api/backend/dashboard/upcoming-events'),
       fetch('/api/backend/dashboard/unavailable-players'),
+      fetch('/api/backend/messages/conversations'),
     ]);
     if (kRes.ok)  setKpis(await kRes.json());
     if (uRes.ok)  setUpcoming(await uRes.json());
     if (unRes.ok) setUnavailable(await unRes.json());
+    if (mRes.ok)  setRecentConvs((await mRes.json()).slice(0, 3));
     if (isAdmin) {
       const sRes = await fetch('/api/backend/dashboard/admin-summary');
       if (sRes.ok) setSummary(await sRes.json());
@@ -130,7 +133,7 @@ export default function DashboardMobile() {
         )}
       </section>
 
-      {/* Messages récents — placeholder Phase 4 */}
+      {/* Messages récents */}
       <section>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -141,7 +144,25 @@ export default function DashboardMobile() {
             {t.dashboard.viewAll} <ChevronRight size={13} />
           </a>
         </div>
-        <p className="text-sm text-on-surface-variant text-center py-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">Messagerie disponible en Phase 4</p>
+        {recentConvs.length === 0 ? (
+          <p className="text-sm text-on-surface-variant text-center py-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">Aucun message</p>
+        ) : (
+          <div className="space-y-2">
+            {recentConvs.map((conv: any) => (
+              <a key={conv.id} href="/messagerie"
+                className="flex items-center gap-3 p-3 bg-surface-container-lowest border border-outline-variant rounded-2xl">
+                <div className={`w-10 h-10 rounded-full ${conv.avatar_bg} flex items-center justify-center shrink-0`}>
+                  <span className={`font-bold text-sm ${conv.is_ai ? 'text-white' : 'text-on-surface-variant'}`}>{conv.initials}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-on-surface truncate">{conv.name}</p>
+                  <p className="text-xs text-on-surface-variant truncate">{conv.preview}</p>
+                </div>
+                <span className="text-xs text-on-surface-variant shrink-0">{conv.time}</span>
+              </a>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Joueurs non disponibles */}

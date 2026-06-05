@@ -38,20 +38,23 @@ export default function DashboardDesktop() {
   const { user: auth } = useAuth();
   const t = useT();
 
-  const [kpis,       setKpis]       = useState({ total_players: 0, available_players: 0, upcoming_events_count: 0, unread_messages: 0 });
-  const [upcoming,   setUpcoming]   = useState<any[]>([]);
+  const [kpis,        setKpis]        = useState({ total_players: 0, available_players: 0, upcoming_events_count: 0, unread_messages: 0 });
+  const [upcoming,    setUpcoming]    = useState<any[]>([]);
   const [unavailable, setUnavailable] = useState<any[]>([]);
-  const [summary,    setSummary]    = useState<any>(null);
+  const [summary,     setSummary]     = useState<any>(null);
+  const [recentConvs, setRecentConvs] = useState<any[]>([]);
 
   const fetchAll = useCallback(async () => {
-    const [kRes, uRes, unRes] = await Promise.all([
+    const [kRes, uRes, unRes, mRes] = await Promise.all([
       fetch('/api/backend/dashboard/kpis'),
       fetch('/api/backend/dashboard/upcoming-events'),
       fetch('/api/backend/dashboard/unavailable-players'),
+      fetch('/api/backend/messages/conversations'),
     ]);
     if (kRes.ok)  setKpis(await kRes.json());
     if (uRes.ok)  setUpcoming(await uRes.json());
     if (unRes.ok) setUnavailable(await unRes.json());
+    if (mRes.ok)  setRecentConvs((await mRes.json()).slice(0, 3));
     if (isAdmin) {
       const sRes = await fetch('/api/backend/dashboard/admin-summary');
       if (sRes.ok) setSummary(await sRes.json());
@@ -139,7 +142,7 @@ export default function DashboardDesktop() {
           )}
         </div>
 
-        {/* Messages récents — statique Phase 4 */}
+        {/* Messages récents */}
         <div className="col-span-2 bg-surface-container-lowest border border-outline-variant rounded-2xl p-6">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
@@ -150,7 +153,25 @@ export default function DashboardDesktop() {
               {t.dashboard.viewAll} <ChevronRight size={14} />
             </a>
           </div>
-          <p className="text-sm text-on-surface-variant text-center py-4">Messagerie disponible en Phase 4</p>
+          {recentConvs.length === 0 ? (
+            <p className="text-sm text-on-surface-variant text-center py-4">Aucun message</p>
+          ) : (
+            <div className="space-y-3">
+              {recentConvs.map((conv: any) => (
+                <a key={conv.id} href="/messagerie"
+                  className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container transition-colors">
+                  <div className={`w-10 h-10 rounded-full ${conv.avatar_bg} flex items-center justify-center shrink-0`}>
+                    <span className={`font-bold text-sm ${conv.is_ai ? 'text-white' : 'text-on-surface-variant'}`}>{conv.initials}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-on-surface truncate">{conv.name}</p>
+                    <p className="text-xs text-on-surface-variant truncate">{conv.preview}</p>
+                  </div>
+                  <span className="text-xs text-on-surface-variant shrink-0">{conv.time}</span>
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

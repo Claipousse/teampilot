@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(npx tsc --noEmit *)",
+      "Bash(pip list)",
+      "Bash(pip show *)",
+      "Bash(python3 -m pytest *)"
+    ]
+  }
+}

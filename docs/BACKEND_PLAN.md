@@ -2,7 +2,7 @@
 
 > **Version :** 1.1 — Juin 2026
 > **Frontend :** Next.js 16 / React 19 / Tailwind 4 / TypeScript
-> **Backend cible :** FastAPI (Python 3.12)
+> **Backend cible :** FastAPI (Python 3.13)
 
 ---
 
@@ -16,7 +16,7 @@
 6. [Chatbot Tactical AI](#6-chatbot-tactical-ai)
 7. [WebSockets — Messagerie temps réel](#7-websockets--messagerie-temps-réel)
 8. [Sécurité](#8-sécurité)
-9. [Docker & déploiement](#9-docker--déploiement)
+9. [Lancement local](#9-lancement-local)
 10. [Roadmap d'intégration frontend](#10-roadmap-dintégration-frontend)
 11. [Impact sur le code frontend existant](#11-impact-sur-le-code-frontend-existant)
 
@@ -27,17 +27,15 @@
 | Composant | Choix | Version | Justification |
 |---|---|---|---|
 | Framework | FastAPI | 0.115 | Async natif, OpenAPI auto, WebSocket intégré |
-| Serveur | Uvicorn | 0.32 | ASGI, workers multiples en prod |
+| Serveur | Uvicorn | 0.32 | ASGI, rechargement automatique en dev |
 | ORM | SQLAlchemy async | 2.0 | Typed, compatible Alembic |
 | Migrations | Alembic | 1.14 | Standard avec SQLAlchemy |
-| BDD prod | PostgreSQL | 16 | JSONB, full-text search, robustesse |
-| BDD dev | SQLite | — | Zéro config, même ORM |
+| BDD | SQLite + aiosqlite | — | Zéro installation, fichier local, même ORM |
 | Validation | Pydantic v2 | 2.10 | Schémas request/response, settings |
 | Auth | python-jose + passlib | 3.3 / 1.7 | JWT HS256, bcrypt |
 | Chatbot | Groq API | 0.13 | Gratuit, Llama 3.3 70B, <1s latence |
 | Fallback IA | Ollama (local) | — | llama3.2:3b, offline, 0 coût |
 | Temps réel | WebSocket FastAPI natif | — | Pas de dépendance tierce |
-| Cache / Pub-Sub | Redis | 7 | Broadcast WS multi-instances |
 | Rate limiting | slowapi | 0.1.9 | Middleware FastAPI |
 | Upload | python-multipart + Pillow | — | Validation MIME, resize images |
 | Tests | pytest + pytest-asyncio | 8.3 / 0.24 | Tests async |
@@ -49,6 +47,7 @@ fastapi==0.115.6
 uvicorn[standard]==0.32.1
 sqlalchemy==2.0.36
 alembic==1.14.0
+aiosqlite==0.20.0
 pydantic[email]==2.10.3
 pydantic-settings==2.6.1
 python-jose[cryptography]==3.3.0
@@ -56,7 +55,6 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.20
 aiofiles==24.1.0
 websockets==14.1
-redis==5.2.1
 groq==0.13.0
 slowapi==0.1.9
 pillow==11.1.0
@@ -148,7 +146,7 @@ backend/
 │   ├── test_messaging.py
 │   └── test_ai.py
 │
-├── uploads/                       # Fichiers uploadés (volume Docker)
+├── uploads/                       # Fichiers uploadés (photos joueurs, staff, logo)
 │   ├── players/
 │   ├── staff/
 │   └── club/
@@ -156,9 +154,7 @@ backend/
 ├── .env
 ├── .env.example
 ├── alembic.ini
-├── requirements.txt
-├── Dockerfile
-└── docker-compose.yml
+└── requirements.txt
 ```
 
 ---
@@ -637,7 +633,6 @@ L'authentification se fait via token JWT en query param (les WebSocket ne suppor
 ```python
 class ConnectionManager:
     _connections: dict[int, set[WebSocket]]  # {user_id: set[WebSocket]}
-    _redis: aioredis.Redis                   # Pub-Sub multi-instances
 
     async def connect(websocket, user_id)
     async def disconnect(websocket, user_id)
@@ -710,46 +705,51 @@ OLLAMA_URL=http://localhost:11434    # optionnel
 
 ---
 
-## 9. Docker & déploiement
+## 9. Lancement local
 
-### Services
+Pas de Docker. Le backend tourne directement avec Python 3.13 et uvicorn. La base de données est un fichier SQLite local (aucune installation requise).
 
-```yaml
-# docker-compose.yml
-services:
-  api:      # FastAPI — port 8000
-  db:       # PostgreSQL 16 — port 5432
-  redis:    # Redis 7 — port 6379
-  adminer:  # Inspecteur BDD (dev seulement, profile: dev)
-```
-
-### Volumes persistants
-
-```yaml
-volumes:
-  postgres_data:   # Données PostgreSQL
-  redis_data:      # Cache Redis
-  ./uploads:       # Fichiers uploadés (monté sur /app/uploads)
-```
-
-### Commandes essentielles
+### Installation
 
 ```bash
-# Démarrage
-docker-compose up -d
+cd backend
+python -m venv venv
+venv\Scripts\activate          # Windows
+pip install -r requirements.txt
+```
 
-# Migrations
-docker-compose exec api alembic upgrade head
+### Démarrage
 
-# Nouvelle migration après modification des modèles
-docker-compose exec api alembic revision --autogenerate -m "description"
+```bash
+# Appliquer les migrations (première fois, ou après une modification de modèle)
+alembic upgrade head
 
-# Logs API
-docker-compose logs -f api
+# Lancer le serveur (rechargement automatique à chaque modification)
+uvicorn app.main:app --reload --port 8000
+```
 
-# Accès BDD (dev)
-docker-compose --profile dev up adminer
-# → http://localhost:8080
+### Commandes courantes
+
+```bash
+# Créer une nouvelle migration après modification d'un modèle
+alembic revision --autogenerate -m "description"
+
+# Lancer les tests
+python -m pytest
+
+# Vérifier l'API interactive
+# → http://localhost:8000/docs
+```
+
+### Variables d'environnement (.env)
+
+```bash
+DATABASE_URL=sqlite+aiosqlite:///./teampilot.db
+SECRET_KEY=changeme_256bits
+ALGORITHM=HS256
+GROQ_API_KEY=                  # rempli en Phase 5
+UPLOAD_DIR=./uploads
+MAX_UPLOAD_SIZE_MB=5
 ```
 
 ---

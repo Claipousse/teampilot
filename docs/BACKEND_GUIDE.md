@@ -15,7 +15,7 @@
 7. [Le chatbot IA — comment ça marche gratuitement](#7-le-chatbot-ia--comment-ça-marche-gratuitement)
 8. [La messagerie temps réel — les WebSockets](#8-la-messagerie-temps-réel--les-websockets)
 9. [La sécurité — les points importants](#9-la-sécurité--les-points-importants)
-10. [Docker — comment tout ça tourne ensemble](#10-docker--comment-tout-ça-tourne-ensemble)
+10. [Lancement local](#10-lancement-local)
 11. [Explication de chaque dossier et fichier](#11-explication-de-chaque-dossier-et-fichier)
 12. [Par où commencer — les 5 phases expliquées](#12-par-où-commencer--les-5-phases-expliquées)
 
@@ -253,23 +253,31 @@ CORS (Cross-Origin Resource Sharing) définit quels sites ont le droit d'appeler
 
 ---
 
-## 10. Docker — comment tout ça tourne ensemble
+## 10. Lancement local
 
-### Le problème sans Docker
-Le backend a besoin de Python 3.12, PostgreSQL 16, Redis 7... Sur ta machine, tu as peut-être d'autres versions installées. Sur le serveur de prod, encore d'autres. "Ça marche chez moi" est un problème classique.
+Pas de Docker, pas de PostgreSQL à installer. Le backend tourne directement avec Python 3.13 sur ta machine. La base de données est un simple **fichier SQLite** (`teampilot.db`) créé automatiquement dans le dossier `backend/` au premier lancement.
 
-### Docker : tout dans des boîtes
-Docker crée des **conteneurs** — des environnements isolés qui contiennent exactement ce dont ils ont besoin, indépendamment du système hôte. Le fichier `docker-compose.yml` décrit comment lancer tous les services ensemble :
+### Démarrer le backend
 
-- **api** (le serveur FastAPI, port 8000)
-- **db** (PostgreSQL, port 5432)
-- **redis** (port 6379)
-- **adminer** (une interface web pour voir le contenu de la BDD, en mode dev seulement)
+```bash
+cd backend
 
-Tu fais `docker-compose up -d` et tout démarre automatiquement, dans le bon ordre, avec les bonnes versions, peu importe ta machine.
+# Première fois seulement : créer l'environnement Python et installer les librairies
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
 
-### Les volumes — pour ne pas perdre les données
-Par défaut, si tu supprimes un conteneur, tout ce qu'il contient disparaît. Les **volumes** sont des dossiers partagés entre le conteneur et ta machine : même si tu supprimes et recrées le conteneur PostgreSQL, les données restent.
+# Créer les tables en base
+alembic upgrade head
+
+# Lancer le serveur (se relance automatiquement à chaque modification de fichier)
+uvicorn app.main:app --reload --port 8000
+```
+
+Ensuite : `http://localhost:8000/docs` → l'interface interactive s'ouvre, tu peux tester tous les endpoints directement depuis le navigateur.
+
+### Analogie avec le frontend
+C'est exactement comme `npm run dev` pour Next.js — un terminal ouvert, un serveur qui se relance seul quand tu modifies le code. Les deux tournent en parallèle : Next.js sur le port 3000, FastAPI sur le port 8000.
 
 ---
 
@@ -380,31 +388,21 @@ backend/
 │
 ├── uploads/
 │   └── Dossier où sont stockées les images uploadées (photos joueurs, staff, logo).
-│       Ce dossier est monté en volume Docker pour persister entre les redémarrages.
 │   ├── players/
 │   ├── staff/
 │   └── club/
 │
 ├── .env
-│   └── Variables d'environnement RÉELLES (clés secrètes, mots de passe BDD...).
+│   └── Variables d'environnement RÉELLES (clé secrète JWT, clé API Groq...).
 │       CE FICHIER NE DOIT JAMAIS ÊTRE COMMITÉ SUR GIT. Il est dans .gitignore.
 │
 ├── .env.example
-│   └── Un modèle vide du .env, sans les vraies valeurs. Celui-là on peut
-│       le commiter — il sert à montrer aux autres développeurs quelles variables
-│       ils doivent remplir.
+│   └── Modèle vide du .env, sans les vraies valeurs. On peut le commiter —
+│       il montre aux autres développeurs quelles variables remplir.
 │
-├── requirements.txt
-│   └── La liste de toutes les librairies Python nécessaires avec leurs versions
-│       exactes. `pip install -r requirements.txt` installe tout en une commande.
-│
-├── Dockerfile
-│   └── La "recette" pour créer l'image Docker de l'API : quel Python,
-│       quelles librairies, quelle commande pour démarrer le serveur.
-│
-└── docker-compose.yml
-    └── Décrit comment lancer tous les services ensemble (API + PostgreSQL + Redis)
-        et comment ils communiquent entre eux.
+└── requirements.txt
+    └── La liste de toutes les librairies Python avec leurs versions exactes.
+        `pip install -r requirements.txt` installe tout en une commande.
 ```
 
 ---
@@ -437,7 +435,7 @@ Le plan est découpé en 5 phases pour ne pas tout faire d'un coup. Chaque phase
 ### Phase 4 — Messagerie & Notifications (19 – 22 juin)
 **Ce qu'on fait :** Messagerie temps réel, compteur de non-lus, notifications automatiques.
 
-**Pourquoi en quatrième :** C'est la partie la plus complexe techniquement (WebSocket, Redis). Elle nécessite que les utilisateurs existent vraiment (Phase 1).
+**Pourquoi en quatrième :** C'est la partie la plus complexe techniquement (WebSocket). Elle nécessite que les utilisateurs existent vraiment (Phase 1).
 
 **Ce que ça apporte :** Les messages arrivent en temps réel. Les notifications apparaissent quand un événement est modifié.
 
@@ -455,14 +453,13 @@ Le plan est découpé en 5 phases pour ne pas tout faire d'un coup. Chaque phase
 | Ce qu'on construit | Pourquoi ce choix | Niveau de complexité |
 |---|---|---|
 | FastAPI (Python) | Simple à lire, rapide, WebSocket intégré | Facile à moyen |
-| PostgreSQL | Robuste pour la production | Moyen (géré par Docker) |
+| SQLite | Zéro installation, fichier local, même ORM qu'en prod | Facile |
 | JWT | Standard du secteur, sans état côté serveur | Moyen |
 | RBAC binaire (`is_admin`) | Suffisant pour nos besoins, zéro complexité | Facile |
 | Groq API (gratuit) | LLM performant sans abonnement | Facile |
-| WebSocket + Redis | Seule vraie façon de faire du temps réel | Difficile |
-| Docker | Garantit que ça marche partout | Moyen |
+| WebSocket | Seule vraie façon de faire du temps réel | Difficile |
 
-Le point techniquement le plus complexe est la messagerie temps réel (WebSocket + Redis). Tout le reste est relativement standard pour un backend moderne.
+Le point techniquement le plus complexe est la messagerie temps réel (WebSocket). Tout le reste est relativement standard pour un backend moderne.
 
 ---
 

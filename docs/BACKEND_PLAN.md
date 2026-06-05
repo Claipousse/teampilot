@@ -756,7 +756,7 @@ docker-compose --profile dev up adminer
 
 ## 10. Roadmap d'intégration frontend
 
-### Phase 1 — Auth (Semaine 1)
+### Phase 1 — Auth (8 – 11 juin)
 
 **Objectif :** Remplacer `useCurrentUser` mocké par une vraie session JWT.
 
@@ -768,7 +768,7 @@ docker-compose --profile dev up adminer
   - Page `/login` (nouvelle page à créer)
   - Redirection vers `/login` si non authentifié
 
-### Phase 2 — Club, Saison, Staff (Semaine 2)
+### Phase 2 — Club, Saison, Staff (12 – 14 juin)
 
 **Objectif :** Connecter la page Administration et le panel admin du dashboard.
 
@@ -779,7 +779,7 @@ docker-compose --profile dev up adminer
   - Upload logo + photos staff fonctionnel
   - Dashboard panel admin : `GET /dashboard/admin-summary`
 
-### Phase 3 — Joueurs & Calendrier (Semaines 3-4)
+### Phase 3 — Joueurs & Calendrier (15 – 18 juin)
 
 **Objectif :** CRUD persisté pour les deux sections principales.
 
@@ -791,7 +791,7 @@ docker-compose --profile dev up adminer
   - `CalendrierDesktop/Mobile` : events depuis API, CRUD branché
   - Dashboard KPIs : `GET /dashboard/kpis` + `GET /dashboard/upcoming-events` + `GET /dashboard/unavailable-players`
 
-### Phase 4 — Messagerie & Notifications (Semaines 5-6)
+### Phase 4 — Messagerie & Notifications (19 – 22 juin)
 
 **Objectif :** Messagerie temps réel et notifications persistées.
 
@@ -803,7 +803,7 @@ docker-compose --profile dev up adminer
   - Header : notifications depuis `GET /notifications`, suppression via API
   - Compteur non-lus en temps réel via WS
 
-### Phase 5 — Tactical AI (Semaine 7)
+### Phase 5 — Tactical AI (23 – 25 juin)
 
 **Objectif :** Chatbot fonctionnel avec contexte réel du club.
 

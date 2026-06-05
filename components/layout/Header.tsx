@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Search, Bell, X } from 'lucide-react';
+import { Search, Bell, X, LogOut } from 'lucide-react';
 import { useLanguage, useT } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -51,6 +51,7 @@ export default function Header() {
   const [langOpen,    setLangOpen]    = useState(false);
   const [notifOpen,   setNotifOpen]   = useState(false);
   const [notifTab,    setNotifTab]    = useState<'events' | 'messages'>('events');
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const { lang, setLang } = useLanguage();
   const t = useT();
@@ -68,15 +69,17 @@ export default function Header() {
   });
   const [messages, setMessages] = useState<NotifMessage[]>(INITIAL_MESSAGES);
 
-  const searchRef = useRef<HTMLDivElement>(null);
-  const langRef   = useRef<HTMLDivElement>(null);
-  const notifRef  = useRef<HTMLDivElement>(null);
+  const searchRef  = useRef<HTMLDivElement>(null);
+  const langRef    = useRef<HTMLDivElement>(null);
+  const notifRef   = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const down = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchOpen(false);
-      if (langRef.current   && !langRef.current.contains(e.target as Node))   setLangOpen(false);
-      if (notifRef.current  && !notifRef.current.contains(e.target as Node))  setNotifOpen(false);
+      if (searchRef.current  && !searchRef.current.contains(e.target as Node))  setSearchOpen(false);
+      if (langRef.current    && !langRef.current.contains(e.target as Node))    setLangOpen(false);
+      if (notifRef.current   && !notifRef.current.contains(e.target as Node))   setNotifOpen(false);
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
     };
     document.addEventListener('mousedown', down);
     return () => document.removeEventListener('mousedown', down);
@@ -272,18 +275,31 @@ export default function Header() {
         <div className="w-px h-10 bg-outline-variant mx-4" />
 
         {/* Profil */}
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <p className="text-lg font-bold text-on-surface leading-tight">{fullName}</p>
-            <p className="text-sm text-primary uppercase tracking-widest font-semibold">{roleLabel}</p>
-          </div>
+        <div ref={profileRef} className="relative">
           <button
-            onClick={logout}
-            className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shrink-0 hover:bg-primary/80 transition-colors"
-            title="Se déconnecter"
+            onClick={() => { setProfileOpen(v => !v); setLangOpen(false); setNotifOpen(false); }}
+            className="flex items-center gap-4 rounded-xl hover:bg-surface-container px-3 py-2 transition-colors"
           >
-            <span className="text-white text-base font-bold">{initials}</span>
+            <div className="text-right">
+              <p className="text-lg font-bold text-on-surface leading-tight">{fullName}</p>
+              <p className="text-sm text-primary uppercase tracking-widest font-semibold">{roleLabel}</p>
+            </div>
+            <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shrink-0">
+              <span className="text-white text-base font-bold">{initials}</span>
+            </div>
           </button>
+
+          {profileOpen && (
+            <div className="absolute top-full right-0 mt-2 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg overflow-hidden z-50 min-w-[180px]">
+              <button
+                onClick={() => { setProfileOpen(false); logout(); }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-error hover:bg-error/5 transition-colors"
+              >
+                <LogOut size={15} />
+                Se déconnecter
+              </button>
+            </div>
+          )}
         </div>
 
       </div>

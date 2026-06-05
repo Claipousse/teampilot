@@ -1,12 +1,24 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { Bell, Settings } from 'lucide-react';
+import { Bell, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function MobileHeader() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const initials = user ? `${user.firstName[0]}${user.lastName[0]}` : '?';
+
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const down = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
+    };
+    document.addEventListener('mousedown', down);
+    return () => document.removeEventListener('mousedown', down);
+  }, []);
 
   return (
     <div className="lg:hidden flex items-center justify-between px-5 py-4 bg-surface-container-lowest border-b border-outline-variant shrink-0">
@@ -25,8 +37,26 @@ export default function MobileHeader() {
         <button className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
           <Settings size={20} className="text-on-surface-variant" />
         </button>
-        <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0">
-          <span className="text-white text-sm font-bold">{initials}</span>
+
+        <div ref={profileRef} className="relative">
+          <button
+            onClick={() => setProfileOpen(v => !v)}
+            className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0"
+          >
+            <span className="text-white text-sm font-bold">{initials}</span>
+          </button>
+
+          {profileOpen && (
+            <div className="absolute top-full right-0 mt-2 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg overflow-hidden z-50 min-w-[180px]">
+              <button
+                onClick={() => { setProfileOpen(false); logout(); }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-error hover:bg-error/5 transition-colors"
+              >
+                <LogOut size={15} />
+                Se déconnecter
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

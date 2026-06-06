@@ -38,7 +38,13 @@ npm run dev
 
 Ouvrir [http://localhost:3000](http://localhost:3000).
 
-Compte de test : `admin@teampilot.com` / `admin123`
+**Comptes de test**
+
+| Rôle | Email | Mot de passe |
+|------|-------|-------------|
+| Admin (staff) | `admin@teampilot.com` | `admin123` |
+| Staff (non admin) | `tlaurent@metropolisunited.com` | `staff123` |
+| Joueur | `m.valentin@metropolisunited.com` | `player123` |
 
 ---
 

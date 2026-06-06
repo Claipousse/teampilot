@@ -35,8 +35,14 @@ async def seed():
         # ── Comptes de test génériques ─────────────────────────────────────────
         test_staff_r = await db.execute(select(User).where(User.email == "staff@teampilot.com"))
         if not test_staff_r.scalar_one_or_none():
+            sm_alex = StaffMember(
+                first_name="Alex", last_name="Martin", role="Logistique",
+                email="staff@teampilot.com", phone="+44 20 5678 9012", since_date="2025-01-01",
+            )
+            db.add(sm_alex)
+            await db.flush()
             db.add(User(email="staff@teampilot.com", hashed_password=hash_password("staff123"),
-                first_name="Alex", last_name="Martin", is_admin=False, type="staff"))
+                first_name="Alex", last_name="Martin", is_admin=False, type="staff", staff_id=sm_alex.id))
             print("✅ Compte test staff : staff@teampilot.com  /  staff123")
 
         test_joueur_r = await db.execute(select(User).where(User.email == "joueur@teampilot.com"))

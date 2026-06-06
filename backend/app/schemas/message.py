@@ -49,3 +49,26 @@ class ConversationRead(BaseModel):
     members:   list[ParticipantRead] | None = None
 
     model_config = {"from_attributes": True}
+
+
+class UserCard(BaseModel):
+    id:         int
+    first_name: str
+    last_name:  str
+    user_type:  str        # "player" | "staff"
+    is_admin:   bool
+    role:       str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class UsersGrouped(BaseModel):
+    coaches: list[UserCard]
+    staff:   list[UserCard]
+    players: list[UserCard]
+
+
+class ConversationCreate(BaseModel):
+    participant_ids: list[int]
+    is_group:        bool = False
+    group_name:      str | None = None

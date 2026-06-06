@@ -1,20 +1,34 @@
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func, delete as sa_delete
 from app.dependencies.db import get_db
 from app.dependencies.auth import get_current_user
 from app.models.message import Conversation, ConversationParticipant, Message
 from app.models.user import User
-from app.schemas.message import ConversationRead, MessageRead, MessageCreate, ParticipantRead
+from app.models.staff import StaffMember
+from app.schemas.message import (
+    ConversationRead, MessageRead, MessageCreate, ParticipantRead,
+    UserCard, UsersGrouped, ConversationCreate,
+)
 
 router = APIRouter(prefix="/messages", tags=["messages"])
 
 
 def _role_type(user: User) -> str:
+    if user.type == "player":
+        return "player"
     if user.is_admin:
         return "coach"
-    return "staff" if user.type == "staff" else "player"
+    return "staff"
+
+
+def _role_type_with_sm(user: User, sm: StaffMember | None) -> str:
+    if user.type == "player":
+        return "player"
+    if user.is_admin or (sm and "coach" in sm.role.lower()):
+        return "coach"
+    return "staff"
 
 
 def _fmt_time(dt: datetime) -> str:
@@ -28,16 +42,51 @@ def _fmt_time(dt: datetime) -> str:
     return dt.strftime("%d/%m")
 
 
+# ── Lister les utilisateurs pour créer une conversation ──────────────────────
+
+@router.get("/users", response_model=UsersGrouped)
+async def list_users_for_conversation(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    rows = (await db.execute(
+        select(User, StaffMember)
+        .outerjoin(StaffMember, User.staff_id == StaffMember.id)
+        .where(User.id != current_user.id, User.is_active == True)
+        .order_by(User.first_name)
+    )).all()
+
+    coaches, staff_list, players = [], [], []
+    for user, sm in rows:
+        card = UserCard(
+            id=user.id,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            user_type=user.type,
+            is_admin=user.is_admin,
+            role=sm.role if sm else None,
+        )
+        if user.type == "player":
+            players.append(card)
+        elif user.is_admin or (sm and "coach" in sm.role.lower()):
+            coaches.append(card)
+        else:
+            staff_list.append(card)
+
+    return UsersGrouped(coaches=coaches, staff=staff_list, players=players)
+
+
+# ── Lister les conversations ──────────────────────────────────────────────────
+
 @router.get("/conversations", response_model=list[ConversationRead])
 async def list_conversations(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    part_ids_r = await db.execute(
+    conv_ids = [r[0] for r in (await db.execute(
         select(ConversationParticipant.conversation_id)
         .where(ConversationParticipant.user_id == current_user.id)
-    )
-    conv_ids = [r[0] for r in part_ids_r.all()]
+    )).all()]
 
     convs = (await db.execute(
         select(Conversation).where(Conversation.id.in_(conv_ids))
@@ -61,13 +110,10 @@ async def list_conversations(
             )).all()
             members = [
                 ParticipantRead(
-                    user_id=u.id,
-                    first_name=u.first_name,
-                    last_name=u.last_name,
+                    user_id=u.id, first_name=u.first_name, last_name=u.last_name,
                     initials=f"{u.first_name[0]}{u.last_name[0]}",
                     bg="bg-surface-container-high",
-                    role_type=_role_type(u),
-                    role=None,
+                    role_type=_role_type(u), role=None,
                 )
                 for _, u in rows
             ]
@@ -83,6 +129,147 @@ async def list_conversations(
 
     return result
 
+
+# ── Créer une conversation ────────────────────────────────────────────────────
+
+@router.post("/conversations", response_model=ConversationRead)
+async def create_conversation(
+    data: ConversationCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not data.is_group:
+        if len(data.participant_ids) != 1:
+            raise HTTPException(400, "Une conversation individuelle nécessite 1 participant")
+
+        partner_id = data.participant_ids[0]
+
+        # Vérifier si une conversation 1:1 existe déjà
+        curr_ids = {r[0] for r in (await db.execute(
+            select(ConversationParticipant.conversation_id)
+            .where(ConversationParticipant.user_id == current_user.id)
+        )).all()}
+        part_ids = {r[0] for r in (await db.execute(
+            select(ConversationParticipant.conversation_id)
+            .where(ConversationParticipant.user_id == partner_id)
+        )).all()}
+        shared = curr_ids & part_ids
+        if shared:
+            existing = (await db.execute(
+                select(Conversation).where(
+                    Conversation.id.in_(shared),
+                    Conversation.is_group == False,
+                    Conversation.is_ai == False,
+                ).limit(1)
+            )).scalar_one_or_none()
+            if existing:
+                last = (await db.execute(
+                    select(Message).where(Message.conversation_id == existing.id)
+                    .order_by(Message.created_at.desc()).limit(1)
+                )).scalar_one_or_none()
+                return ConversationRead(
+                    id=existing.id, name=existing.name, category=existing.category,
+                    role_type=existing.role_type, is_group=False, is_ai=False,
+                    initials=existing.initials, avatar_bg=existing.avatar_bg, role=existing.role,
+                    preview=last.text if last else None,
+                    time=_fmt_time(last.created_at) if last else None,
+                )
+
+        partner = (await db.execute(select(User).where(User.id == partner_id))).scalar_one_or_none()
+        if not partner:
+            raise HTTPException(404, "Utilisateur introuvable")
+        partner_sm = None
+        if partner.staff_id:
+            partner_sm = (await db.execute(
+                select(StaffMember).where(StaffMember.id == partner.staff_id)
+            )).scalar_one_or_none()
+
+        conv = Conversation(
+            name=f"{partner.first_name} {partner.last_name}",
+            category="team" if partner.type == "player" else "staff",
+            role_type=_role_type_with_sm(partner, partner_sm),
+            is_group=False, is_ai=False,
+            initials=f"{partner.first_name[0]}{partner.last_name[0]}",
+            avatar_bg="bg-surface-container-high",
+            role=partner_sm.role if partner_sm else None,
+        )
+        db.add(conv)
+        await db.flush()
+        for uid in [current_user.id, partner_id]:
+            db.add(ConversationParticipant(conversation_id=conv.id, user_id=uid))
+
+    else:
+        if len(data.participant_ids) < 2:
+            raise HTTPException(400, "Un groupe nécessite au moins 2 participants")
+
+        members_users = (await db.execute(
+            select(User).where(User.id.in_(data.participant_ids))
+        )).scalars().all()
+
+        has_player  = any(u.type == "player" for u in members_users)
+        category    = "team" if has_player else "staff"
+        name        = data.group_name or ", ".join(u.first_name for u in members_users[:3]) + ("…" if len(members_users) > 3 else "")
+        initials    = name[:2].upper()
+        avatar_bg   = "bg-primary" if has_player else "bg-inverse-surface"
+
+        conv = Conversation(
+            name=name, category=category, role_type="group",
+            is_group=True, is_ai=False,
+            initials=initials, avatar_bg=avatar_bg,
+        )
+        db.add(conv)
+        await db.flush()
+        for uid in [current_user.id] + data.participant_ids:
+            db.add(ConversationParticipant(conversation_id=conv.id, user_id=uid))
+
+    await db.commit()
+    await db.refresh(conv)
+
+    members = None
+    if conv.is_group:
+        rows = (await db.execute(
+            select(ConversationParticipant, User)
+            .join(User, ConversationParticipant.user_id == User.id)
+            .where(ConversationParticipant.conversation_id == conv.id)
+        )).all()
+        members = [
+            ParticipantRead(
+                user_id=u.id, first_name=u.first_name, last_name=u.last_name,
+                initials=f"{u.first_name[0]}{u.last_name[0]}",
+                bg="bg-surface-container-high", role_type=_role_type(u), role=None,
+            )
+            for _, u in rows
+        ]
+
+    return ConversationRead(
+        id=conv.id, name=conv.name, category=conv.category,
+        role_type=conv.role_type, is_group=conv.is_group, is_ai=conv.is_ai,
+        initials=conv.initials, avatar_bg=conv.avatar_bg, role=conv.role,
+        preview=None, time=None, members=members,
+    )
+
+
+# ── Supprimer une conversation vide ──────────────────────────────────────────
+
+@router.delete("/conversations/{conv_id}")
+async def delete_conversation(
+    conv_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    msg_count = (await db.execute(
+        select(func.count()).where(Message.conversation_id == conv_id)
+    )).scalar()
+    if msg_count and msg_count > 0:
+        raise HTTPException(400, "Impossible de supprimer une conversation non vide")
+
+    await db.execute(sa_delete(ConversationParticipant).where(ConversationParticipant.conversation_id == conv_id))
+    await db.execute(sa_delete(Conversation).where(Conversation.id == conv_id))
+    await db.commit()
+    return {"ok": True}
+
+
+# ── Messages d'une conversation ───────────────────────────────────────────────
 
 @router.get("/conversations/{conv_id}/messages", response_model=list[MessageRead])
 async def list_messages(
@@ -117,6 +304,8 @@ async def list_messages(
         ))
     return result
 
+
+# ── Envoyer un message ────────────────────────────────────────────────────────
 
 @router.post("/conversations/{conv_id}/messages", response_model=MessageRead)
 async def send_message(

@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Search, ArrowLeft, Send, Download, FileText, Users, X } from 'lucide-react';
+import { Search, ArrowLeft, Send, Download, FileText, Users, X, Plus, MessageSquare, ChevronRight, Check } from 'lucide-react';
 import { useT } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 
 type RoleType = 'player' | 'coach' | 'staff' | 'ai';
 type Tab = 'Tous' | 'Team' | 'Staff';
+type CreateMode = 'conversation' | 'group' | null;
 
 type Member = { name: string; initials: string; bg: string; role: string; roleType: RoleType };
 
@@ -42,6 +43,15 @@ type ApiConversation = {
   is_group: boolean; is_ai: boolean; initials: string; avatar_bg: string;
   role: string | null; preview: string | null; time: string | null;
   unread: boolean; members: ApiMember[] | null;
+};
+
+type ApiUserCard = {
+  id: number; first_name: string; last_name: string;
+  user_type: string; is_admin: boolean; role: string | null;
+};
+
+type ApiUsersGrouped = {
+  coaches: ApiUserCard[]; staff: ApiUserCard[]; players: ApiUserCard[];
 };
 
 // ── Conversions ──────────────────────────────────────────────────────────────
@@ -110,6 +120,12 @@ function roleAccent(roleType?: string): { border: string; dot: string; bg: strin
   }
 }
 
+function userRoleType(u: ApiUserCard): RoleType {
+  if (u.user_type === 'player') return 'player';
+  if (u.is_admin || (u.role && u.role.toLowerCase().includes('coach'))) return 'coach';
+  return 'staff';
+}
+
 // ── Composant ─────────────────────────────────────────────────────────────────
 
 export default function MessagerieMobile() {
@@ -125,7 +141,17 @@ export default function MessagerieMobile() {
   const [showMembers,    setShowMembers]    = useState(false);
   const [membersVisible, setMembersVisible] = useState(false);
   const [sending,        setSending]        = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Create panel
+  const [createMode,    setCreateMode]    = useState<CreateMode>(null);
+  const [plusOpen,      setPlusOpen]      = useState(false);
+  const [usersGrouped,  setUsersGrouped]  = useState<ApiUsersGrouped | null>(null);
+  const [groupSelected, setGroupSelected] = useState<Set<number>>(new Set());
+  const [groupName,     setGroupName]     = useState('');
+  const [creatingConv,  setCreatingConv]  = useState(false);
+
+  const messagesEndRef  = useRef<HTMLDivElement>(null);
+  const newEmptyConvRef = useRef<number | null>(null);
 
   const aiConv    = useMemo(() => conversations.find(c => c.isAI),    [conversations]);
   const otherConvs = useMemo(() => conversations.filter(c => !c.isAI), [conversations]);
@@ -138,14 +164,14 @@ export default function MessagerieMobile() {
     return matchTab && matchSearch;
   }), [otherConvs, activeTab, search]);
 
-  // Chargement initial des conversations
+  // Chargement initial
   useEffect(() => {
     fetch('/api/backend/messages/conversations')
       .then(r => r.ok ? r.json() : [])
       .then((data: ApiConversation[]) => setConversations(data.map(toConversation)));
   }, []);
 
-  // Chargement des messages quand la conversation change
+  // Chargement messages
   useEffect(() => {
     if (!activeConv || !user) return;
     fetch(`/api/backend/messages/conversations/${activeConv.id}/messages`)
@@ -157,14 +183,105 @@ export default function MessagerieMobile() {
     if (activeConv) messagesEndRef.current?.scrollIntoView();
   }, [messages]);
 
-  const openConv = (conv: Conversation) => {
+  const cleanupEmptyConv = async () => {
+    const emptyId = newEmptyConvRef.current;
+    if (emptyId === null) return;
+    newEmptyConvRef.current = null;
+    const hasMessages = messages.some(m => m.type !== 'system');
+    if (!hasMessages) {
+      await fetch(`/api/backend/messages/conversations/${emptyId}`, { method: 'DELETE' });
+      setConversations(prev => prev.filter(c => c.id !== emptyId));
+    }
+  };
+
+  const openConv = async (conv: Conversation) => {
+    if (activeConv?.id === conv.id) return;
+    await cleanupEmptyConv();
     setActiveConv(conv);
     setShowMembers(false);
     setMembersVisible(false);
+    setCreateMode(null);
+    setPlusOpen(false);
+  };
+
+  const backToList = async () => {
+    await cleanupEmptyConv();
+    setActiveConv(null);
   };
 
   const openMembers  = () => { setShowMembers(true);  setTimeout(() => setMembersVisible(true),  10); };
   const closeMembers = () => { setMembersVisible(false); setTimeout(() => setShowMembers(false), 300); };
+
+  const openCreateMode = async (mode: CreateMode) => {
+    setPlusOpen(false);
+    setCreateMode(mode);
+    setGroupSelected(new Set());
+    setGroupName('');
+    if (!usersGrouped) {
+      const r = await fetch('/api/backend/messages/users');
+      if (r.ok) setUsersGrouped(await r.json());
+    }
+  };
+
+  const startConversationWith = async (userId: number) => {
+    if (creatingConv) return;
+    setCreatingConv(true);
+    try {
+      const r = await fetch('/api/backend/messages/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participant_ids: [userId], is_group: false }),
+      });
+      if (!r.ok) return;
+      const data: ApiConversation = await r.json();
+      const conv = toConversation(data);
+      const existing = conversations.find(c => c.id === conv.id);
+      if (existing) {
+        setCreateMode(null);
+        setActiveConv(existing);
+      } else {
+        newEmptyConvRef.current = conv.id;
+        setConversations(prev => [conv, ...prev]);
+        setCreateMode(null);
+        setActiveConv(conv);
+      }
+    } finally {
+      setCreatingConv(false);
+    }
+  };
+
+  const createGroup = async () => {
+    if (creatingConv || groupSelected.size < 2) return;
+    setCreatingConv(true);
+    try {
+      const r = await fetch('/api/backend/messages/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          participant_ids: Array.from(groupSelected),
+          is_group: true,
+          group_name: groupName.trim() || null,
+        }),
+      });
+      if (!r.ok) return;
+      const data: ApiConversation = await r.json();
+      const conv = toConversation(data);
+      newEmptyConvRef.current = conv.id;
+      setConversations(prev => [conv, ...prev]);
+      setCreateMode(null);
+      setActiveConv(conv);
+    } finally {
+      setCreatingConv(false);
+    }
+  };
+
+  const toggleGroupUser = (id: number) => {
+    setGroupSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   const sendMsg = async () => {
     if (!input.trim() || !activeConv || sending || !user) return;
@@ -180,6 +297,7 @@ export default function MessagerieMobile() {
       if (r.ok) {
         const msg: ApiMessage = await r.json();
         setMessages(prev => [...prev, toMessage(msg, user.id)]);
+        newEmptyConvRef.current = null;
       }
     } finally {
       setSending(false);
@@ -192,10 +310,9 @@ export default function MessagerieMobile() {
       <>
         <div className="fixed inset-x-0 bottom-0 z-30 bg-surface flex flex-col" style={{ top: '56px' }}>
 
-          {/* Header — fixe */}
           <div className="shrink-0 bg-surface border-b border-outline-variant px-4 py-3">
             <div className="flex items-center gap-3">
-              <button onClick={() => setActiveConv(null)}
+              <button onClick={backToList}
                 className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors shrink-0">
                 <ArrowLeft size={22} className="text-on-surface-variant" />
               </button>
@@ -229,7 +346,6 @@ export default function MessagerieMobile() {
             </div>
           </div>
 
-          {/* Messages — scrollable */}
           <div className="flex-1 overflow-y-auto">
             <div className="flex flex-col justify-end min-h-full gap-3 px-4 py-4">
               <div className="flex justify-center">
@@ -296,7 +412,6 @@ export default function MessagerieMobile() {
             </div>
           </div>
 
-          {/* Barre d'envoi — fixe en bas */}
           <div className="shrink-0 bg-surface border-t border-outline-variant px-4 py-7"
                style={{ paddingBottom: 'calc(56px + 2rem)' }}>
             <div className="flex items-center gap-2">
@@ -316,16 +431,13 @@ export default function MessagerieMobile() {
           </div>
         </div>
 
-        {/* Backdrop membres */}
         {showMembers && (
           <div
             className={`fixed inset-0 z-[50] bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${membersVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-            style={{ willChange: 'opacity, backdrop-filter' }}
             onClick={closeMembers}
           />
         )}
 
-        {/* Bottom sheet membres */}
         {showMembers && (
           <div className={`fixed bottom-0 inset-x-0 z-[51] bg-surface-container-lowest rounded-t-3xl max-h-[70vh] flex flex-col transition-transform duration-300 ${membersVisible ? 'translate-y-0' : 'translate-y-full'}`}>
             <div className="flex justify-center pt-3 pb-1 shrink-0">
@@ -357,11 +469,127 @@ export default function MessagerieMobile() {
     );
   }
 
+  /* ── Vue création ── */
+  if (createMode) {
+    const allUsers: [string, ApiUserCard[]][] = [
+      ['Coachs',  usersGrouped?.coaches  ?? []],
+      ['Staff',   usersGrouped?.staff    ?? []],
+      ['Joueurs', usersGrouped?.players  ?? []],
+    ];
+
+    return (
+      <div className="space-y-0">
+        {/* Header */}
+        <div className="flex items-center gap-3 pb-4 border-b border-outline-variant mb-4">
+          <button onClick={() => setCreateMode(null)} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
+            <ArrowLeft size={22} className="text-on-surface-variant" />
+          </button>
+          <h1 className="text-2xl font-extrabold text-on-surface">
+            {createMode === 'group' ? 'Nouveau groupe' : 'Nouvelle conversation'}
+          </h1>
+        </div>
+
+        {createMode === 'group' && (
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Nom du groupe (optionnel)"
+              value={groupName}
+              onChange={e => setGroupName(e.target.value)}
+              className="w-full px-4 py-3 bg-surface-container rounded-xl text-base text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none"
+            />
+          </div>
+        )}
+
+        {!usersGrouped ? (
+          <div className="p-8 text-center text-base text-on-surface-variant">Chargement…</div>
+        ) : (
+          <div className="space-y-1">
+            {allUsers.map(([label, list]) => list.length === 0 ? null : (
+              <div key={label}>
+                <p className="px-1 py-2 text-xs font-bold text-on-surface-variant uppercase tracking-wider">{label}</p>
+                <div className="space-y-1">
+                  {list.map(u => {
+                    const rt = userRoleType(u);
+                    const initials = `${u.first_name[0]}${u.last_name[0]}`;
+                    const isChecked = groupSelected.has(u.id);
+                    return (
+                      <div
+                        key={u.id}
+                        onClick={() => createMode === 'group' ? toggleGroupUser(u.id) : startConversationWith(u.id)}
+                        className="flex items-center gap-3 p-3 rounded-xl cursor-pointer active:scale-[0.99] bg-surface-container-lowest border border-outline-variant hover:bg-surface-container transition-all"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
+                          <span className="font-bold text-sm text-on-surface-variant">{initials}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-base font-semibold ${nameColor(rt)}`}>{u.first_name} {u.last_name}</p>
+                          {u.role && <p className="text-sm text-on-surface-variant truncate">{u.role}</p>}
+                        </div>
+                        {createMode === 'group' ? (
+                          <div className={`w-6 h-6 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${isChecked ? 'bg-primary border-primary' : 'border-outline-variant'}`}>
+                            {isChecked && <Check size={14} className="text-white" strokeWidth={3} />}
+                          </div>
+                        ) : (
+                          <ChevronRight size={18} className="text-outline shrink-0" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {createMode === 'group' && (
+          <div className="pt-4">
+            <button
+              onClick={createGroup}
+              disabled={groupSelected.size < 2 || creatingConv}
+              className="w-full py-3.5 bg-primary text-white rounded-xl text-base font-semibold disabled:opacity-40 transition-opacity"
+            >
+              Créer le groupe ({groupSelected.size} sélectionné{groupSelected.size > 1 ? 's' : ''})
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   /* ── Vue liste ── */
   return (
     <div className="space-y-4">
 
-      <h1 className="text-3xl font-extrabold text-on-surface">Messages</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-extrabold text-on-surface">Messages</h1>
+        <div className="relative">
+          <button
+            onClick={() => setPlusOpen(v => !v)}
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors"
+          >
+            <Plus size={20} className="text-on-surface-variant" />
+          </button>
+          {plusOpen && (
+            <div className="absolute top-full right-0 mt-1 w-48 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-20 overflow-hidden">
+              <button
+                onClick={() => openCreateMode('conversation')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container transition-colors text-left"
+              >
+                <MessageSquare size={16} className="text-primary shrink-0" />
+                Conversation
+              </button>
+              <button
+                onClick={() => openCreateMode('group')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container transition-colors text-left"
+              >
+                <Users size={16} className="text-secondary shrink-0" />
+                Groupe
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" size={18} />
@@ -380,7 +608,6 @@ export default function MessagerieMobile() {
         ))}
       </div>
 
-      {/* IA — toujours en tête */}
       {aiConv && (
         <div onClick={() => openConv(aiConv)}
           className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer active:scale-[0.99] transition-all bg-primary/5 border border-primary/20 border-l-4 border-l-primary">
@@ -397,14 +624,12 @@ export default function MessagerieMobile() {
         </div>
       )}
 
-      {/* Séparateur */}
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-outline-variant" />
         <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">{t.messaging.teamAndStaff}</span>
         <div className="flex-1 h-px bg-outline-variant" />
       </div>
 
-      {/* Autres conversations */}
       <div className="space-y-2">
         {filtered.length === 0 ? (
           <div className="p-8 text-center text-base text-on-surface-variant">{t.messaging.noConversation}</div>

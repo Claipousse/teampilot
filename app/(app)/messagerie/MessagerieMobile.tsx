@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 type RoleType = 'player' | 'coach' | 'staff' | 'ai';
 type Tab = 'Tous' | 'Team' | 'Staff';
 type CreateMode = 'conversation' | 'group' | null;
+type CreateTab  = 'joueurs' | 'staff' | 'coachs';
 
 type Member = { name: string; initials: string; bg: string; role: string; roleType: RoleType };
 
@@ -142,8 +143,10 @@ export default function MessagerieMobile() {
   const [membersVisible, setMembersVisible] = useState(false);
   const [sending,        setSending]        = useState(false);
 
-  // Create panel
+  // Create modal
   const [createMode,    setCreateMode]    = useState<CreateMode>(null);
+  const [createVisible, setCreateVisible] = useState(false);
+  const [createTab,     setCreateTab]     = useState<CreateTab>('joueurs');
   const [plusOpen,      setPlusOpen]      = useState(false);
   const [usersGrouped,  setUsersGrouped]  = useState<ApiUsersGrouped | null>(null);
   const [groupSelected, setGroupSelected] = useState<Set<number>>(new Set());
@@ -214,13 +217,20 @@ export default function MessagerieMobile() {
 
   const openCreateMode = async (mode: CreateMode) => {
     setPlusOpen(false);
-    setCreateMode(mode);
     setGroupSelected(new Set());
     setGroupName('');
+    setCreateTab('joueurs');
+    setCreateMode(mode);
+    setTimeout(() => setCreateVisible(true), 10);
     if (!usersGrouped) {
       const r = await fetch('/api/backend/messages/users');
       if (r.ok) setUsersGrouped(await r.json());
     }
+  };
+
+  const closeCreate = () => {
+    setCreateVisible(false);
+    setTimeout(() => setCreateMode(null), 200);
   };
 
   const startConversationWith = async (userId: number) => {
@@ -237,12 +247,12 @@ export default function MessagerieMobile() {
       const conv = toConversation(data);
       const existing = conversations.find(c => c.id === conv.id);
       if (existing) {
-        setCreateMode(null);
+        closeCreate();
         setActiveConv(existing);
       } else {
         newEmptyConvRef.current = conv.id;
         setConversations(prev => [conv, ...prev]);
-        setCreateMode(null);
+        closeCreate();
         setActiveConv(conv);
       }
     } finally {
@@ -268,7 +278,7 @@ export default function MessagerieMobile() {
       const conv = toConversation(data);
       newEmptyConvRef.current = conv.id;
       setConversations(prev => [conv, ...prev]);
-      setCreateMode(null);
+      closeCreate();
       setActiveConv(conv);
     } finally {
       setCreatingConv(false);
@@ -465,95 +475,118 @@ export default function MessagerieMobile() {
             </div>
           </div>
         )}
-      </>
-    );
-  }
-
-  /* ── Vue création ── */
-  if (createMode) {
-    const allUsers: [string, ApiUserCard[]][] = [
-      ['Coachs',  usersGrouped?.coaches  ?? []],
-      ['Staff',   usersGrouped?.staff    ?? []],
-      ['Joueurs', usersGrouped?.players  ?? []],
-    ];
-
-    return (
-      <div className="space-y-0">
-        {/* Header */}
-        <div className="flex items-center gap-3 pb-4 border-b border-outline-variant mb-4">
-          <button onClick={() => setCreateMode(null)} className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
-            <ArrowLeft size={22} className="text-on-surface-variant" />
-          </button>
-          <h1 className="text-2xl font-extrabold text-on-surface">
-            {createMode === 'group' ? 'Nouveau groupe' : 'Nouvelle conversation'}
-          </h1>
-        </div>
-
-        {createMode === 'group' && (
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Nom du groupe (optionnel)"
-              value={groupName}
-              onChange={e => setGroupName(e.target.value)}
-              className="w-full px-4 py-3 bg-surface-container rounded-xl text-base text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none"
+        {/* Modale création */}
+        {createMode && (
+          <>
+            <div
+              className={`fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${createVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+              onClick={closeCreate}
             />
-          </div>
-        )}
+            <div className="fixed inset-0 z-[60] flex items-end justify-center pointer-events-none pb-4 px-3">
+              <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-h-[85vh] flex flex-col pointer-events-auto transition-all duration-200 ${createVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
 
-        {!usersGrouped ? (
-          <div className="p-8 text-center text-base text-on-surface-variant">Chargement…</div>
-        ) : (
-          <div className="space-y-1">
-            {allUsers.map(([label, list]) => list.length === 0 ? null : (
-              <div key={label}>
-                <p className="px-1 py-2 text-xs font-bold text-on-surface-variant uppercase tracking-wider">{label}</p>
-                <div className="space-y-1">
-                  {list.map(u => {
-                    const rt = userRoleType(u);
-                    const initials = `${u.first_name[0]}${u.last_name[0]}`;
-                    const isChecked = groupSelected.has(u.id);
+                {/* Drag handle */}
+                <div className="flex justify-center pt-3 pb-1 shrink-0">
+                  <div className="w-10 h-1 bg-outline-variant rounded-full" />
+                </div>
+
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 py-3 border-b border-outline-variant shrink-0">
+                  <p className="text-lg font-bold text-on-surface">
+                    {createMode === 'group' ? 'Nouveau groupe' : 'Nouvelle conversation'}
+                  </p>
+                  <button onClick={closeCreate} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
+                    <X size={18} className="text-on-surface-variant" />
+                  </button>
+                </div>
+
+                {/* Nom du groupe */}
+                {createMode === 'group' && (
+                  <div className="px-5 py-3 border-b border-outline-variant shrink-0">
+                    <input
+                      type="text"
+                      placeholder="Nom du groupe (optionnel)"
+                      value={groupName}
+                      onChange={e => setGroupName(e.target.value)}
+                      className="w-full px-4 py-2.5 bg-surface-container rounded-xl text-sm text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none"
+                    />
+                  </div>
+                )}
+
+                {/* Onglets */}
+                <div className="flex mx-5 mt-3 mb-1 bg-surface-container rounded-xl p-1 gap-1 shrink-0">
+                  {(['joueurs', 'staff', 'coachs'] as CreateTab[]).map(tab => {
+                    const count = tab === 'joueurs' ? (usersGrouped?.players.length ?? 0)
+                      : tab === 'staff'   ? (usersGrouped?.staff.length   ?? 0)
+                      :                     (usersGrouped?.coaches.length ?? 0);
                     return (
-                      <div
-                        key={u.id}
-                        onClick={() => createMode === 'group' ? toggleGroupUser(u.id) : startConversationWith(u.id)}
-                        className="flex items-center gap-3 p-3 rounded-xl cursor-pointer active:scale-[0.99] bg-surface-container-lowest border border-outline-variant hover:bg-surface-container transition-all"
-                      >
-                        <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
-                          <span className="font-bold text-sm text-on-surface-variant">{initials}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-base font-semibold ${nameColor(rt)}`}>{u.first_name} {u.last_name}</p>
-                          {u.role && <p className="text-sm text-on-surface-variant truncate">{u.role}</p>}
-                        </div>
-                        {createMode === 'group' ? (
-                          <div className={`w-6 h-6 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${isChecked ? 'bg-primary border-primary' : 'border-outline-variant'}`}>
-                            {isChecked && <Check size={14} className="text-white" strokeWidth={3} />}
-                          </div>
-                        ) : (
-                          <ChevronRight size={18} className="text-outline shrink-0" />
-                        )}
-                      </div>
+                      <button key={tab} onClick={() => setCreateTab(tab)}
+                        className={`flex-1 py-2 rounded-lg text-sm font-semibold capitalize transition-all flex items-center justify-center gap-1 ${createTab === tab ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant'}`}>
+                        {tab}
+                        {count > 0 && <span className="text-xs text-on-surface-variant bg-surface-container-high px-1.5 py-0.5 rounded-full">{count}</span>}
+                      </button>
                     );
                   })}
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
 
-        {createMode === 'group' && (
-          <div className="pt-4">
-            <button
-              onClick={createGroup}
-              disabled={groupSelected.size < 2 || creatingConv}
-              className="w-full py-3.5 bg-primary text-white rounded-xl text-base font-semibold disabled:opacity-40 transition-opacity"
-            >
-              Créer le groupe ({groupSelected.size} sélectionné{groupSelected.size > 1 ? 's' : ''})
-            </button>
-          </div>
+                {/* Liste */}
+                <div className="flex-1 overflow-y-auto px-3 py-2">
+                  {!usersGrouped ? (
+                    <div className="p-6 text-center text-sm text-on-surface-variant">Chargement…</div>
+                  ) : (() => {
+                    const list = createTab === 'joueurs' ? usersGrouped.players
+                      : createTab === 'staff'   ? usersGrouped.staff
+                      :                           usersGrouped.coaches;
+                    if (list.length === 0)
+                      return <div className="p-6 text-center text-sm text-on-surface-variant">Aucun membre dans cette catégorie</div>;
+                    return list.map(u => {
+                      const rt = userRoleType(u);
+                      const initials = `${u.first_name[0]}${u.last_name[0]}`;
+                      const isChecked = groupSelected.has(u.id);
+                      return (
+                        <div
+                          key={u.id}
+                          onClick={() => createMode === 'group' ? toggleGroupUser(u.id) : startConversationWith(u.id)}
+                          className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-colors ${isChecked ? 'bg-primary/5' : 'hover:bg-surface-container'}`}
+                        >
+                          <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
+                            <span className="font-bold text-sm text-on-surface-variant">{initials}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-semibold ${nameColor(rt)}`}>{u.first_name} {u.last_name}</p>
+                            {u.role && <p className="text-xs text-on-surface-variant truncate">{u.role}</p>}
+                          </div>
+                          {createMode === 'group' ? (
+                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${isChecked ? 'bg-primary border-primary' : 'border-outline-variant'}`}>
+                              {isChecked && <Check size={12} className="text-white" strokeWidth={3} />}
+                            </div>
+                          ) : (
+                            <ChevronRight size={16} className="text-outline shrink-0" />
+                          )}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+
+                {/* Footer groupe */}
+                {createMode === 'group' && (
+                  <div className="px-5 py-4 border-t border-outline-variant shrink-0">
+                    <button
+                      onClick={createGroup}
+                      disabled={groupSelected.size < 2 || creatingConv}
+                      className="w-full py-3 bg-primary text-white rounded-xl text-sm font-semibold disabled:opacity-40 transition-opacity"
+                    >
+                      Créer le groupe{groupSelected.size >= 2 ? ` (${groupSelected.size} membres)` : ''}
+                    </button>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          </>
         )}
-      </div>
+      </>
     );
   }
 

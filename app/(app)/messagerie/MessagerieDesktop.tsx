@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 type RoleType = 'player' | 'coach' | 'staff' | 'ai';
 type Tab = 'Tous' | 'Team' | 'Staff';
 type CreateMode = 'conversation' | 'group' | null;
+type CreateTab  = 'joueurs' | 'staff' | 'coachs';
 
 type Member = { name: string; initials: string; bg: string; role: string; roleType: RoleType };
 
@@ -142,8 +143,10 @@ export default function MessagerieDesktop() {
   const [membersVisible, setMembersVisible] = useState(false);
   const [sending,        setSending]        = useState(false);
 
-  // Create panel
+  // Create modal
   const [createMode,     setCreateMode]     = useState<CreateMode>(null);
+  const [createVisible,  setCreateVisible]  = useState(false);
+  const [createTab,      setCreateTab]      = useState<CreateTab>('joueurs');
   const [plusOpen,       setPlusOpen]       = useState(false);
   const [usersGrouped,   setUsersGrouped]   = useState<ApiUsersGrouped | null>(null);
   const [groupSelected,  setGroupSelected]  = useState<Set<number>>(new Set());
@@ -221,16 +224,21 @@ export default function MessagerieDesktop() {
 
   const openCreateMode = async (mode: CreateMode) => {
     setPlusOpen(false);
-    setCreateMode(mode);
     setGroupSelected(new Set());
     setGroupName('');
+    setCreateTab('joueurs');
+    setCreateMode(mode);
+    setTimeout(() => setCreateVisible(true), 10);
     if (!usersGrouped) {
       const r = await fetch('/api/backend/messages/users');
       if (r.ok) setUsersGrouped(await r.json());
     }
   };
 
-  const cancelCreate = () => setCreateMode(null);
+  const closeCreate = () => {
+    setCreateVisible(false);
+    setTimeout(() => setCreateMode(null), 200);
+  };
 
   const startConversationWith = async (userId: number) => {
     if (creatingConv) return;
@@ -247,12 +255,12 @@ export default function MessagerieDesktop() {
       // Si conversation déjà existante, juste l'activer
       const existing = conversations.find(c => c.id === conv.id);
       if (existing) {
-        setCreateMode(null);
+        closeCreate();
         setActiveConv(existing);
       } else {
         newEmptyConvRef.current = conv.id;
         setConversations(prev => [conv, ...prev.filter(c => c.id !== conv.id)]);
-        setCreateMode(null);
+        closeCreate();
         setActiveConv(conv);
       }
     } finally {
@@ -278,7 +286,7 @@ export default function MessagerieDesktop() {
       const conv = toConversation(data);
       newEmptyConvRef.current = conv.id;
       setConversations(prev => [conv, ...prev]);
-      setCreateMode(null);
+      closeCreate();
       setActiveConv(conv);
     } finally {
       setCreatingConv(false);
@@ -312,95 +320,6 @@ export default function MessagerieDesktop() {
     } finally {
       setSending(false);
     }
-  };
-
-  // ── Panneau de création ──────────────────────────────────────────────────────
-
-  const renderCreatePanel = () => {
-    const allUsers: [string, ApiUserCard[]][] = [
-      ['Coachs',  usersGrouped?.coaches  ?? []],
-      ['Staff',   usersGrouped?.staff    ?? []],
-      ['Joueurs', usersGrouped?.players  ?? []],
-    ];
-
-    return (
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {/* En-tête du panneau */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-outline-variant shrink-0">
-          <button onClick={cancelCreate} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container transition-colors">
-            <X size={16} className="text-on-surface-variant" />
-          </button>
-          <p className="text-sm font-bold text-on-surface">
-            {createMode === 'group' ? 'Nouveau groupe' : 'Nouvelle conversation'}
-          </p>
-        </div>
-
-        {/* Nom du groupe (mode groupe uniquement) */}
-        {createMode === 'group' && (
-          <div className="px-4 py-3 border-b border-outline-variant shrink-0">
-            <input
-              type="text"
-              placeholder="Nom du groupe (optionnel)"
-              value={groupName}
-              onChange={e => setGroupName(e.target.value)}
-              className="w-full px-3 py-2 bg-surface-container rounded-lg text-sm text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none"
-            />
-          </div>
-        )}
-
-        {/* Liste des utilisateurs */}
-        <div className="flex-1 overflow-y-auto py-2">
-          {!usersGrouped ? (
-            <div className="p-6 text-center text-sm text-on-surface-variant">Chargement…</div>
-          ) : allUsers.map(([label, list]) => list.length === 0 ? null : (
-            <div key={label}>
-              <p className="px-4 py-2 text-xs font-bold text-on-surface-variant uppercase tracking-wider">{label}</p>
-              {list.map(u => {
-                const rt = userRoleType(u);
-                const initials = `${u.first_name[0]}${u.last_name[0]}`;
-                const isChecked = groupSelected.has(u.id);
-                return (
-                  <div
-                    key={u.id}
-                    onClick={() => createMode === 'group' ? toggleGroupUser(u.id) : startConversationWith(u.id)}
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-surface-container transition-colors"
-                  >
-                    <div className="w-9 h-9 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
-                      <span className="font-bold text-xs text-on-surface-variant">{initials}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-semibold ${nameColor(rt)}`}>{u.first_name} {u.last_name}</p>
-                      {u.role && <p className="text-xs text-on-surface-variant truncate">{u.role}</p>}
-                    </div>
-                    {createMode === 'group' && (
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${isChecked ? 'bg-primary border-primary' : 'border-outline-variant'}`}>
-                        {isChecked && <Check size={12} className="text-white" strokeWidth={3} />}
-                      </div>
-                    )}
-                    {createMode === 'conversation' && (
-                      <ChevronRight size={16} className="text-outline shrink-0" />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-
-        {/* Bouton Créer le groupe */}
-        {createMode === 'group' && (
-          <div className="px-4 py-3 border-t border-outline-variant shrink-0">
-            <button
-              onClick={createGroup}
-              disabled={groupSelected.size < 2 || creatingConv}
-              className="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold disabled:opacity-40 transition-opacity"
-            >
-              Créer le groupe ({groupSelected.size} sélectionné{groupSelected.size > 1 ? 's' : ''})
-            </button>
-          </div>
-        )}
-      </div>
-    );
   };
 
   return (
@@ -439,96 +358,92 @@ export default function MessagerieDesktop() {
           </div>
         </div>
 
-        {createMode ? renderCreatePanel() : (
-          <>
-            <div className="px-4 py-3 border-b border-outline-variant shrink-0">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={16} />
-                <input type="text" placeholder={t.messaging.searchPlaceholder} value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-surface-container rounded-xl text-sm text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none transition-all"
-                />
+        <div className="px-4 py-3 border-b border-outline-variant shrink-0">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={16} />
+            <input type="text" placeholder={t.messaging.searchPlaceholder} value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 bg-surface-container rounded-xl text-sm text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        <div className="flex mx-4 my-3 bg-surface-container rounded-xl p-1 gap-1 shrink-0">
+          {(['Tous', 'Team', 'Staff'] as Tab[]).map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === tab ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}>
+              {tab === 'Tous' ? t.messaging.tabAll : tab === 'Team' ? t.messaging.tabTeam : t.messaging.tabStaff}
+            </button>
+          ))}
+        </div>
+
+        {/* IA — toujours en tête */}
+        {aiConv && (
+          <div onClick={() => selectConv(aiConv)}
+            className={`flex items-center gap-3 px-4 py-4 cursor-pointer transition-all border-l-4 shrink-0 ${
+              activeConv?.id === aiConv.id ? 'border-primary bg-primary/5' : 'border-primary/50 bg-primary/5 hover:bg-primary/10'
+            }`}
+          >
+            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0">
+              <span className="text-white text-lg font-bold">✦</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-base font-bold text-primary">{aiConv.name}</p>
+                {aiConv.unread && <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 ml-2" />}
               </div>
+              <p className="text-sm truncate text-on-surface-variant">{aiConv.preview}</p>
             </div>
+          </div>
+        )}
 
-            <div className="flex mx-4 my-3 bg-surface-container rounded-xl p-1 gap-1 shrink-0">
-              {(['Tous', 'Team', 'Staff'] as Tab[]).map(tab => (
-                <button key={tab} onClick={() => setActiveTab(tab)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === tab ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}>
-                  {tab === 'Tous' ? t.messaging.tabAll : tab === 'Team' ? t.messaging.tabTeam : t.messaging.tabStaff}
-                </button>
-              ))}
-            </div>
+        <div className="flex items-center gap-3 px-4 py-2 shrink-0">
+          <div className="flex-1 h-px bg-outline-variant" />
+          <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">{t.messaging.teamAndStaff}</span>
+          <div className="flex-1 h-px bg-outline-variant" />
+        </div>
 
-            {/* IA — toujours en tête */}
-            {aiConv && (
-              <div onClick={() => selectConv(aiConv)}
-                className={`flex items-center gap-3 px-4 py-4 cursor-pointer transition-all border-l-4 shrink-0 ${
-                  activeConv?.id === aiConv.id ? 'border-primary bg-primary/5' : 'border-primary/50 bg-primary/5 hover:bg-primary/10'
+        <div className="flex-1 overflow-y-auto">
+          {filtered.length === 0 ? (
+            <div className="p-6 text-center text-sm text-on-surface-variant">{t.messaging.noConversation}</div>
+          ) : filtered.map(conv => {
+            const accent = conv.isGroup ? null : roleAccent(conv.roleType as string);
+            return (
+              <div key={conv.id} onClick={() => selectConv(conv)}
+                className={`flex items-center gap-3 px-4 py-4 cursor-pointer transition-all border-l-4 ${
+                  activeConv?.id === conv.id
+                    ? `${accent?.bg ?? 'bg-surface-container'} ${accent?.border ?? 'border-outline-variant'}`
+                    : 'border-transparent hover:bg-surface-container'
                 }`}
               >
-                <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0">
-                  <span className="text-white text-lg font-bold">✦</span>
-                </div>
+                {conv.isGroup ? (
+                  <div className="w-12 h-12 rounded-full bg-inverse-surface flex items-center justify-center shrink-0">
+                    <Users size={20} className="text-white/80" />
+                  </div>
+                ) : (
+                  <div className={`w-12 h-12 rounded-full ${conv.avatarBg} flex items-center justify-center shrink-0`}>
+                    <span className="font-bold text-base text-on-surface-variant">{conv.initials}</span>
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-base font-bold text-primary">{aiConv.name}</p>
-                    {aiConv.unread && <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 ml-2" />}
-                  </div>
-                  <p className="text-sm truncate text-on-surface-variant">{aiConv.preview}</p>
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center gap-3 px-4 py-2 shrink-0">
-              <div className="flex-1 h-px bg-outline-variant" />
-              <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider">{t.messaging.teamAndStaff}</span>
-              <div className="flex-1 h-px bg-outline-variant" />
-            </div>
-
-            <div className="flex-1 overflow-y-auto">
-              {filtered.length === 0 ? (
-                <div className="p-6 text-center text-sm text-on-surface-variant">{t.messaging.noConversation}</div>
-              ) : filtered.map(conv => {
-                const accent = conv.isGroup ? null : roleAccent(conv.roleType as string);
-                return (
-                  <div key={conv.id} onClick={() => selectConv(conv)}
-                    className={`flex items-center gap-3 px-4 py-4 cursor-pointer transition-all border-l-4 ${
-                      activeConv?.id === conv.id
-                        ? `${accent?.bg ?? 'bg-surface-container'} ${accent?.border ?? 'border-outline-variant'}`
-                        : 'border-transparent hover:bg-surface-container'
-                    }`}
-                  >
-                    {conv.isGroup ? (
-                      <div className="w-12 h-12 rounded-full bg-inverse-surface flex items-center justify-center shrink-0">
-                        <Users size={20} className="text-white/80" />
-                      </div>
-                    ) : (
-                      <div className={`w-12 h-12 rounded-full ${conv.avatarBg} flex items-center justify-center shrink-0`}>
-                        <span className="font-bold text-base text-on-surface-variant">{conv.initials}</span>
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <p className={`text-base font-bold truncate ${nameColor(conv.roleType as string)}`}>{conv.name}</p>
-                          {conv.isGroup && conv.members && (
-                            <span className="text-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded-full shrink-0">{conv.members.length}</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0 ml-2">
-                          {conv.unread && <div className={`w-2.5 h-2.5 rounded-full ${conv.isGroup ? 'bg-primary' : (accent?.dot ?? 'bg-primary')}`} />}
-                          <span className="text-xs text-on-surface-variant">{conv.time}</span>
-                        </div>
-                      </div>
-                      <p className={`text-sm truncate ${conv.unread ? 'text-on-surface font-medium' : 'text-on-surface-variant'}`}>{conv.preview}</p>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <p className={`text-base font-bold truncate ${nameColor(conv.roleType as string)}`}>{conv.name}</p>
+                      {conv.isGroup && conv.members && (
+                        <span className="text-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded-full shrink-0">{conv.members.length}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      {conv.unread && <div className={`w-2.5 h-2.5 rounded-full ${conv.isGroup ? 'bg-primary' : (accent?.dot ?? 'bg-primary')}`} />}
+                      <span className="text-xs text-on-surface-variant">{conv.time}</span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </>
-        )}
+                  <p className={`text-sm truncate ${conv.unread ? 'text-on-surface font-medium' : 'text-on-surface-variant'}`}>{conv.preview}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── Chat ── */}
@@ -691,6 +606,114 @@ export default function MessagerieDesktop() {
           </>
         )}
       </div>
+
+      {/* ── Modale création conversation / groupe ── */}
+      {createMode && (
+        <>
+          <div
+            className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${createVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            onClick={closeCreate}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none">
+            <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col pointer-events-auto transition-all duration-200 ${createVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant shrink-0">
+                <p className="text-xl font-bold text-on-surface">
+                  {createMode === 'group' ? 'Nouveau groupe' : 'Nouvelle conversation'}
+                </p>
+                <button onClick={closeCreate} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
+                  <X size={18} className="text-on-surface-variant" />
+                </button>
+              </div>
+
+              {/* Nom du groupe */}
+              {createMode === 'group' && (
+                <div className="px-6 py-4 border-b border-outline-variant shrink-0">
+                  <input
+                    type="text"
+                    placeholder="Nom du groupe (optionnel)"
+                    value={groupName}
+                    onChange={e => setGroupName(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-surface-container rounded-xl text-sm text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none"
+                  />
+                </div>
+              )}
+
+              {/* Onglets */}
+              <div className="flex mx-6 mt-4 mb-1 bg-surface-container rounded-xl p-1 gap-1 shrink-0">
+                {(['joueurs', 'staff', 'coachs'] as CreateTab[]).map(tab => {
+                  const count = tab === 'joueurs' ? (usersGrouped?.players.length ?? 0)
+                    : tab === 'staff'   ? (usersGrouped?.staff.length   ?? 0)
+                    :                     (usersGrouped?.coaches.length ?? 0);
+                  return (
+                    <button key={tab} onClick={() => setCreateTab(tab)}
+                      className={`flex-1 py-2 rounded-lg text-sm font-semibold capitalize transition-all flex items-center justify-center gap-1.5 ${createTab === tab ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}>
+                      {tab}
+                      {count > 0 && <span className={`text-xs px-1.5 py-0.5 rounded-full ${createTab === tab ? 'bg-surface-container text-on-surface-variant' : 'bg-surface-container-high text-on-surface-variant'}`}>{count}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Liste */}
+              <div className="flex-1 overflow-y-auto px-3 py-2">
+                {!usersGrouped ? (
+                  <div className="p-6 text-center text-sm text-on-surface-variant">Chargement…</div>
+                ) : (() => {
+                  const list = createTab === 'joueurs' ? usersGrouped.players
+                    : createTab === 'staff'   ? usersGrouped.staff
+                    :                           usersGrouped.coaches;
+                  if (list.length === 0)
+                    return <div className="p-6 text-center text-sm text-on-surface-variant">Aucun membre dans cette catégorie</div>;
+                  return list.map(u => {
+                    const rt = userRoleType(u);
+                    const initials = `${u.first_name[0]}${u.last_name[0]}`;
+                    const isChecked = groupSelected.has(u.id);
+                    return (
+                      <div
+                        key={u.id}
+                        onClick={() => createMode === 'group' ? toggleGroupUser(u.id) : startConversationWith(u.id)}
+                        className={`flex items-center gap-3 px-3 py-3 rounded-xl cursor-pointer transition-colors ${isChecked ? 'bg-primary/5' : 'hover:bg-surface-container'}`}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center shrink-0">
+                          <span className="font-bold text-sm text-on-surface-variant">{initials}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-semibold ${nameColor(rt)}`}>{u.first_name} {u.last_name}</p>
+                          {u.role && <p className="text-xs text-on-surface-variant truncate">{u.role}</p>}
+                        </div>
+                        {createMode === 'group' ? (
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${isChecked ? 'bg-primary border-primary' : 'border-outline-variant'}`}>
+                            {isChecked && <Check size={12} className="text-white" strokeWidth={3} />}
+                          </div>
+                        ) : (
+                          <ChevronRight size={16} className="text-outline shrink-0" />
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+
+              {/* Footer groupe */}
+              {createMode === 'group' && (
+                <div className="px-6 py-4 border-t border-outline-variant shrink-0">
+                  <button
+                    onClick={createGroup}
+                    disabled={groupSelected.size < 2 || creatingConv}
+                    className="w-full py-3 bg-primary text-white rounded-xl text-sm font-semibold disabled:opacity-40 transition-opacity"
+                  >
+                    Créer le groupe{groupSelected.size >= 2 ? ` (${groupSelected.size} membres)` : ''}
+                  </button>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </>
+      )}
+
     </div>
   );
 }

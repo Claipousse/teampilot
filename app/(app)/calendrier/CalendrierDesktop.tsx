@@ -260,19 +260,11 @@ export default function CalendrierDesktop({ openCreate = false }: { openCreate?:
                       <div className="flex flex-col gap-1 flex-1 min-h-0 overflow-hidden">
                         {visible.map((event, ei) => (
                           <div key={ei} onClick={() => openDetail(event, cell.day)}
-                            className={`group px-1.5 py-1 rounded-lg font-medium flex items-center justify-between gap-1 cursor-pointer ${event.color}`}>
+                            className={`px-1.5 py-1 rounded-lg font-medium flex items-center cursor-pointer ${event.color}`}>
                             <div className="flex-1 min-w-0">
                               {event.time && <p className="font-bold text-xs leading-none mb-0.5">{event.time}</p>}
                               <p className="font-semibold leading-tight truncate text-sm">{event.title}</p>
                             </div>
-                            {canEdit && (
-                              <button
-                                onClick={e => { e.stopPropagation(); openEdit(event, cell.day); }}
-                                className="transform-gpu opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0 w-5 h-5 flex items-center justify-center rounded hover:bg-black/15"
-                              >
-                                <Pencil size={11} className="text-current" />
-                              </button>
-                            )}
                           </div>
                         ))}
                       </div>
@@ -305,18 +297,12 @@ export default function CalendrierDesktop({ openCreate = false }: { openCreate?:
               <div className="flex-1 overflow-y-auto p-5 space-y-3">
                 {dayDetail.events.map((event, i) => (
                   <div key={i} onClick={() => openDetail(event, dayDetail.day)}
-                    className={`group px-4 py-3 rounded-xl flex items-center gap-3 cursor-pointer ${event.color}`}>
+                    className={`px-4 py-3 rounded-xl flex items-center gap-3 cursor-pointer ${event.color}`}>
                     <div className="flex-1 min-w-0">
                       {event.time && <p className="text-sm font-bold mb-1">{event.time}</p>}
                       <p className="text-base font-bold">{event.title}</p>
                       <span className={`inline-block mt-1.5 px-2 py-0.5 text-xs font-bold rounded-md ${TAG_BADGE[event.tag]}`}>{event.tag}</span>
                     </div>
-                    {canEdit && (
-                      <button onClick={e => { e.stopPropagation(); openEdit(event, dayDetail.day); }}
-                        className="transform-gpu opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0 w-9 h-9 flex items-center justify-center rounded-xl hover:bg-black/10">
-                        <Pencil size={16} className="text-current" />
-                      </button>
-                    )}
                   </div>
                 ))}
               </div>
@@ -374,6 +360,17 @@ export default function CalendrierDesktop({ openCreate = false }: { openCreate?:
                   </div>
                 )}
               </div>
+
+              {canEdit && (
+                <div className="px-7 py-4 border-t border-outline-variant shrink-0 flex justify-end">
+                  <button
+                    onClick={() => { closeDetail(); setTimeout(() => openEdit(detailInfo.event, detailInfo.day), 200); }}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-error hover:bg-error/90 text-white rounded-xl font-semibold transition-colors"
+                  >
+                    <Pencil size={15} /> Modifier
+                  </button>
+                </div>
+              )}
 
             </div>
           </div>

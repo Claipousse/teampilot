@@ -309,16 +309,8 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
                     className={`flex-1 border border-outline-variant border-l-4 ${event.border} rounded-2xl p-4 mb-2 cursor-pointer ${event.isMatch ? 'bg-error/5' : 'bg-surface-container-low'}`}>
                     <div className="flex items-center justify-between gap-3">
                       <p className={`text-xl font-bold flex-1 min-w-0 ${event.isMatch ? 'text-error' : 'text-on-surface'}`}>{event.title}</p>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {canEdit && (
-                          <button onClick={e => { e.stopPropagation(); openEdit(event); }}
-                            className="w-9 h-9 flex items-center justify-center rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors shrink-0">
-                            <Pencil size={16} className="text-on-surface-variant" />
-                          </button>
-                        )}
-                        <div className={`w-10 h-10 ${event.iconBg} rounded-xl flex items-center justify-center`}>
-                          <Icon size={20} className={event.iconColor} />
-                        </div>
+                      <div className={`w-10 h-10 ${event.iconBg} rounded-xl flex items-center justify-center shrink-0`}>
+                        <Icon size={20} className={event.iconColor} />
                       </div>
                     </div>
                   </div>
@@ -373,6 +365,18 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
                   </div>
                 )}
               </div>
+
+              {canEdit && (
+                <div className="px-7 py-4 border-t border-outline-variant shrink-0 flex justify-end">
+                  <button
+                    onClick={openEditFromDetail}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-error hover:bg-error/90 text-white rounded-xl font-semibold transition-colors"
+                  >
+                    <Pencil size={15} /> Modifier
+                  </button>
+                </div>
+              )}
+
             </div>
           </div>
         </>

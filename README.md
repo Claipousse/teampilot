@@ -43,8 +43,8 @@ Ouvrir [http://localhost:3000](http://localhost:3000).
 | Rôle | Email | Mot de passe |
 |------|-------|-------------|
 | Admin (staff) | `admin@teampilot.com` | `admin123` |
-| Staff (non admin) | `tlaurent@metropolisunited.com` | `staff123` |
-| Joueur | `m.valentin@metropolisunited.com` | `player123` |
+| Staff (non admin) | `staff@teampilot.com` | `staff123` |
+| Joueur | `joueur@teampilot.com` | `player123` |
 
 ---
 

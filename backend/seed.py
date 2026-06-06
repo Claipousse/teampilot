@@ -32,6 +32,27 @@ async def seed():
         else:
             print("ℹ️  Admin déjà existant, ignoré.")
 
+        # ── Comptes de test génériques ─────────────────────────────────────────
+        test_staff_r = await db.execute(select(User).where(User.email == "staff@teampilot.com"))
+        if not test_staff_r.scalar_one_or_none():
+            db.add(User(email="staff@teampilot.com", hashed_password=hash_password("staff123"),
+                first_name="Alex", last_name="Martin", is_admin=False, type="staff"))
+            print("✅ Compte test staff : staff@teampilot.com  /  staff123")
+
+        test_joueur_r = await db.execute(select(User).where(User.email == "joueur@teampilot.com"))
+        if not test_joueur_r.scalar_one_or_none():
+            test_player = Player(
+                first_name="Jamie", last_name="Dupont",
+                shirt_number=77, position="Milieu Offensif", position_short="MIL",
+                nationality="Français", status="Disponible", contract_end_date="2027-06-30",
+            )
+            db.add(test_player)
+            await db.flush()
+            db.add(User(email="joueur@teampilot.com", hashed_password=hash_password("player123"),
+                first_name="Jamie", last_name="Dupont",
+                is_admin=False, type="player", player_id=test_player.id))
+            print("✅ Compte test joueur : joueur@teampilot.com  /  player123")
+
         # ── Club ───────────────────────────────────────────────────────────────
         club_r = await db.execute(select(Club).where(Club.id == 1))
         if not club_r.scalar_one_or_none():

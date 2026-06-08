@@ -1,7 +1,28 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { NATIONALITIES } from '@/lib/nationalities';
+
+type Nat = { label: string; iso: string };
+
+// Module-level cache — fetched once per session
+let _cache: Nat[] | null = null;
+let _promise: Promise<Nat[]> | null = null;
+
+function loadNationalities(): Promise<Nat[]> {
+  if (_cache) return Promise.resolve(_cache);
+  if (_promise) return _promise;
+  _promise = fetch('https://restcountries.com/v3.1/all?fields=cca2,demonyms', { cache: 'force-cache' })
+    .then(r => r.json())
+    .then((data: Array<{ cca2: string; demonyms?: { fra?: { m?: string } } }>) => {
+      _cache = data
+        .filter(c => c.demonyms?.fra?.m)
+        .map(c => ({ label: c.demonyms!.fra!.m!, iso: c.cca2.toLowerCase() }))
+        .sort((a, b) => a.label.localeCompare(b.label, 'fr'));
+      return _cache;
+    })
+    .catch(() => { _promise = null; return []; });
+  return _promise;
+}
 
 interface Props {
   value: string;
@@ -11,9 +32,14 @@ interface Props {
 }
 
 export default function NationalitySelect({ value, iso, onChange, error }: Props) {
+  const [nats, setNats]   = useState<Nat[]>([]);
   const [query, setQuery] = useState(value);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen]   = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    loadNationalities().then(setNats);
+  }, []);
 
   useEffect(() => { setQuery(value); }, [value]);
 
@@ -25,9 +51,9 @@ export default function NationalitySelect({ value, iso, onChange, error }: Props
     return () => document.removeEventListener('mousedown', down);
   }, []);
 
-  const filtered = NATIONALITIES.filter(n =>
-    n.label.toLowerCase().includes(query.toLowerCase())
-  ).slice(0, 8);
+  const filtered = nats
+    .filter(n => n.label.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 8);
 
   const cls = `w-full py-3 pr-4 bg-surface-container border ${error ? 'border-error' : 'border-outline-variant'} rounded-xl text-base text-on-surface outline-none focus:ring-2 focus:ring-primary transition-all ${iso ? 'pl-10' : 'pl-4'}`;
 
@@ -49,7 +75,7 @@ export default function NationalitySelect({ value, iso, onChange, error }: Props
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
-          placeholder="Ex : Français"
+          placeholder={nats.length === 0 ? 'Chargement…' : 'Ex : Français'}
           className={cls}
         />
       </div>

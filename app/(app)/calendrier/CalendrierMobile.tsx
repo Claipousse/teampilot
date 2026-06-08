@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Video, Leaf, Dumbbell, Users, Trophy, Plus, X, Pencil, Trash2, MapPin, FileText } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -123,7 +123,7 @@ function getWeekLabel(days: ReturnType<typeof getWeekDays>, months: readonly str
   return `${months[first.month]} — ${months[last.month]} ${last.year}`;
 }
 
-export default function CalendrierMobile({ openCreate = false }: { openCreate?: boolean }) {
+export default function CalendrierMobile({ openCreate = false, openEventId }: { openCreate?: boolean; openEventId?: number }) {
   const today = new Date();
   const baseMondayRef = getMondayOfWeek(today);
   const [weekOffset, setWeekOffset] = useState(0);
@@ -156,8 +156,10 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
   const [createCalYear,  setCreateCalYear]  = useState(today.getFullYear());
 
   const [eventsMap, setEventsMap] = useState<Record<string, MobileEvent[]>>({});
+  const pendingEventIdRef = useRef<number | null>(openEventId ?? null);
 
-  const { isAdmin: canEdit } = useCurrentUser();
+  const { isAdmin: canEdit, type: userType } = useCurrentUser();
+  const canCreate = userType !== 'player';
   const t = useT();
 
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -248,15 +250,54 @@ export default function CalendrierMobile({ openCreate = false }: { openCreate?: 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (openCreate) openCreateForm(); }, []);
 
+  // Navigate to the right week when openEventId is provided
+  useEffect(() => {
+    if (!openEventId) return;
+    fetch(`/api/backend/events/${openEventId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(evt => {
+        if (!evt) return;
+        const [y, m, d] = evt.event_date.split('-').map(Number);
+        const eventDate = new Date(y, m - 1, d);
+        const eventMonday = getMondayOfWeek(eventDate);
+        const offset = Math.round((eventMonday.getTime() - baseMondayRef.getTime()) / (7 * 24 * 60 * 60 * 1000));
+        const key = `${y}-${m - 1}-${d}`;
+        pendingEventIdRef.current = openEventId;
+        setWeekOffset(offset);
+        setActiveKey(key);
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Once eventsMap updates, open the pending event detail
+  useEffect(() => {
+    const targetId = pendingEventIdRef.current;
+    if (targetId === null) return;
+    const evts = eventsMap[activeKey];
+    if (!evts) return;
+    const evt = evts.find(e => e.id === targetId);
+    if (evt) {
+      pendingEventIdRef.current = null;
+      const parts = activeKey.split('-').map(Number);
+      const d = new Date(parts[0], parts[1], parts[2]);
+      const dayLabel = `${t.calendar.fullDays[d.getDay()]} ${d.getDate()} ${t.calendar.months[d.getMonth()]} ${d.getFullYear()}`;
+      setDetailInfo({ event: evt, dayLabel, dateStr: evt.time });
+      setTimeout(() => setDetailVisible(true), 10);
+    }
+  }, [eventsMap, activeKey, t]);
+
   return (
     <div className="space-y-6">
 
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-extrabold text-on-surface">{t.nav.calendar}</h1>
-        <button onClick={openCreateForm} className="flex items-center gap-2 px-4 py-2.5 bg-error rounded-xl text-white text-sm font-bold active:scale-[0.98] transition-all">
-          + {t.calendar.addEvent}
-        </button>
+        {canCreate && (
+          <button onClick={openCreateForm} className="flex items-center gap-2 px-4 py-2.5 bg-error rounded-xl text-white text-sm font-bold active:scale-[0.98] transition-all">
+            + {t.calendar.addEvent}
+          </button>
+        )}
       </div>
 
       {/* Navigation semaine */}

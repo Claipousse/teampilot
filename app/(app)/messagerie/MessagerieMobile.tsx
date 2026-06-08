@@ -293,6 +293,12 @@ export default function MessagerieMobile() {
     });
   };
 
+  const hideConversation = async (convId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await fetch(`/api/backend/messages/conversations/${convId}/leave`, { method: 'POST' });
+    setConversations(prev => prev.filter(c => c.id !== convId));
+  };
+
   const sendMsg = async () => {
     if (!input.trim() || !activeConv || sending || !user) return;
     setSending(true);
@@ -628,8 +634,16 @@ export default function MessagerieMobile() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" size={18} />
         <input type="text" placeholder={t.messaging.searchPlaceholder}
           value={search} onChange={e => setSearch(e.target.value)}
-          className="w-full pl-12 pr-4 py-3.5 bg-surface-container rounded-xl text-base text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none transition-all"
+          className="w-full pl-12 pr-10 py-3.5 bg-surface-container rounded-xl text-base text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none transition-all"
         />
+        {search && (
+          <button
+            onClick={() => setSearch('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full hover:bg-outline/20 active:bg-outline/30 transition-colors"
+          >
+            <X size={15} className="text-outline" />
+          </button>
+        )}
       </div>
 
       <div className="flex items-center gap-1 bg-surface-container rounded-xl p-1">
@@ -688,11 +702,20 @@ export default function MessagerieMobile() {
                       <span className="text-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded-full shrink-0">{conv.members.length}</span>
                     )}
                   </div>
-                  <span className="text-xs text-on-surface-variant shrink-0 ml-2">{conv.time}</span>
+                  <div className="flex items-center gap-1 shrink-0 ml-2">
+                    {conv.unread && <div className={`w-2.5 h-2.5 rounded-full ${conv.isGroup ? 'bg-primary' : (accent?.dot ?? 'bg-primary')}`} />}
+                    <span className="text-xs text-on-surface-variant">{conv.time}</span>
+                    <button
+                      onClick={e => hideConversation(conv.id, e)}
+                      className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-error/10 active:bg-error/20 transition-colors ml-1"
+                      title="Supprimer la conversation"
+                    >
+                      <X size={14} className="text-outline" />
+                    </button>
+                  </div>
                 </div>
                 <p className={`text-sm truncate ${conv.unread ? 'text-on-surface font-medium' : 'text-on-surface-variant'}`}>{conv.preview}</p>
               </div>
-              {conv.unread && <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${conv.isGroup ? 'bg-primary' : (accent?.dot ?? 'bg-primary')}`} />}
             </div>
           );
         })}

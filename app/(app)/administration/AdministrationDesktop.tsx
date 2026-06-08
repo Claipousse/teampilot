@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Pencil, UserPlus, CalendarPlus, Search, X, Trash2, Upload, Plus, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Pencil, UserPlus, CalendarPlus, Search, X, Trash2, Upload, Plus, AlertTriangle, ShieldCheck, Copy, Check, KeyRound } from 'lucide-react';
 import { useT } from '@/contexts/LanguageContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -31,9 +31,11 @@ type StaffForm = {
   prenom: string; nom: string; role: string;
   email: string; phone: string; since: string;
   photoUrl: string; notes: string;
-  password: string; isAdmin: boolean;
+  isAdmin: boolean;
 };
-type StaffErrors = Partial<Record<'prenom' | 'nom' | 'role' | 'email' | 'password', string>>;
+type StaffErrors = Partial<Record<'prenom' | 'nom' | 'role' | 'email', string>>;
+
+type Credentials = { username: string; temp_password: string };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -53,7 +55,7 @@ const SS: Record<SaisonStatus, { active: string; hover: string; badge: string; t
 
 const EMPTY_CLUB: ClubData = { nom: '', annee: '', ligue: '', email: '', phone: '', adresse: '', ville: '', logoUrl: '' };
 const EMPTY_SAISON: SaisonData = { debut: '', fin: '', competitions: '', objectif: '', statut: 'En cours' };
-const EMPTY_STAFF: StaffForm = { prenom: '', nom: '', role: '', email: '', phone: '', since: '', photoUrl: '', notes: '', password: '', isAdmin: false };
+const EMPTY_STAFF: StaffForm = { prenom: '', nom: '', role: '', email: '', phone: '', since: '', photoUrl: '', notes: '', isAdmin: false };
 
 const inputCls = (err?: string) =>
   `w-full px-4 py-3 bg-surface-container border ${err ? 'border-error' : 'border-outline-variant'} rounded-xl text-base text-on-surface outline-none focus:ring-2 focus:ring-primary transition-all`;
@@ -108,6 +110,11 @@ export default function AdministrationDesktop() {
   const [editErrors,      setEditErrors]      = useState<StaffErrors>({});
   const [editingId,       setEditingId]       = useState<number | null>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
+
+  const [credsOpen,    setCredsOpen]    = useState(false);
+  const [credsVisible, setCredsVisible] = useState(false);
+  const [creds,        setCreds]        = useState<Credentials | null>(null);
+  const [credsCopied,  setCredsCopied]  = useState<'user' | 'pass' | null>(null);
 
   const [delOpen,    setDelOpen]    = useState(false);
   const [delVisible, setDelVisible] = useState(false);
@@ -203,18 +210,30 @@ export default function AdministrationDesktop() {
 
   const openAdd = () => { setAddForm(EMPTY_STAFF); setAddErrors({}); setAddOpen(true); setTimeout(() => setAddVisible(true), 10); };
   const closeAdd = () => { setAddVisible(false); setTimeout(() => setAddOpen(false), 200); };
+  const openCreds = (c: Credentials) => {
+    setCreds(c); setCredsCopied(null);
+    setCredsOpen(true); setTimeout(() => setCredsVisible(true), 10);
+  };
+  const closeCreds = () => { setCredsVisible(false); setTimeout(() => { setCredsOpen(false); setCreds(null); }, 200); };
+  const copyToClipboard = (text: string, which: 'user' | 'pass') => {
+    navigator.clipboard.writeText(text);
+    setCredsCopied(which);
+    setTimeout(() => setCredsCopied(null), 2000);
+  };
+
   const submitAdd = async () => {
-    const e = validateStaff(addForm, false);
+    const e = validateStaff(addForm);
     if (Object.keys(e).length) { setAddErrors(e); return; }
     const res = await fetch('/api/backend/staff', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ first_name: addForm.prenom, last_name: addForm.nom, role: addForm.role, email: addForm.email, phone: addForm.phone || null, since_date: addForm.since || null, notes: addForm.notes || null, is_admin: addForm.isAdmin, password: addForm.password }),
+      body: JSON.stringify({ first_name: addForm.prenom, last_name: addForm.nom, role: addForm.role, email: addForm.email, phone: addForm.phone || null, since_date: addForm.since || null, notes: addForm.notes || null, is_admin: addForm.isAdmin }),
     });
     if (res.ok) {
       const created = await res.json();
       setStaff(prev => [...prev, staffFromApi(created)]);
       closeAdd();
+      openCreds({ username: created.username, temp_password: created.temp_password });
     } else {
       const err = await res.json().catch(() => ({}));
       setAddErrors({ email: err.detail ?? 'Erreur lors de la création.' });
@@ -225,17 +244,16 @@ export default function AdministrationDesktop() {
 
   const openEdit = (m: StaffMember) => {
     setEditingId(m.id);
-    setEditForm({ prenom: m.prenom, nom: m.nom, role: m.role, email: m.email, phone: m.phone, since: m.since, photoUrl: m.photoUrl ?? '', notes: m.notes ?? '', password: '', isAdmin: m.isAdmin });
+    setEditForm({ prenom: m.prenom, nom: m.nom, role: m.role, email: m.email, phone: m.phone, since: m.since, photoUrl: m.photoUrl ?? '', notes: m.notes ?? '', isAdmin: m.isAdmin });
     setEditErrors({});
     setEditOpen(true);
     setTimeout(() => setEditVisible(true), 10);
   };
   const closeEdit = () => { setEditVisible(false); setTimeout(() => { setEditOpen(false); setEditingId(null); }, 200); };
   const submitEdit = async () => {
-    const e = validateStaff(editForm, true);
+    const e = validateStaff(editForm);
     if (Object.keys(e).length) { setEditErrors(e); return; }
     const body: Record<string, unknown> = { first_name: editForm.prenom, last_name: editForm.nom, role: editForm.role, email: editForm.email, phone: editForm.phone || null, since_date: editForm.since || null, notes: editForm.notes || null, is_admin: editForm.isAdmin };
-    if (editForm.password) body.password = editForm.password;
     const res = await fetch(`/api/backend/staff/${editingId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -245,6 +263,15 @@ export default function AdministrationDesktop() {
       const updated = await res.json();
       setStaff(prev => prev.map(m => m.id === editingId ? staffFromApi(updated) : m));
       closeEdit();
+    }
+  };
+
+  const resetStaffPassword = async (staffId: number) => {
+    const res = await fetch(`/api/backend/staff/${staffId}/reset-password`, { method: 'POST' });
+    if (res.ok) {
+      const data = await res.json();
+      closeEdit();
+      openCreds({ username: data.username, temp_password: data.temp_password });
     }
   };
 
@@ -278,13 +305,12 @@ export default function AdministrationDesktop() {
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
-  function validateStaff(f: StaffForm, isEdit: boolean): StaffErrors {
+  function validateStaff(f: StaffForm): StaffErrors {
     const e: StaffErrors = {};
     if (!f.prenom.trim()) e.prenom = 'Champ obligatoire';
     if (!f.nom.trim())    e.nom    = 'Champ obligatoire';
     if (!f.role)          e.role   = 'Champ obligatoire';
     if (!f.email.trim())  e.email  = 'Champ obligatoire';
-    if (!isEdit && !f.password.trim()) e.password = 'Mot de passe obligatoire';
     return e;
   }
 
@@ -385,14 +411,14 @@ export default function AdministrationDesktop() {
         <div className="space-y-4 pt-2 border-t border-outline-variant">
           <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Accès &amp; Sécurité</p>
           <div>
-            <label className={labelCls}>
-              Mot de passe {isEdit
-                ? <span className="font-normal normal-case opacity-60">(laisser vide pour ne pas changer)</span>
-                : <span className="text-error">*</span>}
-            </label>
-            <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-              className={inputCls(errors.password)} placeholder={isEdit ? '••••••••' : 'Minimum 6 caractères'} />
-            {errors.password && <p className="text-xs text-error mt-1">{errors.password}</p>}
+            <label className={labelCls}>Identifiant de connexion</label>
+            <div className="px-4 py-3 bg-surface-container-high border border-outline-variant rounded-xl text-base text-on-surface-variant font-mono">
+              {form.prenom && form.nom
+                ? `${form.prenom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}.${form.nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}`
+                : <span className="opacity-40">prenom.nom</span>
+              }
+            </div>
+            <p className="text-xs text-on-surface-variant/60 mt-1">Généré automatiquement — le mot de passe temporaire sera affiché après création.</p>
           </div>
           <label className="flex items-center gap-3 cursor-pointer select-none">
             <div
@@ -832,19 +858,77 @@ export default function AdministrationDesktop() {
               </div>
               {renderStaffForm(editForm, setEditForm, editErrors, editPhotoRef, true)}
               <div className="flex items-center justify-between px-7 py-5 border-t border-outline-variant shrink-0">
-                <button
-                  onClick={() => openDel(`${editForm.prenom} ${editForm.nom}`, async () => {
-                    await fetch(`/api/backend/staff/${editingId}`, { method: 'DELETE' });
-                    setStaff(prev => prev.filter(m => m.id !== editingId));
-                    closeEdit();
-                  })}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold">
-                  <Trash2 size={16} /> Supprimer
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => openDel(`${editForm.prenom} ${editForm.nom}`, async () => {
+                      await fetch(`/api/backend/staff/${editingId}`, { method: 'DELETE' });
+                      setStaff(prev => prev.filter(m => m.id !== editingId));
+                      closeEdit();
+                    })}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold">
+                    <Trash2 size={16} /> Supprimer
+                  </button>
+                  <button
+                    onClick={() => editingId && resetStaffPassword(editingId)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">
+                    <KeyRound size={16} /> Réinitialiser le mot de passe
+                  </button>
+                </div>
                 <div className="flex items-center gap-2">
                   <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                   <button onClick={submitEdit} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Modal identifiants créés ── */}
+      {credsOpen && creds && (
+        <>
+          <div className={`fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${credsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={closeCreds} />
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 pointer-events-none">
+            <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto transition-all duration-200 ${credsVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} overflow-hidden`}>
+              <div className="bg-secondary/5 border-b border-secondary/20 px-7 py-5 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
+                  <KeyRound size={24} className="text-secondary" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-on-surface">Compte créé</p>
+                  <p className="text-sm text-on-surface-variant">Communiquez ces identifiants au membre</p>
+                </div>
+              </div>
+              <div className="px-7 py-6 space-y-4">
+                <div>
+                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Identifiant</p>
+                  <div className="flex items-center gap-3 px-4 py-3 bg-surface-container rounded-xl border border-outline-variant">
+                    <span className="flex-1 font-mono text-base text-on-surface">{creds.username}</span>
+                    <button onClick={() => copyToClipboard(creds.username, 'user')}
+                      className="text-on-surface-variant hover:text-primary transition-colors">
+                      {credsCopied === 'user' ? <Check size={18} className="text-secondary" /> : <Copy size={18} />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Mot de passe temporaire</p>
+                  <div className="flex items-center gap-3 px-4 py-3 bg-surface-container rounded-xl border border-outline-variant">
+                    <span className="flex-1 font-mono text-base text-on-surface tracking-widest">{creds.temp_password}</span>
+                    <button onClick={() => copyToClipboard(creds.temp_password, 'pass')}
+                      className="text-on-surface-variant hover:text-primary transition-colors">
+                      {credsCopied === 'pass' ? <Check size={18} className="text-secondary" /> : <Copy size={18} />}
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-on-surface-variant/70 bg-surface-container rounded-xl px-4 py-3 border border-outline-variant">
+                  Le membre devra définir un nouveau mot de passe lors de sa première connexion.
+                </p>
+              </div>
+              <div className="flex justify-end px-7 pb-6">
+                <button onClick={closeCreds}
+                  className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">
+                  Compris
+                </button>
               </div>
             </div>
           </div>

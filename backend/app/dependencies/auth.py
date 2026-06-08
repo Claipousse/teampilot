@@ -27,3 +27,8 @@ async def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if not current_user.is_admin:
         raise HTTPException(403, "Action réservée aux administrateurs")
     return current_user
+
+async def require_staff(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.type == "player":
+        raise HTTPException(403, "Action réservée au staff et aux coachs")
+    return current_user

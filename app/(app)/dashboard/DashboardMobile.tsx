@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Calendar, Users, MessageSquare, MapPin, ChevronRight, Shield, AlertTriangle } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,6 +38,7 @@ export default function DashboardMobile() {
   const { isAdmin } = useCurrentUser();
   const { user: auth } = useAuth();
   const t = useT();
+  const router = useRouter();
 
   const [kpis,        setKpis]        = useState({ total_players: 0, available_players: 0, upcoming_events_count: 0, unread_messages: 0 });
   const [upcoming,    setUpcoming]    = useState<any[]>([]);
@@ -79,18 +82,18 @@ export default function DashboardMobile() {
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-3">
         {([
-          { label: t.dashboard.kpiPlayers,  value: kpis.total_players,         sub: `${kpis.available_players} ${t.dashboard.kpiAvailable}`, Icon: Users,         accent: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/20' },
-          { label: t.dashboard.kpiEvents,   value: kpis.upcoming_events_count, sub: t.dashboard.kpiUpcoming,                                  Icon: Calendar,      accent: 'text-secondary', bg: 'bg-secondary/5', border: 'border-secondary/20' },
-          { label: t.dashboard.kpiMessages, value: kpis.unread_messages,       sub: t.dashboard.kpiUnread,                                    Icon: MessageSquare, accent: 'text-error',     bg: 'bg-error/5',     border: 'border-error/20' },
+          { label: t.dashboard.kpiPlayers,  value: kpis.total_players,         sub: `${kpis.available_players} ${t.dashboard.kpiAvailable}`, Icon: Users,         accent: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/20',   href: '/joueurs' },
+          { label: t.dashboard.kpiEvents,   value: kpis.upcoming_events_count, sub: t.dashboard.kpiUpcoming,                                  Icon: Calendar,      accent: 'text-secondary', bg: 'bg-secondary/5', border: 'border-secondary/20', href: '/calendrier' },
+          { label: t.dashboard.kpiMessages, value: kpis.unread_messages,       sub: t.dashboard.kpiUnread,                                    Icon: MessageSquare, accent: 'text-error',     bg: 'bg-error/5',     border: 'border-error/20',     href: '/messagerie' },
         ] as const).map(kpi => (
-          <div key={kpi.label} className={`${kpi.bg} border ${kpi.border} rounded-2xl p-4 flex flex-col gap-1.5`}>
+          <Link key={kpi.label} href={kpi.href} className={`${kpi.bg} border ${kpi.border} rounded-2xl p-4 flex flex-col gap-1.5 active:brightness-95 transition-all`}>
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{kpi.label}</p>
               <kpi.Icon size={16} className={kpi.accent} />
             </div>
             <p className={`text-3xl font-extrabold leading-none ${kpi.accent}`}>{kpi.value}</p>
             <p className="text-xs text-on-surface-variant">{kpi.sub}</p>
-          </div>
+          </Link>
         ))}
       </div>
 
@@ -101,9 +104,9 @@ export default function DashboardMobile() {
             <Calendar size={18} className="text-primary" />
             <h2 className="text-base font-bold text-on-surface">{t.dashboard.upcomingEvents}</h2>
           </div>
-          <a href="/calendrier" className="text-xs font-semibold text-primary flex items-center gap-0.5">
+          <Link href="/calendrier" className="text-xs font-semibold text-primary flex items-center gap-0.5">
             {t.dashboard.viewAll} <ChevronRight size={13} />
-          </a>
+          </Link>
         </div>
         {upcoming.length === 0 ? (
           <p className="text-sm text-on-surface-variant text-center py-4">Aucun événement à venir</p>
@@ -112,7 +115,7 @@ export default function DashboardMobile() {
             {upcoming.slice(0, 4).map((ev: any) => {
               const ts = TAG_STYLE[ev.tag as EventTag] ?? TAG_STYLE['Réunion'];
               return (
-                <div key={ev.id} className={`flex items-center gap-3 p-4 bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden ${ts.border}`}>
+                <div key={ev.id} onClick={() => router.push(`/calendrier?eventId=${ev.id}`)} className={`flex items-center gap-3 p-4 bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden ${ts.border} cursor-pointer active:brightness-95 transition-all`}>
                   <div className="shrink-0 text-center min-w-[48px]">
                     <p className="text-xs text-on-surface-variant font-semibold">{fmtEventDate(ev.event_date)}</p>
                     <p className="text-sm font-extrabold text-on-surface">{ev.event_time}</p>
@@ -140,16 +143,16 @@ export default function DashboardMobile() {
             <MessageSquare size={18} className="text-on-surface-variant" />
             <h2 className="text-base font-bold text-on-surface">{t.dashboard.recentMessages}</h2>
           </div>
-          <a href="/messagerie" className="text-xs font-semibold text-primary flex items-center gap-0.5">
+          <Link href="/messagerie" className="text-xs font-semibold text-primary flex items-center gap-0.5">
             {t.dashboard.viewAll} <ChevronRight size={13} />
-          </a>
+          </Link>
         </div>
         {recentConvs.length === 0 ? (
           <p className="text-sm text-on-surface-variant text-center py-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">Aucun message</p>
         ) : (
           <div className="space-y-2">
             {recentConvs.map((conv: any) => (
-              <a key={conv.id} href="/messagerie"
+              <Link key={conv.id} href="/messagerie"
                 className="flex items-center gap-3 p-3 bg-surface-container-lowest border border-outline-variant rounded-2xl">
                 <div className={`w-10 h-10 rounded-full ${conv.avatar_bg} flex items-center justify-center shrink-0`}>
                   <span className={`font-bold text-sm ${conv.is_ai ? 'text-white' : 'text-on-surface-variant'}`}>{conv.initials}</span>
@@ -159,7 +162,7 @@ export default function DashboardMobile() {
                   <p className="text-xs text-on-surface-variant truncate">{conv.preview}</p>
                 </div>
                 <span className="text-xs text-on-surface-variant shrink-0">{conv.time}</span>
-              </a>
+              </Link>
             ))}
           </div>
         )}
@@ -172,9 +175,9 @@ export default function DashboardMobile() {
             <AlertTriangle size={18} className="text-[#F97316]" />
             <h2 className="text-base font-bold text-on-surface">{t.dashboard.unavailable}</h2>
           </div>
-          <a href="/joueurs" className="text-xs font-semibold text-primary flex items-center gap-0.5">
+          <Link href="/joueurs" className="text-xs font-semibold text-primary flex items-center gap-0.5">
             {t.dashboard.viewPlayersList} <ChevronRight size={13} />
-          </a>
+          </Link>
         </div>
         {unavailable.length === 0 ? (
           <p className="text-sm text-on-surface-variant text-center py-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">Tous les joueurs sont disponibles</p>
@@ -215,9 +218,9 @@ export default function DashboardMobile() {
               <h2 className="text-base font-bold text-on-surface">{t.dashboard.adminPanel}</h2>
               <p className="text-xs text-on-surface-variant">{t.dashboard.adminOnly}</p>
             </div>
-            <a href="/administration" className="text-xs font-semibold text-error/80 flex items-center gap-0.5 shrink-0">
+            <Link href="/administration" className="text-xs font-semibold text-error/80 flex items-center gap-0.5 shrink-0">
               {t.common.manage} <ChevronRight size={13} />
-            </a>
+            </Link>
           </div>
           <div className="border border-error/25 bg-error/5 rounded-2xl p-4 space-y-3">
 

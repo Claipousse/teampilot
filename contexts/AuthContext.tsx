@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation';
 
 export type AuthUser = {
   id: number;
-  email: string;
+  username: string;
   firstName: string;
   lastName: string;
   isAdmin: boolean;
   type: 'player' | 'staff';
+  mustChangePassword: boolean;
   playerId?: number;
+  staffId?: number;
 };
 
 type AuthCtxType = {
@@ -35,15 +37,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then(r => (r.ok ? r.json() : null))
       .then(data => {
         if (data) {
-          setUser({
+          const u: AuthUser = {
             id: data.id,
-            email: data.email,
+            username: data.username ?? '',
             firstName: data.first_name,
             lastName: data.last_name,
             isAdmin: data.is_admin,
             type: data.type,
+            mustChangePassword: data.must_change_password ?? false,
             playerId: data.player_id ?? undefined,
-          });
+            staffId: data.staff_id ?? undefined,
+          };
+          setUser(u);
+          if (u.mustChangePassword) {
+            const path = window.location.pathname;
+            if (!path.includes('/change-password')) {
+              router.push('/change-password');
+            }
+          }
         }
       })
       .finally(() => setLoading(false));

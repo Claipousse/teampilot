@@ -5,10 +5,23 @@ from app.dependencies.db import get_db
 from app.dependencies.auth import get_current_user, require_admin
 from app.models.player import Player
 from app.models.user import User
-from app.schemas.player import PlayerCreate, PlayerUpdate, PlayerRead
-from app.services.auth_service import hash_password
+from app.schemas.player import PlayerCreate, PlayerUpdate, PlayerRead, PlayerCreatedResponse
+from app.services.auth_service import hash_password, generate_temp_password, make_username_base
 
 router = APIRouter(prefix="/players", tags=["players"])
+
+
+async def _unique_username(base: str, db: AsyncSession) -> str:
+    rows = (await db.execute(
+        select(User.username).where(User.username.like(f"{base}%"))
+    )).scalars().all()
+    existing = {u for u in rows if u}
+    if base not in existing:
+        return base
+    i = 2
+    while f"{base}{i}" in existing:
+        i += 1
+    return f"{base}{i}"
 
 
 @router.get("", response_model=list[PlayerRead], dependencies=[Depends(get_current_user)])
@@ -29,12 +42,8 @@ async def list_players(
     return players
 
 
-
-@router.post("", response_model=PlayerRead, dependencies=[Depends(require_admin)])
+@router.post("", response_model=PlayerCreatedResponse, dependencies=[Depends(require_admin)])
 async def create_player(data: PlayerCreate, db: AsyncSession = Depends(get_db)):
-    existing = await db.execute(select(User).where(User.email == data.email))
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Email déjà utilisé")
     player = Player(
         first_name=data.first_name, last_name=data.last_name,
         shirt_number=data.shirt_number, position=data.position,
@@ -47,16 +56,41 @@ async def create_player(data: PlayerCreate, db: AsyncSession = Depends(get_db)):
     )
     db.add(player)
     await db.flush()
+
+    base = make_username_base(data.first_name, data.last_name)
+    username = await _unique_username(base, db)
+    temp_password = generate_temp_password()
+
     user = User(
-        email=data.email,
-        hashed_password=hash_password(data.password),
-        first_name=data.first_name, last_name=data.last_name,
-        is_admin=False, type="player", player_id=player.id,
+        username=username,
+        hashed_password=hash_password(temp_password),
+        first_name=data.first_name,
+        last_name=data.last_name,
+        is_admin=False,
+        type="player",
+        player_id=player.id,
+        must_change_password=True,
     )
     db.add(user)
     await db.commit()
     await db.refresh(player)
-    return player
+
+    result = PlayerRead.model_validate(player).model_dump()
+    result["username"] = username
+    result["temp_password"] = temp_password
+    return result
+
+
+@router.post("/{player_id}/reset-password", dependencies=[Depends(require_admin)])
+async def reset_player_password(player_id: int, db: AsyncSession = Depends(get_db)):
+    user = (await db.execute(select(User).where(User.player_id == player_id))).scalar_one_or_none()
+    if not user:
+        raise HTTPException(404, "Utilisateur introuvable")
+    temp_password = generate_temp_password()
+    user.hashed_password = hash_password(temp_password)
+    user.must_change_password = True
+    await db.commit()
+    return {"username": user.username, "temp_password": temp_password}
 
 
 @router.patch("/{player_id}", response_model=PlayerRead, dependencies=[Depends(require_admin)])
@@ -79,8 +113,8 @@ async def delete_player(player_id: int, db: AsyncSession = Depends(get_db)):
     if not player:
         raise HTTPException(status_code=404, detail="Joueur introuvable")
     player.is_active = False
-    user_r = await db.execute(select(User).where(User.player_id == player_id))
-    user = user_r.scalar_one_or_none()
+    user_result = await db.execute(select(User).where(User.player_id == player_id))
+    user = user_result.scalar_one_or_none()
     if user:
         user.is_active = False
     await db.commit()

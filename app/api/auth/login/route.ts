@@ -13,18 +13,17 @@ export async function POST(req: NextRequest) {
   });
 
   if (!res.ok) {
-    return NextResponse.json({ error: 'Email ou mot de passe incorrect' }, { status: 401 });
+    return NextResponse.json({ error: 'Identifiant ou mot de passe incorrect' }, { status: 401 });
   }
 
   const data = await res.json();
   const cookieStore = await cookies();
 
-  // Token httpOnly : JavaScript côté client ne peut pas le lire (sécurité)
   cookieStore.set('token', data.access_token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24, // 24h
+    maxAge: 60 * 60 * 24,
     path: '/',
   });
 

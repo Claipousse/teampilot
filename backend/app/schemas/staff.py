@@ -7,10 +7,9 @@ class StaffMemberCreate(BaseModel):
     role: str
     email: EmailStr
     phone: str | None = None
-    since_date: str | None = None  # YYYY-MM-DD
+    since_date: str | None = None
     notes: str | None = None
     is_admin: bool = False
-    password: str
 
 
 class StaffMemberUpdate(BaseModel):
@@ -22,7 +21,6 @@ class StaffMemberUpdate(BaseModel):
     since_date: str | None = None
     notes: str | None = None
     is_admin: bool | None = None
-    password: str | None = None
 
 
 class StaffMemberRead(BaseModel):
@@ -37,3 +35,13 @@ class StaffMemberRead(BaseModel):
     notes: str | None
     is_admin: bool
     model_config = ConfigDict(from_attributes=True)
+
+
+class StaffCreatedResponse(StaffMemberRead):
+    username: str
+    temp_password: str
+
+
+class ResetPasswordResponse(BaseModel):
+    username: str
+    temp_password: str

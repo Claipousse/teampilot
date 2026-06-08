@@ -1,46 +1,52 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Search, Bell, X, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, Bell, X, LogOut, KeyRound } from 'lucide-react';
 import { useLanguage, useT } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 
 type SearchTab = 'Joueurs' | 'Événements' | 'Messages';
-type NotifKind = 'added' | 'rescheduled' | 'cancelled';
+type NotifKind = 'added' | 'rescheduled' | 'cancelled' | 'message';
 
 type NotifEvent = {
   id: number;
-  title: string;
-  time: string;
   kind: NotifKind;
-  eventDate: string; // YYYY-MM-DD — auto-removed if in the past
+  title: string;
+  tag: string | null;
+  event_id: number | null;
+  event_date: string | null;
+  created_at: string;
 };
 
-type NotifMessage = {
-  id: number;
-  from: string;
-  preview: string;
-  time: string;
-  unread: number;
-};
+function evtDotClass(tag: string | null): string {
+  if (tag === 'Match')        return 'bg-error';
+  if (tag === 'Entraînement') return 'bg-primary';
+  if (tag === 'Récupération') return 'bg-secondary';
+  if (tag === 'Réunion')      return 'bg-outline';
+  return 'bg-outline';
+}
+
+function msgDotClass(tag: string | null): string {
+  if (tag === 'coach')  return 'bg-primary';
+  if (tag === 'player') return 'bg-secondary';
+  return 'bg-[#F97316]'; // staff
+}
 
 const SEARCH_TABS: SearchTab[] = ['Joueurs', 'Événements', 'Messages'];
 
-// eventDate >= 2026-06-03 (today) → kept ; < → auto-removed
-const INITIAL_EVENTS: NotifEvent[] = [
-  { id: 1, title: 'Match vs Arsenal ajouté',           time: 'Il y a 2h', kind: 'added',       eventDate: '2026-06-15' },
-  { id: 2, title: 'Entraînement reprogrammé au 12/06', time: 'Il y a 5h', kind: 'rescheduled', eventDate: '2026-06-12' },
-  { id: 3, title: 'Match vs Chelsea annulé',            time: 'Hier',     kind: 'cancelled',   eventDate: '2026-06-01' }, // passé → auto-supprimé
-  { id: 4, title: 'Réunion staff planifiée',            time: 'Il y a 1j', kind: 'added',      eventDate: '2026-06-20' },
-  { id: 5, title: 'Match amical vs Brighton',           time: 'Il y a 2j', kind: 'added',      eventDate: '2026-05-28' }, // passé → auto-supprimé
-];
-
-const INITIAL_MESSAGES: NotifMessage[] = [
-  { id: 1, from: 'Marcus V.',  preview: 'Bonjour coach, je voulais vous dire...', time: 'Il y a 1h', unread: 2 },
-  { id: 2, from: 'Stefan K.',  preview: 'OK pour demain, je serai là.',            time: 'Il y a 3h', unread: 1 },
-  { id: 3, from: 'Kevin L.',   preview: 'Concernant le match de samedi…',          time: 'Il y a 4h', unread: 3 },
-  { id: 4, from: 'Alex M.',    preview: 'Est-ce qu\'on s\'entraîne lundi ?',       time: 'Il y a 6h', unread: 1 },
-];
+function fmtNotifTime(createdAt: string): string {
+  const dt = new Date(createdAt);
+  const diffMs = Date.now() - dt.getTime();
+  const diffM = Math.floor(diffMs / 60000);
+  const diffH = Math.floor(diffMs / 3600000);
+  const diffD = Math.floor(diffMs / 86400000);
+  if (diffM < 1) return "À l'instant";
+  if (diffH < 1) return `Il y a ${diffM} min`;
+  if (diffH < 24) return `Il y a ${diffH}h`;
+  if (diffD === 1) return 'Hier';
+  return `Il y a ${diffD}j`;
+}
 
 const MAX_VISIBLE = 3;
 
@@ -57,17 +63,21 @@ export default function Header() {
   const t = useT();
   const { user, logout } = useAuth();
 
+  const router = useRouter();
+
   const fullName = user ? `${user.firstName} ${user.lastName}` : '—';
   const initials = user ? `${user.firstName[0]}${user.lastName[0]}` : '?';
   const roleLabel = user?.isAdmin ? 'Admin' : user?.type === 'staff' ? 'Staff' : 'Joueur';
 
-  // Notifications en état pour pouvoir les supprimer
-  const [events, setEvents] = useState<NotifEvent[]>(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return INITIAL_EVENTS.filter(e => new Date(e.eventDate) >= today);
-  });
-  const [messages, setMessages] = useState<NotifMessage[]>(INITIAL_MESSAGES);
+  const [events, setEvents] = useState<NotifEvent[]>([]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    fetch('/api/backend/notifications')
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then((data: NotifEvent[]) => setEvents(data))
+      .catch(err => console.warn('[notifications] fetch failed:', err));
+  }, [user?.id]);
 
   const searchRef  = useRef<HTMLDivElement>(null);
   const langRef    = useRef<HTMLDivElement>(null);
@@ -85,14 +95,24 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', down);
   }, []);
 
-  const removeEvent   = (id: number) => setEvents(prev => prev.filter(e => e.id !== id));
-  const removeMessage = (id: number) => setMessages(prev => prev.filter(m => m.id !== id));
+  const removeEvent = async (id: number) => {
+    setEvents(prev => prev.filter(e => e.id !== id));
+    await fetch(`/api/backend/notifications/${id}`, { method: 'DELETE' }).catch(() => {});
+  };
 
-  const msgUnread   = messages.reduce((s, m) => s + m.unread, 0);
-  const totalUnread = events.length + msgUnread;
+  const openEventNotif = (n: NotifEvent) => {
+    removeEvent(n.id);
+    setNotifOpen(false);
+    if (n.event_id) {
+      router.push(`/calendrier?eventId=${n.event_id}`);
+    }
+  };
 
-  const visibleEvents   = events.slice(0, MAX_VISIBLE);
-  const visibleMessages = messages.slice(0, MAX_VISIBLE);
+  const evtNotifs = events.filter(n => n.kind !== 'message');
+  const msgNotifs = events.filter(n => n.kind === 'message');
+  const totalUnread = events.length;
+  const visibleEvents = evtNotifs.slice(0, MAX_VISIBLE);
+  const visibleMessages = msgNotifs.slice(0, MAX_VISIBLE);
 
   const getSearchTabLabel = (tab: SearchTab) => {
     if (tab === 'Joueurs')    return t.header.tabPlayers;
@@ -192,14 +212,14 @@ export default function Header() {
                     notifTab === 'events' ? 'text-primary border-primary bg-primary/5' : 'text-on-surface-variant border-transparent hover:text-on-surface hover:bg-surface-container'
                   }`}>
                   {t.header.notifEvents}
-                  {events.length > 0 && <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">{events.length}</span>}
+                  {evtNotifs.length > 0 && <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">{evtNotifs.length}</span>}
                 </button>
                 <button onClick={() => setNotifTab('messages')}
                   className={`flex-1 py-2.5 text-sm font-bold transition-colors border-b-2 flex items-center justify-center gap-2 ${
                     notifTab === 'messages' ? 'text-primary border-primary bg-primary/5' : 'text-on-surface-variant border-transparent hover:text-on-surface hover:bg-surface-container'
                   }`}>
                   {t.header.notifMessages}
-                  {msgUnread > 0 && <span className="px-1.5 py-0.5 bg-error/10 text-error text-xs font-bold rounded-full">{msgUnread}</span>}
+                  {msgNotifs.length > 0 && <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-xs font-bold rounded-full">{msgNotifs.length}</span>}
                 </button>
               </div>
 
@@ -210,13 +230,12 @@ export default function Header() {
                   ) : (
                     <>
                       {visibleEvents.map(n => (
-                        <div key={n.id} className="group/item relative flex items-start gap-3 px-5 py-3.5 hover:bg-surface-container transition-colors cursor-pointer">
-                          <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${
-                            n.kind === 'added' ? 'bg-secondary' : n.kind === 'rescheduled' ? 'bg-[#F97316]' : 'bg-error'
-                          }`} />
+                        <div key={n.id} onClick={() => openEventNotif(n)}
+                          className="group/item relative flex items-start gap-3 px-5 py-3.5 hover:bg-surface-container transition-colors cursor-pointer">
+                          <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${evtDotClass(n.tag)}`} />
                           <div className="flex-1 min-w-0 pr-6">
                             <p className="text-sm font-semibold text-on-surface">{n.title}</p>
-                            <p className="text-xs text-on-surface-variant mt-0.5">{n.time}</p>
+                            <p className="text-xs text-on-surface-variant mt-0.5">{fmtNotifTime(n.created_at)}</p>
                           </div>
                           <button
                             onClick={e => { e.stopPropagation(); removeEvent(n.id); }}
@@ -226,46 +245,39 @@ export default function Header() {
                         </div>
                       ))}
                       {events.length > MAX_VISIBLE && (
-                        <a href="/calendrier"
-                          className="flex items-center justify-center px-5 py-3 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors">
+                        <button onClick={() => { setNotifOpen(false); router.push('/calendrier'); }}
+                          className="w-full flex items-center justify-center px-5 py-3 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors">
                           {t.header.seeMore} ({events.length - MAX_VISIBLE} {t.header.moreSuffix}) →
-                        </a>
+                        </button>
                       )}
                     </>
                   )
+                ) : msgNotifs.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-on-surface-variant">{t.header.noMessages}</p>
                 ) : (
-                  messages.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-on-surface-variant">{t.header.noMessages}</p>
-                  ) : (
-                    <>
-                      {visibleMessages.map(m => (
-                        <div key={m.id} className="group/item relative flex items-start gap-3 px-5 py-3.5 hover:bg-surface-container transition-colors cursor-pointer">
-                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
-                            {m.from.charAt(0)}
-                          </div>
-                          <div className="flex-1 min-w-0 pr-6">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-bold text-on-surface">{m.from}</p>
-                              <span className="px-1.5 py-0.5 bg-error/10 text-error text-xs font-bold rounded-full shrink-0">{m.unread}</span>
-                            </div>
-                            <p className="text-xs text-on-surface-variant truncate">{m.preview}</p>
-                            <p className="text-xs text-on-surface-variant/60 mt-0.5">{m.time}</p>
-                          </div>
-                          <button
-                            onClick={e => { e.stopPropagation(); removeMessage(m.id); }}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant opacity-0 group-hover/item:opacity-100 transition-opacity">
-                            <X size={11} />
-                          </button>
+                  <>
+                    {visibleMessages.map(n => (
+                      <div key={n.id} onClick={() => { removeEvent(n.id); setNotifOpen(false); router.push('/messagerie'); }}
+                        className="group/item relative flex items-start gap-3 px-5 py-3.5 hover:bg-surface-container transition-colors cursor-pointer">
+                        <div className={`w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 ${msgDotClass(n.tag)}`} />
+                        <div className="flex-1 min-w-0 pr-6">
+                          <p className="text-sm font-semibold text-on-surface">{n.title}</p>
+                          <p className="text-xs text-on-surface-variant mt-0.5">{fmtNotifTime(n.created_at)}</p>
                         </div>
-                      ))}
-                      {messages.length > MAX_VISIBLE && (
-                        <a href="/messagerie"
-                          className="flex items-center justify-center px-5 py-3 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors">
-                          {t.header.seeMore} ({messages.length - MAX_VISIBLE} {t.header.moreSuffix}) →
-                        </a>
-                      )}
-                    </>
-                  )
+                        <button
+                          onClick={e => { e.stopPropagation(); removeEvent(n.id); }}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full hover:bg-surface-container-high text-on-surface-variant opacity-0 group-hover/item:opacity-100 transition-opacity">
+                          <X size={11} />
+                        </button>
+                      </div>
+                    ))}
+                    {msgNotifs.length > MAX_VISIBLE && (
+                      <button onClick={() => { setNotifOpen(false); router.push('/messagerie'); }}
+                        className="w-full flex items-center justify-center px-5 py-3 text-sm font-semibold text-primary hover:bg-primary/5 transition-colors">
+                        {t.header.seeMore} ({msgNotifs.length - MAX_VISIBLE} {t.header.moreSuffix}) →
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -290,7 +302,15 @@ export default function Header() {
           </button>
 
           {profileOpen && (
-            <div className="absolute top-full right-0 mt-2 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg overflow-hidden z-50 min-w-[180px]">
+            <div className="absolute top-full right-0 mt-2 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg overflow-hidden z-50 min-w-[230px]">
+              <button
+                onClick={() => { setProfileOpen(false); router.push('/change-password'); }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors whitespace-nowrap"
+              >
+                <KeyRound size={15} className="text-on-surface-variant shrink-0" />
+                Changer le mot de passe
+              </button>
+              <div className="border-t border-outline-variant" />
               <button
                 onClick={() => { setProfileOpen(false); logout(); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-error hover:bg-error/5 transition-colors"

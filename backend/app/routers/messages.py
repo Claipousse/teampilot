@@ -5,6 +5,7 @@ from sqlalchemy import select, func, delete as sa_delete
 from app.dependencies.db import get_db
 from app.dependencies.auth import get_current_user
 from app.models.message import Conversation, ConversationParticipant, Message
+from app.models.notification import Notification
 from app.models.user import User
 from app.models.staff import StaffMember
 from app.schemas.message import (
@@ -85,14 +86,17 @@ async def list_conversations(
 ):
     conv_ids = [r[0] for r in (await db.execute(
         select(ConversationParticipant.conversation_id)
-        .where(ConversationParticipant.user_id == current_user.id)
+        .where(
+            ConversationParticipant.user_id == current_user.id,
+            ConversationParticipant.hidden == False,
+        )
     )).all()]
 
     convs = (await db.execute(
         select(Conversation).where(Conversation.id.in_(conv_ids))
     )).scalars().all()
 
-    result = []
+    result_with_time = []
     for conv in convs:
         last = (await db.execute(
             select(Message)
@@ -101,7 +105,11 @@ async def list_conversations(
             .limit(1)
         )).scalar_one_or_none()
 
+        display_name     = conv.name
+        display_initials = conv.initials
+        display_role     = conv.role
         members = None
+
         if conv.is_group:
             rows = (await db.execute(
                 select(ConversationParticipant, User)
@@ -117,17 +125,38 @@ async def list_conversations(
                 )
                 for _, u in rows
             ]
+        elif not conv.is_ai:
+            # Résoudre nom/initiales depuis l'AUTRE participant (pas celui qui consulte)
+            other = (await db.execute(
+                select(User, StaffMember)
+                .outerjoin(StaffMember, User.staff_id == StaffMember.id)
+                .join(ConversationParticipant, ConversationParticipant.user_id == User.id)
+                .where(
+                    ConversationParticipant.conversation_id == conv.id,
+                    ConversationParticipant.user_id != current_user.id,
+                )
+            )).first()
+            if other:
+                other_user, other_sm = other
+                display_name     = f"{other_user.first_name} {other_user.last_name}"
+                display_initials = f"{other_user.first_name[0]}{other_user.last_name[0]}"
+                display_role     = other_sm.role if other_sm else None
 
-        result.append(ConversationRead(
-            id=conv.id, name=conv.name, category=conv.category,
-            role_type=conv.role_type, is_group=conv.is_group, is_ai=conv.is_ai,
-            initials=conv.initials, avatar_bg=conv.avatar_bg, role=conv.role,
-            preview=last.text if last else None,
-            time=_fmt_time(last.created_at) if last else None,
-            members=members,
+        sort_key = last.created_at if last else conv.created_at
+        result_with_time.append((
+            ConversationRead(
+                id=conv.id, name=display_name, category=conv.category,
+                role_type=conv.role_type, is_group=conv.is_group, is_ai=conv.is_ai,
+                initials=display_initials, avatar_bg=conv.avatar_bg, role=display_role,
+                preview=last.text if last else None,
+                time=_fmt_time(last.created_at) if last else None,
+                members=members,
+            ),
+            sort_key,
         ))
 
-    return result
+    result_with_time.sort(key=lambda x: x[1], reverse=True)
+    return [r for r, _ in result_with_time]
 
 
 # ── Créer une conversation ────────────────────────────────────────────────────
@@ -163,14 +192,33 @@ async def create_conversation(
                 ).limit(1)
             )).scalar_one_or_none()
             if existing:
+                # Unhide for current user if they had previously hidden it
+                my_part = (await db.execute(
+                    select(ConversationParticipant).where(
+                        ConversationParticipant.conversation_id == existing.id,
+                        ConversationParticipant.user_id == current_user.id,
+                    )
+                )).scalar_one_or_none()
+                if my_part and my_part.hidden:
+                    my_part.hidden = False
+                    await db.commit()
+                # Fetch partner info so name/initials are correct for the requesting user
+                p = (await db.execute(
+                    select(User, StaffMember)
+                    .outerjoin(StaffMember, User.staff_id == StaffMember.id)
+                    .where(User.id == partner_id)
+                )).first()
+                p_name     = f"{p[0].first_name} {p[0].last_name}" if p else existing.name
+                p_initials = f"{p[0].first_name[0]}{p[0].last_name[0]}" if p else existing.initials
+                p_role     = p[1].role if p and p[1] else existing.role
                 last = (await db.execute(
                     select(Message).where(Message.conversation_id == existing.id)
                     .order_by(Message.created_at.desc()).limit(1)
                 )).scalar_one_or_none()
                 return ConversationRead(
-                    id=existing.id, name=existing.name, category=existing.category,
+                    id=existing.id, name=p_name, category=existing.category,
                     role_type=existing.role_type, is_group=False, is_ai=False,
-                    initials=existing.initials, avatar_bg=existing.avatar_bg, role=existing.role,
+                    initials=p_initials, avatar_bg=existing.avatar_bg, role=p_role,
                     preview=last.text if last else None,
                     time=_fmt_time(last.created_at) if last else None,
                 )
@@ -249,7 +297,28 @@ async def create_conversation(
     )
 
 
-# ── Supprimer une conversation vide ──────────────────────────────────────────
+# ── Masquer une conversation (soft-hide pour l'utilisateur courant) ───────────
+
+@router.post("/conversations/{conv_id}/leave")
+async def leave_conversation(
+    conv_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    part = (await db.execute(
+        select(ConversationParticipant).where(
+            ConversationParticipant.conversation_id == conv_id,
+            ConversationParticipant.user_id == current_user.id,
+        )
+    )).scalar_one_or_none()
+    if not part:
+        raise HTTPException(404, "Conversation introuvable")
+    part.hidden = True
+    await db.commit()
+    return {"ok": True}
+
+
+# ── Supprimer une conversation vide (cleanup) ────────────────────────────────
 
 @router.delete("/conversations/{conv_id}")
 async def delete_conversation(
@@ -316,6 +385,26 @@ async def send_message(
 ):
     msg = Message(conversation_id=conv_id, sender_id=current_user.id, msg_type="text", text=data.text)
     db.add(msg)
+    await db.flush()
+
+    parts = (await db.execute(
+        select(ConversationParticipant).where(
+            ConversationParticipant.conversation_id == conv_id,
+            ConversationParticipant.user_id != current_user.id,
+            ConversationParticipant.hidden == False,
+        )
+    )).scalars().all()
+    sender_name = f"{current_user.first_name} {current_user.last_name}"
+    preview = data.text if len(data.text) <= 80 else data.text[:77] + "…"
+    sender_tag = _role_type(current_user)
+    for part in parts:
+        db.add(Notification(
+            user_id=part.user_id,
+            kind="message",
+            title=f"{sender_name} : {preview}",
+            tag=sender_tag,
+        ))
+
     await db.commit()
     await db.refresh(msg)
     return MessageRead(

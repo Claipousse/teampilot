@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.dependencies.db import get_db
-from app.dependencies.auth import get_current_user, require_admin
+from app.dependencies.auth import get_current_user, require_admin, require_staff
 from app.models.event import Event
+from app.models.notification import Notification
 from app.models.user import User
 from app.schemas.event import EventCreate, EventUpdate, EventRead
 
@@ -35,12 +36,31 @@ async def upcoming_events(db: AsyncSession = Depends(get_db)):
 async def create_event(
     data: EventCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_staff),
 ):
     event = Event(**data.model_dump(), created_by=current_user.id)
     db.add(event)
+    await db.flush()
+    all_users = (await db.execute(select(User).where(User.is_active == True))).scalars().all()
+    for u in all_users:
+        db.add(Notification(
+            user_id=u.id,
+            kind="added",
+            title=event.title,
+            tag=event.tag,
+            event_id=event.id,
+            event_date=event.event_date,
+        ))
     await db.commit()
     await db.refresh(event)
+    return event
+
+
+@router.get("/{event_id}", response_model=EventRead, dependencies=[Depends(get_current_user)])
+async def get_event(event_id: int, db: AsyncSession = Depends(get_db)):
+    event = (await db.execute(select(Event).where(Event.id == event_id))).scalar_one_or_none()
+    if not event:
+        raise HTTPException(status_code=404, detail="Événement introuvable")
     return event
 
 
@@ -50,8 +70,21 @@ async def update_event(event_id: int, data: EventUpdate, db: AsyncSession = Depe
     event = result.scalar_one_or_none()
     if not event:
         raise HTTPException(status_code=404, detail="Événement introuvable")
-    for field, value in data.model_dump(exclude_none=True).items():
+    changed = data.model_dump(exclude_none=True)
+    date_changed = "event_date" in changed or "event_time" in changed
+    for field, value in changed.items():
         setattr(event, field, value)
+    if date_changed:
+        all_users = (await db.execute(select(User).where(User.is_active == True))).scalars().all()
+        for u in all_users:
+            db.add(Notification(
+                user_id=u.id,
+                kind="rescheduled",
+                title=event.title,
+                tag=event.tag,
+                event_id=event.id,
+                event_date=event.event_date,
+            ))
     await db.commit()
     await db.refresh(event)
     return event
@@ -63,6 +96,16 @@ async def delete_event(event_id: int, db: AsyncSession = Depends(get_db)):
     event = result.scalar_one_or_none()
     if not event:
         raise HTTPException(status_code=404, detail="Événement introuvable")
+    all_users = (await db.execute(select(User).where(User.is_active == True))).scalars().all()
+    for u in all_users:
+        db.add(Notification(
+            user_id=u.id,
+            kind="cancelled",
+            title=event.title,
+            tag=event.tag,
+            event_id=None,
+            event_date=event.event_date,
+        ))
     await db.delete(event)
     await db.commit()
     return {"ok": True}

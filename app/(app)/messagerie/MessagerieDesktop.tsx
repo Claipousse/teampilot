@@ -301,6 +301,13 @@ export default function MessagerieDesktop() {
     });
   };
 
+  const hideConversation = async (convId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await fetch(`/api/backend/messages/conversations/${convId}/leave`, { method: 'POST' });
+    setConversations(prev => prev.filter(c => c.id !== convId));
+    if (activeConv?.id === convId) setActiveConv(null);
+  };
+
   const sendMsg = async () => {
     if (!input.trim() || !activeConv || sending || !user) return;
     setSending(true);
@@ -363,8 +370,16 @@ export default function MessagerieDesktop() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={16} />
             <input type="text" placeholder={t.messaging.searchPlaceholder} value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 bg-surface-container rounded-xl text-sm text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none transition-all"
+              className="w-full pl-9 pr-8 py-2.5 bg-surface-container rounded-xl text-sm text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none transition-all"
             />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full hover:bg-outline/20 transition-colors"
+              >
+                <X size={13} className="text-outline" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -410,7 +425,7 @@ export default function MessagerieDesktop() {
             const accent = conv.isGroup ? null : roleAccent(conv.roleType as string);
             return (
               <div key={conv.id} onClick={() => selectConv(conv)}
-                className={`flex items-center gap-3 px-4 py-4 cursor-pointer transition-all border-l-4 ${
+                className={`group flex items-center gap-3 px-4 py-4 cursor-pointer transition-all border-l-4 ${
                   activeConv?.id === conv.id
                     ? `${accent?.bg ?? 'bg-surface-container'} ${accent?.border ?? 'border-outline-variant'}`
                     : 'border-transparent hover:bg-surface-container'
@@ -433,9 +448,16 @@ export default function MessagerieDesktop() {
                         <span className="text-xs text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded-full shrink-0">{conv.members.length}</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                    <div className="flex items-center gap-1 shrink-0 ml-2">
                       {conv.unread && <div className={`w-2.5 h-2.5 rounded-full ${conv.isGroup ? 'bg-primary' : (accent?.dot ?? 'bg-primary')}`} />}
-                      <span className="text-xs text-on-surface-variant">{conv.time}</span>
+                      <span className="text-xs text-on-surface-variant group-hover:hidden">{conv.time}</span>
+                      <button
+                        onClick={e => hideConversation(conv.id, e)}
+                        className="hidden group-hover:flex w-6 h-6 items-center justify-center rounded-full hover:bg-error/10 transition-colors"
+                        title="Supprimer la conversation"
+                      >
+                        <X size={13} className="text-on-surface-variant hover:text-error" />
+                      </button>
                     </div>
                   </div>
                   <p className={`text-sm truncate ${conv.unread ? 'text-on-surface font-medium' : 'text-on-surface-variant'}`}>{conv.preview}</p>

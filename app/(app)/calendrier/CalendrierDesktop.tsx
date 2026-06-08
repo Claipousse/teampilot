@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Plus, X, Pencil, Trash2, MapPin, FileText } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useT } from '@/contexts/LanguageContext';
@@ -113,7 +113,7 @@ function generateWeeks(year: number, month: number, eventsMap: Record<number, Ca
   return weeks;
 }
 
-export default function CalendrierDesktop({ openCreate = false }: { openCreate?: boolean }) {
+export default function CalendrierDesktop({ openCreate = false, openEventId }: { openCreate?: boolean; openEventId?: number }) {
   const today = new Date();
   const [current, setCurrent] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [dayDetail, setDayDetail]       = useState<DayDetail | null>(null);
@@ -143,8 +143,10 @@ export default function CalendrierDesktop({ openCreate = false }: { openCreate?:
   const [createCalYear,  setCreateCalYear]  = useState(today.getFullYear());
 
   const [eventsMap, setEventsMap] = useState<Record<number, CalEvent[]>>({});
+  const pendingEventIdRef = useRef<number | null>(openEventId ?? null);
 
-  const { isAdmin: canEdit } = useCurrentUser();
+  const { isAdmin: canEdit, type: userType } = useCurrentUser();
+  const canCreate = userType !== 'player';
   const t = useT();
 
   const fetchEvents = useCallback(async () => {
@@ -163,6 +165,36 @@ export default function CalendrierDesktop({ openCreate = false }: { openCreate?:
   }, [current]);
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
+
+  // Navigate to the right month when openEventId is provided
+  useEffect(() => {
+    if (!openEventId) return;
+    fetch(`/api/backend/events/${openEventId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(evt => {
+        if (!evt) return;
+        const [y, m] = evt.event_date.split('-').map(Number);
+        pendingEventIdRef.current = openEventId;
+        setCurrent(new Date(y, m - 1, 1));
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Once eventsMap updates, open the pending event detail
+  useEffect(() => {
+    const targetId = pendingEventIdRef.current;
+    if (targetId === null) return;
+    for (const [dayStr, evts] of Object.entries(eventsMap)) {
+      const evt = evts.find(e => e.id === targetId);
+      if (evt) {
+        pendingEventIdRef.current = null;
+        setDetailInfo({ event: evt, day: Number(dayStr), month: current.getMonth(), year: current.getFullYear() });
+        setTimeout(() => setDetailVisible(true), 10);
+        break;
+      }
+    }
+  }, [eventsMap, current]);
 
   const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -221,11 +253,13 @@ export default function CalendrierDesktop({ openCreate = false }: { openCreate?:
           {t.calendar.months[current.getMonth()]} {current.getFullYear()}
         </h1>
         <button onClick={next} className="w-8 h-8 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container transition-colors shrink-0"><ChevronRight size={16} /></button>
-        <div className="ml-auto shrink-0">
-          <button onClick={openCreateForm} className="flex items-center gap-2 px-4 py-2 bg-error hover:bg-error/90 text-white text-sm font-semibold rounded-xl transition-colors">
-            <Plus size={16} /> {t.calendar.addEvent}
-          </button>
-        </div>
+        {canCreate && (
+          <div className="ml-auto shrink-0">
+            <button onClick={openCreateForm} className="flex items-center gap-2 px-4 py-2 bg-error hover:bg-error/90 text-white text-sm font-semibold rounded-xl transition-colors">
+              <Plus size={16} /> {t.calendar.addEvent}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Calendrier + panneau */}

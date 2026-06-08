@@ -24,9 +24,10 @@ class Conversation(Base):
 class ConversationParticipant(Base):
     __tablename__ = "conversation_participants"
 
-    id:              Mapped[int] = mapped_column(Integer, primary_key=True)
-    conversation_id: Mapped[int] = mapped_column(Integer, ForeignKey("conversations.id"), nullable=False)
-    user_id:         Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    id:              Mapped[int]  = mapped_column(Integer, primary_key=True)
+    conversation_id: Mapped[int]  = mapped_column(Integer, ForeignKey("conversations.id"), nullable=False)
+    user_id:         Mapped[int]  = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    hidden:          Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
 class Message(Base):

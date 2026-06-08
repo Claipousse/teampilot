@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Search, X, Pencil, Send, Trash2, Upload, AlertTriangle } from 'lucide-react';
+import { Search, X, Pencil, Send, Trash2, Upload, AlertTriangle, Copy, Check, KeyRound } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useT } from '@/contexts/LanguageContext';
 
@@ -46,10 +46,11 @@ type PlayerForm = {
   injury: string; returnDate: string;
   contract: string; academy: string;
   notes: string; photoUrl: string;
-  email: string; password: string;
 };
 
-type FormErrors = Partial<Record<'prenom' | 'nom' | 'number' | 'position' | 'nationality' | 'status' | 'email' | 'password', string>>;
+type FormErrors = Partial<Record<'prenom' | 'nom' | 'number' | 'position' | 'nationality' | 'status', string>>;
+
+type Credentials = { username: string; temp_password: string };
 
 const EMPTY_FORM: PlayerForm = {
   prenom: '', nom: '', number: '',
@@ -60,7 +61,6 @@ const EMPTY_FORM: PlayerForm = {
   injury: '', returnDate: '',
   contract: '', academy: '',
   notes: '', photoUrl: '',
-  email: '', password: '',
 };
 
 const POSITION_OPTIONS: { label: string; short: 'GK' | 'DEF' | 'MIL' | 'ATT' }[] = [
@@ -146,18 +146,14 @@ function contractColor(date?: string): string {
   return 'text-secondary font-semibold';
 }
 
-function validateForm(form: PlayerForm, isEdit: boolean): FormErrors {
+function validateForm(form: PlayerForm): FormErrors {
   const e: FormErrors = {};
-  if (!form.prenom.trim())     e.prenom      = 'Champ obligatoire';
-  if (!form.nom.trim())        e.nom         = 'Champ obligatoire';
-  if (!form.number.trim())     e.number      = 'Champ obligatoire';
-  if (!form.position)          e.position    = 'Champ obligatoire';
+  if (!form.prenom.trim())      e.prenom      = 'Champ obligatoire';
+  if (!form.nom.trim())         e.nom         = 'Champ obligatoire';
+  if (!form.number.trim())      e.number      = 'Champ obligatoire';
+  if (!form.position)           e.position    = 'Champ obligatoire';
   if (!form.nationality.trim()) e.nationality = 'Champ obligatoire';
-  if (!form.status)            e.status      = 'Champ obligatoire';
-  if (!isEdit) {
-    if (!form.email.trim())    e.email       = 'Champ obligatoire';
-    if (!form.password.trim()) e.password    = 'Champ obligatoire';
-  }
+  if (!form.status)             e.status      = 'Champ obligatoire';
   return e;
 }
 
@@ -189,6 +185,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
   const [createForm,    setCreateForm]    = useState<PlayerForm>(EMPTY_FORM);
   const [createErrors,  setCreateErrors]  = useState<FormErrors>({});
   const createPhotoRef = useRef<HTMLInputElement>(null);
+
+  const [credsOpen,    setCredsOpen]    = useState(false);
+  const [credsVisible, setCredsVisible] = useState(false);
+  const [creds,        setCreds]        = useState<Credentials | null>(null);
+  const [credsCopied,  setCredsCopied]  = useState<Record<string, boolean>>({});
 
   const [delOpen,    setDelOpen]    = useState(false);
   const [delVisible, setDelVisible] = useState(false);
@@ -261,7 +262,6 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
       academy: player.academy ?? '',
       notes: player.notes ?? '',
       photoUrl: player.photoUrl ?? '',
-      email: '', password: '',
     });
     setEditErrors({});
     setEditOpen(true);
@@ -277,8 +277,32 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
   };
   const closeCreate = () => { setCreateVisible(false); setTimeout(() => setCreateOpen(false), 200); };
 
+  const openCreds = (data: Credentials) => {
+    setCreds(data);
+    setCredsCopied({});
+    setCredsOpen(true);
+    setTimeout(() => setCredsVisible(true), 10);
+  };
+  const closeCreds = () => {
+    setCredsVisible(false);
+    setTimeout(() => { setCredsOpen(false); setCreds(null); }, 200);
+  };
+  const copyField = (key: string, value: string) => {
+    navigator.clipboard.writeText(value);
+    setCredsCopied(prev => ({ ...prev, [key]: true }));
+    setTimeout(() => setCredsCopied(prev => ({ ...prev, [key]: false })), 2000);
+  };
+
+  const resetPlayerPassword = async (playerId: number) => {
+    const res = await fetch(`/api/backend/players/${playerId}/reset-password`, { method: 'POST' });
+    if (res.ok) {
+      openCreds(await res.json());
+      closeEdit();
+    }
+  };
+
   const handleEditSubmit = async () => {
-    const errs = validateForm(editForm, true);
+    const errs = validateForm(editForm);
     if (Object.keys(errs).length > 0) { setEditErrors(errs); return; }
     const body: Record<string, unknown> = {
       first_name: editForm.prenom, last_name: editForm.nom,
@@ -306,7 +330,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
   };
 
   const handleCreateSubmit = async () => {
-    const errs = validateForm(createForm, false);
+    const errs = validateForm(createForm);
     if (Object.keys(errs).length > 0) { setCreateErrors(errs); return; }
     const res = await fetch('/api/backend/players', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -323,16 +347,16 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
         return_date_estimate: createForm.returnDate || null,
         contract_end_date: createForm.contract || null,
         academy: createForm.academy || null, notes: createForm.notes || null,
-        email: createForm.email, password: createForm.password,
       }),
     });
     if (res.ok) {
       const created = await res.json();
       setPlayers(prev => [...prev, playerFromApi(created)]);
       closeCreate();
+      openCreds({ username: created.username, temp_password: created.temp_password });
     } else {
       const err = await res.json().catch(() => ({}));
-      setCreateErrors({ email: err.detail ?? 'Erreur lors de la création.' });
+      setCreateErrors({ prenom: err.detail ?? 'Erreur lors de la création.' });
     }
   };
 
@@ -504,19 +528,23 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
           </div>
         </div>
 
-        {/* Compte — création seulement */}
+        {/* Compte — aperçu à la création */}
         {!isEdit && (
-          <div className="space-y-4 pt-2 border-t border-outline-variant">
-            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Compte d&apos;accès <span className="text-error font-normal normal-case">— obligatoire</span></p>
-            <div>
-              <label className={labelCls}>Email <span className="text-error">*</span></label>
-              <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className={inputCls(errors.email)} placeholder="joueur@club.com" />
-              {errors.email && <p className="text-xs text-error mt-1">{errors.email}</p>}
-            </div>
-            <div>
-              <label className={labelCls}>Mot de passe <span className="text-error">*</span></label>
-              <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className={inputCls(errors.password)} placeholder="Minimum 6 caractères" />
-              {errors.password && <p className="text-xs text-error mt-1">{errors.password}</p>}
+          <div className="space-y-3 pt-2 border-t border-outline-variant">
+            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Compte d&apos;accès</p>
+            <div className="flex items-center gap-3 p-4 bg-surface-container rounded-xl border border-outline-variant">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <KeyRound size={18} className="text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-on-surface">
+                  {form.prenom && form.nom
+                    ? `${form.prenom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}.${form.nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}`
+                    : 'prenom.nom'}
+                </p>
+                <p className="text-xs text-on-surface-variant">Identifiant généré automatiquement</p>
+              </div>
+              <p className="text-xs text-on-surface-variant/60 shrink-0">Mot de passe temporaire affiché après création</p>
             </div>
           </div>
         )}
@@ -764,6 +792,10 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   <Trash2 size={16} /> Supprimer le joueur
                 </button>
                 <div className="flex items-center gap-2">
+                  <button onClick={() => editingPlayerId && resetPlayerPassword(editingPlayerId)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">
+                    <KeyRound size={15} /> Réinitialiser le mot de passe
+                  </button>
                   <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                   <button onClick={handleEditSubmit} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
                 </div>
@@ -787,6 +819,49 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
               <div className="flex items-center justify-end px-7 py-5 border-t border-outline-variant shrink-0 gap-2">
                 <button onClick={closeCreate} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                 <button onClick={handleCreateSubmit} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.players.addTitle}</button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Modal identifiants ── */}
+      {credsOpen && creds && (
+        <>
+          <div className={`fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm transition-opacity duration-200 ${credsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-6 pointer-events-none">
+            <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto transition-all duration-200 ${credsVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} overflow-hidden`}>
+              <div className="bg-primary/5 border-b border-primary/20 px-7 py-5 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <KeyRound size={24} className="text-primary" />
+                </div>
+                <div>
+                  <p className="text-lg font-bold text-on-surface">Identifiants du joueur</p>
+                  <p className="text-sm text-on-surface-variant">À communiquer en main propre — affiché une seule fois</p>
+                </div>
+              </div>
+              <div className="px-7 py-6 space-y-4">
+                {([
+                  { label: 'Identifiant', key: 'username', value: creds.username },
+                  { label: 'Mot de passe temporaire', key: 'password', value: creds.temp_password },
+                ] as const).map(item => (
+                  <div key={item.key} className="space-y-1.5">
+                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{item.label}</p>
+                    <div className="flex items-center gap-2 p-3 bg-surface-container rounded-xl border border-outline-variant">
+                      <code className="flex-1 text-base font-mono text-on-surface">{item.value}</code>
+                      <button onClick={() => copyField(item.key, item.value)}
+                        className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors shrink-0">
+                        {credsCopied[item.key] ? <Check size={16} className="text-secondary" /> : <Copy size={16} className="text-on-surface-variant" />}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <p className="text-xs text-on-surface-variant leading-relaxed">Le joueur devra changer son mot de passe dès la première connexion.</p>
+              </div>
+              <div className="flex justify-end px-7 pb-6">
+                <button onClick={closeCreds} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">
+                  Fermer
+                </button>
               </div>
             </div>
           </div>

@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,12 +20,17 @@ export default function LoginPage() {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username: username.trim().toLowerCase(), password }),
     });
     if (res.ok) {
-      router.push('/dashboard');
+      const data = await res.json();
+      if (data.user?.must_change_password) {
+        router.push('/change-password');
+      } else {
+        router.push('/dashboard');
+      }
     } else {
-      setError('Email ou mot de passe incorrect.');
+      setError('Identifiant ou mot de passe incorrect.');
     }
     setLoading(false);
   };
@@ -48,7 +53,7 @@ export default function LoginPage() {
           <p className="text-secondary-fixed-dim text-2xl font-bold">Elite</p>
         </div>
         <div className="absolute bottom-12 left-0 right-0 text-center px-8">
-          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">TeamPilot AI</h1>
+          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">Teampilot AI</h1>
           <p className="text-outline-variant text-sm leading-relaxed">Elite Tactical Control. Master the pitch with automated intelligence.</p>
         </div>
       </section>
@@ -56,15 +61,13 @@ export default function LoginPage() {
       {/* Panneau droit*/}
       <main className="w-full lg:w-1/2 h-screen flex flex-col bg-surface px-16 py-12">
 
-        {/* Logo — haut gauche */}
         <div className="flex items-center gap-3 shrink-0">
           <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-md">
             <Image src="/logo-icon.png" alt="TeamPilot" width={32} height={32} />
           </div>
-          <span className="text-2xl font-bold text-on-surface">TeamPilot AI</span>
+          <span className="text-2xl font-bold text-on-surface">Teampilot AI</span>
         </div>
 
-        {/* Contenu centré verticalement et horizontalement */}
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="w-full max-w-lg">
 
@@ -80,19 +83,20 @@ export default function LoginPage() {
             <form className="space-y-7" onSubmit={handleSubmit}>
 
               <div className="space-y-2">
-                <label htmlFor="email" className="text-xs font-semibold text-on-surface-variant uppercase tracking-widest block">
-                  Manager Email
+                <label htmlFor="username" className="text-xs font-semibold text-on-surface-variant uppercase tracking-widest block">
+                  Identifiant
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-outline" size={20} />
+                  <User className="absolute left-5 top-1/2 -translate-y-1/2 text-outline" size={20} />
                   <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    id="username"
+                    name="username"
+                    type="text"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
                     required
-                    placeholder="manager@teampilot.ai"
+                    placeholder="prenom.nom"
+                    autoComplete="username"
                     className="w-full pl-14 pr-5 py-5 bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all text-base text-on-surface outline-none placeholder:text-outline"
                   />
                 </div>
@@ -100,7 +104,7 @@ export default function LoginPage() {
 
               <div className="space-y-2">
                 <label htmlFor="password" className="text-xs font-semibold text-on-surface-variant uppercase tracking-widest block">
-                  Password
+                  Mot de passe
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-outline" size={20} />
@@ -112,6 +116,7 @@ export default function LoginPage() {
                     onChange={e => setPassword(e.target.value)}
                     required
                     placeholder="••••••••"
+                    autoComplete="current-password"
                     className="w-full pl-14 pr-14 py-5 bg-surface-container-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all text-base text-on-surface outline-none placeholder:text-outline"
                   />
                   <button
@@ -133,15 +138,15 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full py-5 bg-primary hover:bg-primary/90 text-white text-lg font-semibold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Connexion...' : 'Sign In to Dashboard'}
+                {loading ? 'Connexion...' : 'Se connecter'}
                 {!loading && <ArrowRight size={20} />}
               </button>
 
             </form>
 
             <p className="mt-8 text-sm text-on-surface-variant text-center">
-              New to the platform?{' '}
-              <a href="#" className="text-primary font-bold hover:underline">Request a Demo</a>
+              Identifiant oublié ?{' '}
+              <span className="text-primary font-bold">Contactez votre administrateur.</span>
             </p>
 
           </div>

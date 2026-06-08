@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Pencil, UserPlus, CalendarPlus, Search, X, Trash2, Upload, Plus, AlertTriangle, ChevronRight, ShieldCheck } from 'lucide-react';
+import { Pencil, UserPlus, CalendarPlus, Search, X, Trash2, Upload, Plus, AlertTriangle, ChevronRight, ShieldCheck, Copy, Check, KeyRound } from 'lucide-react';
 import { useT } from '@/contexts/LanguageContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -31,9 +31,11 @@ type StaffForm = {
   prenom: string; nom: string; role: string;
   email: string; phone: string; since: string;
   photoUrl: string; notes: string;
-  password: string; isAdmin: boolean;
+  isAdmin: boolean;
 };
-type StaffErrors = Partial<Record<'prenom' | 'nom' | 'role' | 'email' | 'password', string>>;
+type StaffErrors = Partial<Record<'prenom' | 'nom' | 'role' | 'email', string>>;
+
+type Credentials = { username: string; temp_password: string };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -53,7 +55,7 @@ const SS: Record<SaisonStatus, { active: string; hover: string; badge: string; t
 
 const EMPTY_CLUB: ClubData = { nom: '', annee: '', ligue: '', email: '', phone: '', adresse: '', ville: '', logoUrl: '' };
 const EMPTY_SAISON: SaisonData = { debut: '', fin: '', competitions: '', objectif: '', statut: 'En cours' };
-const EMPTY_STAFF: StaffForm = { prenom: '', nom: '', role: '', email: '', phone: '', since: '', photoUrl: '', notes: '', password: '', isAdmin: false };
+const EMPTY_STAFF: StaffForm = { prenom: '', nom: '', role: '', email: '', phone: '', since: '', photoUrl: '', notes: '', isAdmin: false };
 
 const inputCls = (err?: string) =>
   `w-full px-4 py-3 bg-surface-container border ${err ? 'border-error' : 'border-outline-variant'} rounded-xl text-base text-on-surface outline-none focus:ring-2 focus:ring-primary transition-all`;
@@ -105,6 +107,11 @@ export default function AdministrationMobile() {
   const [editErrors,  setEditErrors]  = useState<StaffErrors>({});
   const [editingId,   setEditingId]   = useState<number | null>(null);
   const editPhotoRef = useRef<HTMLInputElement>(null);
+
+  const [credsOpen,    setCredsOpen]    = useState(false);
+  const [credsVisible, setCredsVisible] = useState(false);
+  const [creds,        setCreds]        = useState<Credentials | null>(null);
+  const [credsCopied,  setCredsCopied]  = useState<Record<string, boolean>>({});
 
   const [delOpen,    setDelOpen]    = useState(false);
   const [delVisible, setDelVisible] = useState(false);
@@ -199,18 +206,43 @@ export default function AdministrationMobile() {
 
   const openAdd  = () => { setAddForm(EMPTY_STAFF); setAddErrors({}); setAddOpen(true); setTimeout(() => setAddVisible(true), 10); };
   const closeAdd = () => { setAddVisible(false); setTimeout(() => setAddOpen(false), 200); };
+  const openCreds = (data: Credentials) => {
+    setCreds(data);
+    setCredsCopied({});
+    setCredsOpen(true);
+    setTimeout(() => setCredsVisible(true), 10);
+  };
+  const closeCreds = () => {
+    setCredsVisible(false);
+    setTimeout(() => { setCredsOpen(false); setCreds(null); }, 200);
+  };
+  const copyField = (key: string, value: string) => {
+    navigator.clipboard.writeText(value);
+    setCredsCopied(prev => ({ ...prev, [key]: true }));
+    setTimeout(() => setCredsCopied(prev => ({ ...prev, [key]: false })), 2000);
+  };
+
+  const resetStaffPassword = async (staffId: number) => {
+    const res = await fetch(`/api/backend/staff/${staffId}/reset-password`, { method: 'POST' });
+    if (res.ok) {
+      openCreds(await res.json());
+      closeEdit();
+    }
+  };
+
   const submitAdd = async () => {
     const e = validateStaff(addForm, false);
     if (Object.keys(e).length) { setAddErrors(e); return; }
     const res = await fetch('/api/backend/staff', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ first_name: addForm.prenom, last_name: addForm.nom, role: addForm.role, email: addForm.email, phone: addForm.phone || null, since_date: addForm.since || null, notes: addForm.notes || null, is_admin: addForm.isAdmin, password: addForm.password }),
+      body: JSON.stringify({ first_name: addForm.prenom, last_name: addForm.nom, role: addForm.role, email: addForm.email, phone: addForm.phone || null, since_date: addForm.since || null, notes: addForm.notes || null, is_admin: addForm.isAdmin }),
     });
     if (res.ok) {
       const created = await res.json();
       setStaff(prev => [...prev, staffFromApi(created)]);
       closeAdd();
+      openCreds({ username: created.username, temp_password: created.temp_password });
     } else {
       const err = await res.json().catch(() => ({}));
       setAddErrors({ email: err.detail ?? 'Erreur lors de la création.' });
@@ -221,7 +253,7 @@ export default function AdministrationMobile() {
 
   const openEdit = (m: StaffMember) => {
     setEditingId(m.id);
-    setEditForm({ prenom: m.prenom, nom: m.nom, role: m.role, email: m.email, phone: m.phone, since: m.since, photoUrl: m.photoUrl ?? '', notes: m.notes ?? '', password: '', isAdmin: m.isAdmin });
+    setEditForm({ prenom: m.prenom, nom: m.nom, role: m.role, email: m.email, phone: m.phone, since: m.since, photoUrl: m.photoUrl ?? '', notes: m.notes ?? '', isAdmin: m.isAdmin });
     setEditErrors({});
     setEditOpen(true);
     setTimeout(() => setEditVisible(true), 10);
@@ -230,8 +262,7 @@ export default function AdministrationMobile() {
   const submitEdit = async () => {
     const e = validateStaff(editForm, true);
     if (Object.keys(e).length) { setEditErrors(e); return; }
-    const body: Record<string, unknown> = { first_name: editForm.prenom, last_name: editForm.nom, role: editForm.role, email: editForm.email, phone: editForm.phone || null, since_date: editForm.since || null, notes: editForm.notes || null, is_admin: editForm.isAdmin };
-    if (editForm.password) body.password = editForm.password;
+    const body = { first_name: editForm.prenom, last_name: editForm.nom, role: editForm.role, email: editForm.email, phone: editForm.phone || null, since_date: editForm.since || null, notes: editForm.notes || null, is_admin: editForm.isAdmin };
     const res = await fetch(`/api/backend/staff/${editingId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -278,7 +309,7 @@ export default function AdministrationMobile() {
     if (!f.nom.trim())    e.nom    = 'Champ obligatoire';
     if (!f.role)          e.role   = 'Champ obligatoire';
     if (!f.email.trim())  e.email  = 'Champ obligatoire';
-    if (!isEdit && !f.password.trim()) e.password = 'Mot de passe obligatoire';
+    void isEdit;
     return e;
   }
 
@@ -356,15 +387,21 @@ export default function AdministrationMobile() {
         {/* Accès & Sécurité */}
         <div className="space-y-4 pt-2 border-t border-outline-variant">
           <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Accès &amp; Sécurité</p>
-          <div>
-            <label className={labelCls}>
-              Mot de passe {isEdit
-                ? <span className="font-normal normal-case opacity-60">(vide = inchangé)</span>
-                : <span className="text-error">*</span>}
-            </label>
-            <input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} className={inputCls(errors.password)} placeholder={isEdit ? '••••••••' : 'Minimum 6 caractères'} />
-            {errors.password && <p className="text-xs text-error mt-1">{errors.password}</p>}
-          </div>
+          {!isEdit && (
+            <div className="flex items-center gap-3 p-3 bg-surface-container rounded-xl border border-outline-variant">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <KeyRound size={15} className="text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-on-surface">
+                  {form.prenom && form.nom
+                    ? `${form.prenom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}.${form.nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}`
+                    : 'prenom.nom'}
+                </p>
+                <p className="text-xs text-on-surface-variant">Mot de passe temporaire affiché après création</p>
+              </div>
+            </div>
+          )}
           <label className="flex items-center gap-3 cursor-pointer select-none">
             <div onClick={() => setForm(f => ({ ...f, isAdmin: !f.isAdmin }))} className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${form.isAdmin ? 'bg-[#B45309]' : 'bg-outline-variant'}`}>
               <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${form.isAdmin ? 'translate-x-5' : 'translate-x-0.5'}`} />
@@ -738,9 +775,56 @@ export default function AdministrationMobile() {
                   <Trash2 size={15} /> {t.common.delete}
                 </button>
                 <div className="flex items-center gap-2">
+                  <button onClick={() => editingId && resetStaffPassword(editingId)}
+                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold text-sm">
+                    <KeyRound size={14} /> MDP
+                  </button>
                   <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                   <button onClick={submitEdit} className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Modal identifiants ── */}
+      {credsOpen && creds && (
+        <>
+          <div className={`fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm transition-opacity duration-200 ${credsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
+          <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 pointer-events-none">
+            <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-sm pointer-events-auto transition-all duration-200 ${credsVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} overflow-hidden`}>
+              <div className="bg-primary/5 border-b border-primary/20 px-5 py-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <KeyRound size={20} className="text-primary" />
+                </div>
+                <div>
+                  <p className="text-base font-bold text-on-surface">Identifiants du membre</p>
+                  <p className="text-xs text-on-surface-variant">À communiquer en main propre</p>
+                </div>
+              </div>
+              <div className="px-5 py-5 space-y-4">
+                {([
+                  { label: 'Identifiant', key: 'username', value: creds.username },
+                  { label: 'Mot de passe temporaire', key: 'password', value: creds.temp_password },
+                ] as const).map(item => (
+                  <div key={item.key} className="space-y-1.5">
+                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{item.label}</p>
+                    <div className="flex items-center gap-2 p-3 bg-surface-container rounded-xl border border-outline-variant">
+                      <code className="flex-1 text-base font-mono text-on-surface">{item.value}</code>
+                      <button onClick={() => copyField(item.key, item.value)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors shrink-0">
+                        {credsCopied[item.key] ? <Check size={15} className="text-secondary" /> : <Copy size={15} className="text-on-surface-variant" />}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <p className="text-xs text-on-surface-variant">Le membre devra changer son mot de passe à la première connexion.</p>
+              </div>
+              <div className="flex justify-end px-5 pb-5">
+                <button onClick={closeCreds} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">
+                  Fermer
+                </button>
               </div>
             </div>
           </div>

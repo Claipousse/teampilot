@@ -1,5 +1,5 @@
 from typing import Literal
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 PlayerStatus = Literal["Disponible", "Blessé", "Suspendu", "Incertain"]
 
@@ -22,8 +22,6 @@ class PlayerCreate(BaseModel):
     contract_end_date: str | None = None
     academy: str | None = None
     notes: str | None = None
-    email: EmailStr
-    password: str
 
 
 class PlayerUpdate(BaseModel):
@@ -83,3 +81,8 @@ class PlayerRead(BaseModel):
     clean_sheets: int
     goals_conceded: int
     model_config = ConfigDict(from_attributes=True)
+
+
+class PlayerCreatedResponse(PlayerRead):
+    username: str
+    temp_password: str

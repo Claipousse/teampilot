@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Calendar, Users, MessageSquare, MapPin, ChevronRight, Shield, AlertTriangle } from 'lucide-react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +39,7 @@ export default function DashboardDesktop() {
   const { isAdmin } = useCurrentUser();
   const { user: auth } = useAuth();
   const t = useT();
+  const router = useRouter();
 
   const [kpis,        setKpis]        = useState({ total_players: 0, available_players: 0, upcoming_events_count: 0, unread_messages: 0 });
   const [upcoming,    setUpcoming]    = useState<any[]>([]);
@@ -86,18 +89,18 @@ export default function DashboardDesktop() {
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
         {([
-          { label: t.dashboard.kpiPlayers,  value: kpis.total_players,          sub: `${kpis.available_players} ${t.dashboard.kpiAvailable}`, Icon: Users,         accent: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/20' },
-          { label: t.dashboard.kpiEvents,   value: kpis.upcoming_events_count,  sub: t.dashboard.kpiUpcoming,                                  Icon: Calendar,      accent: 'text-secondary', bg: 'bg-secondary/5', border: 'border-secondary/20' },
-          { label: t.dashboard.kpiMessages, value: kpis.unread_messages,        sub: t.dashboard.kpiUnread,                                    Icon: MessageSquare, accent: 'text-error',     bg: 'bg-error/5',     border: 'border-error/20' },
+          { label: t.dashboard.kpiPlayers,  value: kpis.total_players,          sub: `${kpis.available_players} ${t.dashboard.kpiAvailable}`, Icon: Users,         accent: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/20',   href: '/joueurs' },
+          { label: t.dashboard.kpiEvents,   value: kpis.upcoming_events_count,  sub: t.dashboard.kpiUpcoming,                                  Icon: Calendar,      accent: 'text-secondary', bg: 'bg-secondary/5', border: 'border-secondary/20', href: '/calendrier' },
+          { label: t.dashboard.kpiMessages, value: kpis.unread_messages,        sub: t.dashboard.kpiUnread,                                    Icon: MessageSquare, accent: 'text-error',     bg: 'bg-error/5',     border: 'border-error/20',     href: '/messagerie' },
         ] as const).map(kpi => (
-          <div key={kpi.label} className={`${kpi.bg} border ${kpi.border} rounded-2xl p-5 flex flex-col gap-2`}>
+          <Link key={kpi.label} href={kpi.href} className={`${kpi.bg} border ${kpi.border} rounded-2xl p-5 flex flex-col gap-2 hover:brightness-[0.97] transition-all`}>
             <div className="flex items-center justify-between">
               <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{kpi.label}</p>
               <kpi.Icon size={18} className={kpi.accent} />
             </div>
             <p className={`text-4xl font-extrabold leading-none ${kpi.accent}`}>{kpi.value}</p>
             <p className="text-sm text-on-surface-variant">{kpi.sub}</p>
-          </div>
+          </Link>
         ))}
       </div>
 
@@ -110,9 +113,9 @@ export default function DashboardDesktop() {
               <Calendar size={20} className="text-primary" />
               <h2 className="text-lg font-bold text-on-surface">{t.dashboard.upcomingEvents}</h2>
             </div>
-            <a href="/calendrier" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+            <Link href="/calendrier" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
               {t.dashboard.viewCalendar} <ChevronRight size={14} />
-            </a>
+            </Link>
           </div>
           {upcoming.length === 0 ? (
             <p className="text-sm text-on-surface-variant text-center py-6">Aucun événement à venir</p>
@@ -121,7 +124,7 @@ export default function DashboardDesktop() {
               {upcoming.map((ev: any) => {
                 const ts = TAG_STYLE[ev.tag as EventTag] ?? TAG_STYLE['Réunion'];
                 return (
-                  <div key={ev.id} className={`flex items-center gap-4 p-4 rounded-xl ${ts.border} bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer`}>
+                  <div key={ev.id} onClick={() => router.push(`/calendrier?eventId=${ev.id}`)} className={`flex items-center gap-4 p-4 rounded-xl ${ts.border} bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer`}>
                     <div className="shrink-0 w-14 text-center">
                       <p className="text-xs font-bold text-on-surface-variant">{fmtEventDate(ev.event_date)}</p>
                       <p className="text-base font-extrabold text-on-surface leading-tight">{ev.event_time}</p>
@@ -149,16 +152,16 @@ export default function DashboardDesktop() {
               <MessageSquare size={20} className="text-on-surface-variant" />
               <h2 className="text-lg font-bold text-on-surface">{t.dashboard.recentMessages}</h2>
             </div>
-            <a href="/messagerie" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+            <Link href="/messagerie" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
               {t.dashboard.viewAll} <ChevronRight size={14} />
-            </a>
+            </Link>
           </div>
           {recentConvs.length === 0 ? (
             <p className="text-sm text-on-surface-variant text-center py-4">Aucun message</p>
           ) : (
             <div className="space-y-3">
               {recentConvs.map((conv: any) => (
-                <a key={conv.id} href="/messagerie"
+                <Link key={conv.id} href="/messagerie"
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-surface-container transition-colors">
                   <div className={`w-10 h-10 rounded-full ${conv.avatar_bg} flex items-center justify-center shrink-0`}>
                     <span className={`font-bold text-sm ${conv.is_ai ? 'text-white' : 'text-on-surface-variant'}`}>{conv.initials}</span>
@@ -168,7 +171,7 @@ export default function DashboardDesktop() {
                     <p className="text-xs text-on-surface-variant truncate">{conv.preview}</p>
                   </div>
                   <span className="text-xs text-on-surface-variant shrink-0">{conv.time}</span>
-                </a>
+                </Link>
               ))}
             </div>
           )}
@@ -185,9 +188,9 @@ export default function DashboardDesktop() {
               {unavailable.length} {unavailable.length > 1 ? t.dashboard.affectedPlural : t.dashboard.affected}
             </span>
           </div>
-          <a href="/joueurs" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+          <Link href="/joueurs" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
             {t.dashboard.viewPlayersList} <ChevronRight size={14} />
-          </a>
+          </Link>
         </div>
         {unavailable.length === 0 ? (
           <p className="text-sm text-on-surface-variant text-center py-4">Tous les joueurs sont disponibles</p>
@@ -229,9 +232,9 @@ export default function DashboardDesktop() {
               <h2 className="text-lg font-bold text-on-surface">{t.dashboard.adminPanel}</h2>
               <p className="text-xs text-on-surface-variant">{t.dashboard.adminOnly}</p>
             </div>
-            <a href="/administration" className="ml-auto text-sm font-semibold text-error/80 hover:underline flex items-center gap-1">
+            <Link href="/administration" className="ml-auto text-sm font-semibold text-error/80 hover:underline flex items-center gap-1">
               {t.common.manage} <ChevronRight size={14} />
-            </a>
+            </Link>
           </div>
           <div className="grid grid-cols-3 gap-4">
 

@@ -7,7 +7,8 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    username: Mapped[str | None] = mapped_column(String, unique=True, index=True, nullable=True)
+    email: Mapped[str | None] = mapped_column(String, unique=True, index=True, nullable=True)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     first_name: Mapped[str] = mapped_column(String, nullable=False)
     last_name: Mapped[str] = mapped_column(String, nullable=False)
@@ -15,9 +16,9 @@ class User(Base):
     type: Mapped[str] = mapped_column(
         Enum("player", "staff", name="user_type"), nullable=False
     )
-    # FKs ajoutées en Phase 3 quand les tables players/staff existent
     player_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     staff_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    must_change_password: Mapped[bool] = mapped_column(Boolean, default=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(

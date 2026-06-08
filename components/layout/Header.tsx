@@ -6,7 +6,6 @@ import { Search, Bell, X, LogOut, KeyRound } from 'lucide-react';
 import { useLanguage, useT } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 
-type SearchTab = 'Joueurs' | 'Événements' | 'Messages';
 type NotifKind = 'added' | 'rescheduled' | 'cancelled' | 'message';
 
 type NotifEvent = {
@@ -33,7 +32,16 @@ function msgDotClass(tag: string | null): string {
   return 'bg-[#F97316]'; // staff
 }
 
-const SEARCH_TABS: SearchTab[] = ['Joueurs', 'Événements', 'Messages'];
+type PlayerResult = { id: number; first_name: string; last_name: string; shirt_number: number; position: string; position_short: string; nationality_flag?: string };
+type EventResult  = { id: number; title: string; tag: string; event_date: string };
+type ConvoResult  = { id: number; name: string; category: string };
+
+function evtTagColor(tag: string): string {
+  if (tag === 'Match')        return 'bg-error';
+  if (tag === 'Entraînement') return 'bg-primary';
+  if (tag === 'Récupération') return 'bg-secondary';
+  return 'bg-outline';
+}
 
 function fmtNotifTime(createdAt: string): string {
   const dt = new Date(createdAt);
@@ -51,9 +59,12 @@ function fmtNotifTime(createdAt: string): string {
 const MAX_VISIBLE = 3;
 
 export default function Header() {
-  const [searchTab,   setSearchTab]   = useState<SearchTab>('Joueurs');
-  const [query,       setQuery]       = useState('');
-  const [searchOpen,  setSearchOpen]  = useState(false);
+  const [query,          setQuery]          = useState('');
+  const [searchOpen,     setSearchOpen]     = useState(false);
+  const [searchPlayers,  setSearchPlayers]  = useState<PlayerResult[]>([]);
+  const [searchEvents,   setSearchEvents]   = useState<EventResult[]>([]);
+  const [searchConvos,   setSearchConvos]   = useState<ConvoResult[]>([]);
+  const [searchLoading,  setSearchLoading]  = useState(false);
   const [langOpen,    setLangOpen]    = useState(false);
   const [notifOpen,   setNotifOpen]   = useState(false);
   const [notifTab,    setNotifTab]    = useState<'events' | 'messages'>('events');
@@ -78,6 +89,39 @@ export default function Header() {
       .then((data: NotifEvent[]) => setEvents(data))
       .catch(err => console.warn('[notifications] fetch failed:', err));
   }, [user?.id]);
+
+  useEffect(() => {
+    if (query.length < 2) {
+      setSearchPlayers([]); setSearchEvents([]); setSearchConvos([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setSearchLoading(true);
+      const q = query.toLowerCase();
+      try {
+        const [pRes, eRes, mRes] = await Promise.all([
+          fetch('/api/backend/players'),
+          fetch('/api/backend/events'),
+          fetch('/api/backend/messages/conversations'),
+        ]);
+        if (pRes.ok) {
+          const all: PlayerResult[] = await pRes.json();
+          setSearchPlayers(all.filter(p => `${p.first_name} ${p.last_name}`.toLowerCase().includes(q)).slice(0, 6));
+        }
+        if (eRes.ok) {
+          const all: EventResult[] = await eRes.json();
+          setSearchEvents(all.filter(e => e.title.toLowerCase().includes(q)).slice(0, 6));
+        }
+        if (mRes.ok) {
+          const all: ConvoResult[] = await mRes.json();
+          setSearchConvos(all.filter(c => c.name.toLowerCase().includes(q)).slice(0, 6));
+        }
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const searchRef  = useRef<HTMLDivElement>(null);
   const langRef    = useRef<HTMLDivElement>(null);
@@ -114,11 +158,7 @@ export default function Header() {
   const visibleEvents = evtNotifs.slice(0, MAX_VISIBLE);
   const visibleMessages = msgNotifs.slice(0, MAX_VISIBLE);
 
-  const getSearchTabLabel = (tab: SearchTab) => {
-    if (tab === 'Joueurs')    return t.header.tabPlayers;
-    if (tab === 'Événements') return t.header.tabEvents;
-    return t.header.tabMessages;
-  };
+  const hasSearchResults = searchPlayers.length > 0 || searchEvents.length > 0 || searchConvos.length > 0;
 
   return (
     <header className="h-22 bg-surface-container-lowest border-b border-outline-variant flex items-center px-8 gap-4 shrink-0 relative z-30">
@@ -128,32 +168,70 @@ export default function Header() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-outline z-10 pointer-events-none" size={20} />
         <input
           type="text"
-          placeholder={t.header.searchPlaceholder[searchTab]}
+          placeholder="Rechercher joueurs, événements, messages…"
           value={query}
           onChange={e => setQuery(e.target.value)}
           onFocus={() => setSearchOpen(true)}
           className={`w-full pl-12 pr-4 py-3 bg-surface-container text-base text-on-surface placeholder:text-outline border border-outline-variant outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all ${searchOpen ? 'rounded-t-xl' : 'rounded-xl'}`}
         />
         {searchOpen && (
-          <div className="absolute top-full left-0 right-0 bg-surface-container-lowest border border-outline-variant border-t-0 rounded-b-xl shadow-xl z-50 overflow-hidden">
-            <div className="flex">
-              {SEARCH_TABS.map(tab => (
-                <button key={tab} onClick={() => { setSearchTab(tab); setQuery(''); }}
-                  className={`flex-1 py-2.5 text-sm font-bold transition-colors border-b-2 ${
-                    searchTab === tab
-                      ? 'text-primary border-primary bg-primary/5'
-                      : 'text-on-surface-variant border-transparent hover:text-on-surface hover:bg-surface-container'
-                  }`}>
-                  {getSearchTabLabel(tab)}
-                </button>
-              ))}
-            </div>
-            <div className="px-4 py-3 text-sm text-center min-h-[52px] flex items-center justify-center">
-              {query
-                ? <span className="text-on-surface-variant">{t.header.searchIn} <strong className="text-on-surface">&ldquo;{query}&rdquo;</strong> {t.header.searchIn} {getSearchTabLabel(searchTab).toLowerCase()}…{/* TODO backend: connecter la recherche par catégorie */}</span>
-                : <span className="text-on-surface-variant/60">{t.header.searchHint} {getSearchTabLabel(searchTab).toLowerCase()}</span>
-              }
-            </div>
+          <div className="absolute top-full left-0 right-0 bg-surface-container-lowest border border-outline-variant border-t-0 rounded-b-xl shadow-xl z-50 overflow-hidden max-h-[480px] overflow-y-auto">
+            {query.length < 2 ? (
+              <p className="px-4 py-4 text-sm text-center text-on-surface-variant/60">Tapez au moins 2 caractères pour rechercher</p>
+            ) : searchLoading ? (
+              <p className="px-4 py-4 text-sm text-center text-on-surface-variant/60">Recherche…</p>
+            ) : !hasSearchResults ? (
+              <p className="px-4 py-4 text-sm text-center text-on-surface-variant">Aucun résultat pour &ldquo;{query}&rdquo;</p>
+            ) : (
+              <>
+                {/* Joueurs */}
+                {searchPlayers.length > 0 && (
+                  <>
+                    <div className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container/60 border-b border-outline-variant/50">Joueurs</div>
+                    {searchPlayers.map(p => (
+                      <button key={p.id} onClick={() => { router.push('/joueurs'); setSearchOpen(false); setQuery(''); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-container transition-colors text-left">
+                        <span className="px-2 py-0.5 text-xs font-bold bg-primary/10 text-primary rounded-lg shrink-0">{p.position_short || '?'}</span>
+                        <span className="text-sm font-semibold text-on-surface">{p.first_name} {p.last_name}</span>
+                        <span className="text-xs text-on-surface-variant ml-auto shrink-0">#{p.shirt_number}</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+
+                {/* Événements */}
+                {searchEvents.length > 0 && (
+                  <>
+                    <div className={`px-4 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container/60 border-b border-outline-variant/50 ${searchPlayers.length > 0 ? 'border-t border-outline-variant/50' : ''}`}>Événements</div>
+                    {searchEvents.map(e => (
+                      <button key={e.id} onClick={() => { router.push(`/calendrier?eventId=${e.id}`); setSearchOpen(false); setQuery(''); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-container transition-colors text-left">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${evtTagColor(e.tag)}`} />
+                        <span className="text-sm font-semibold text-on-surface">{e.title}</span>
+                        <span className="text-xs text-on-surface-variant ml-auto shrink-0">{e.event_date ? new Date(e.event_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : ''}</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+
+                {/* Messages */}
+                {searchConvos.length > 0 && (
+                  <>
+                    <div className={`px-4 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container/60 border-b border-outline-variant/50 ${(searchPlayers.length > 0 || searchEvents.length > 0) ? 'border-t border-outline-variant/50' : ''}`}>Messages</div>
+                    {searchConvos.map(c => (
+                      <button key={c.id} onClick={() => { router.push('/messagerie'); setSearchOpen(false); setQuery(''); }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-container transition-colors text-left">
+                        <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <Search size={13} className="text-primary" />
+                        </span>
+                        <span className="text-sm font-semibold text-on-surface">{c.name}</span>
+                        <span className="text-xs text-on-surface-variant ml-auto shrink-0 capitalize">{c.category}</span>
+                      </button>
+                    ))}
+                  </>
+                )}
+              </>
+            )}
           </div>
         )}
       </div>
@@ -165,9 +243,10 @@ export default function Header() {
         <div ref={langRef} className="relative">
           <button
             onClick={() => { setLangOpen(v => !v); setNotifOpen(false); }}
-            className="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors text-2xl"
+            className="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors"
             title="Langue">
-            {lang === 'fr' ? '🇫🇷' : '🇬🇧'}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={lang === 'fr' ? 'https://flagcdn.com/w40/fr.png' : 'https://flagcdn.com/w40/gb.png'} alt={lang === 'fr' ? 'FR' : 'EN'} width={28} height={21} className="rounded-sm object-cover" />
           </button>
           {langOpen && (
             <div className="absolute top-full right-0 mt-2 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg overflow-hidden z-50 min-w-[148px]">
@@ -175,7 +254,8 @@ export default function Header() {
                 <button key={l}
                   onClick={() => { setLang(l); setLangOpen(false); }}
                   className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold hover:bg-surface-container transition-colors ${i > 0 ? 'border-t border-outline-variant' : ''} ${lang === l ? 'text-primary bg-primary/5' : 'text-on-surface'}`}>
-                  <span className="text-lg">{l === 'fr' ? '🇫🇷' : '🇬🇧'}</span>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={l === 'fr' ? 'https://flagcdn.com/w40/fr.png' : 'https://flagcdn.com/w40/gb.png'} alt={l === 'fr' ? 'FR' : 'EN'} width={24} height={18} className="rounded-sm object-cover shrink-0" />
                   {l === 'fr' ? t.header.langFr : t.header.langEn}
                   {lang === l && <span className="ml-auto w-2 h-2 rounded-full bg-primary shrink-0" />}
                 </button>

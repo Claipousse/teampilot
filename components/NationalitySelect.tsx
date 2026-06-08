@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 
 type Nat = { label: string; iso: string };
 
-// Module-level cache — fetched once per session
 let _cache: Nat[] | null = null;
 let _promise: Promise<Nat[]> | null = null;
 
@@ -37,10 +36,7 @@ export default function NationalitySelect({ value, iso, onChange, error }: Props
   const [open, setOpen]   = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    loadNationalities().then(setNats);
-  }, []);
-
+  useEffect(() => { loadNationalities().then(setNats); }, []);
   useEffect(() => { setQuery(value); }, [value]);
 
   useEffect(() => {
@@ -51,9 +47,9 @@ export default function NationalitySelect({ value, iso, onChange, error }: Props
     return () => document.removeEventListener('mousedown', down);
   }, []);
 
-  const filtered = nats
-    .filter(n => n.label.toLowerCase().includes(query.toLowerCase()))
-    .slice(0, 8);
+  const filtered = query
+    ? nats.filter(n => n.label.toLowerCase().includes(query.toLowerCase()))
+    : nats;
 
   const cls = `w-full py-3 pr-4 bg-surface-container border ${error ? 'border-error' : 'border-outline-variant'} rounded-xl text-base text-on-surface outline-none focus:ring-2 focus:ring-primary transition-all ${iso ? 'pl-10' : 'pl-4'}`;
 
@@ -74,13 +70,13 @@ export default function NationalitySelect({ value, iso, onChange, error }: Props
           type="text"
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
+          onFocus={e => { e.target.select(); setOpen(true); }}
           placeholder={nats.length === 0 ? 'Chargement…' : 'Ex : Français'}
           className={cls}
         />
       </div>
       {open && filtered.length > 0 && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg overflow-y-auto max-h-48">
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg overflow-y-auto max-h-52">
           {filtered.map(n => (
             <button
               key={n.iso}

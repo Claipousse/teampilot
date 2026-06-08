@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Pencil, Send, Trash2, Upload, AlertTriangle, Copy, Check, KeyRound } from 'lucide-react';
+import NationalitySelect from '@/components/NationalitySelect';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useT } from '@/contexts/LanguageContext';
 
@@ -270,13 +271,7 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
     setTimeout(() => setCredsCopied(prev => ({ ...prev, [key]: false })), 2000);
   };
 
-  const resetPlayerPassword = async (playerId: number) => {
-    const res = await fetch(`/api/backend/players/${playerId}/reset-password`, { method: 'POST' });
-    if (res.ok) {
-      openCreds(await res.json());
-      closeEdit();
-    }
-  };
+
 
   const handleEditSubmit = async () => {
     const errs = validateForm(editForm);
@@ -401,20 +396,12 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
             {errors.nom && <p className="text-xs text-error mt-1">{errors.nom}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelCls}>{t.players.formNumber} <span className="text-error">*</span></label>
-              <input type="number" min="0" max="99" value={form.number}
-                onChange={e => setForm(f => ({ ...f, number: e.target.value }))}
-                className={inputCls(errors.number)} placeholder="Ex : 8" />
-              {errors.number && <p className="text-xs text-error mt-1">{errors.number}</p>}
-            </div>
-            <div>
-              <label className={labelCls}>Drapeau</label>
-              <input type="text" value={form.flag}
-                onChange={e => setForm(f => ({ ...f, flag: e.target.value }))}
-                className={inputCls()} placeholder="🇫🇷" />
-            </div>
+          <div>
+            <label className={labelCls}>{t.players.formNumber} <span className="text-error">*</span></label>
+            <input type="number" min="0" max="99" value={form.number}
+              onChange={e => setForm(f => ({ ...f, number: e.target.value }))}
+              className={inputCls(errors.number)} placeholder="Ex : 8" />
+            {errors.number && <p className="text-xs text-error mt-1">{errors.number}</p>}
           </div>
 
           <div>
@@ -434,10 +421,12 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
 
           <div>
             <label className={labelCls}>{t.players.formNationality} <span className="text-error">*</span></label>
-            <input type="text" value={form.nationality}
-              onChange={e => setForm(f => ({ ...f, nationality: e.target.value }))}
-              className={inputCls(errors.nationality)} placeholder="Ex : Français" />
-            {errors.nationality && <p className="text-xs text-error mt-1">{errors.nationality}</p>}
+            <NationalitySelect
+              value={form.nationality}
+              iso={form.flag}
+              onChange={(label, iso) => setForm(f => ({ ...f, nationality: label, flag: iso }))}
+              error={errors.nationality}
+            />
           </div>
 
           <div>
@@ -620,7 +609,13 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                 <div className="flex-1 min-w-0">
                   <p className="text-xl font-bold text-on-surface">{player.name}</p>
                   <p className="text-base text-on-surface-variant">{player.position}</p>
-                  <p className="text-base text-on-surface-variant">{player.flag} {player.nationality}</p>
+                  <div className="flex items-center gap-1.5 text-base text-on-surface-variant">
+                    {player.flag && /^[a-z]{2}(-[a-z]{3})?$/.test(player.flag) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={`https://flagcdn.com/w20/${player.flag}.png`} alt="" width={20} height={15} className="rounded-sm object-cover shrink-0" />
+                    ) : (player.flag ? <span>{player.flag}</span> : null)}
+                    <span>{player.nationality}</span>
+                  </div>
                 </div>
                 <span className={`px-4 py-2 rounded-xl text-base font-extrabold shrink-0 ${s.badge}`}>
                   {t.players.statuses[player.status]}
@@ -703,7 +698,7 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                 <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.players.info}</p>
                 <div className="bg-surface-container rounded-2xl overflow-hidden divide-y divide-outline-variant/50">
                   {[
-                    { label: t.players.nationality, value: displayed.nationality ? `${displayed.flag} ${displayed.nationality}` : undefined },
+                    { label: t.players.nationality, value: displayed.nationality ?? undefined },
                     { label: t.players.dob,         value: displayed.dob },
                     { label: t.players.height,      value: displayed.height },
                     { label: t.players.weight,      value: displayed.weight },
@@ -808,10 +803,6 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                   <Trash2 size={15} /> Supprimer
                 </button>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => editingPlayerId && resetPlayerPassword(editingPlayerId)}
-                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold text-sm">
-                    <KeyRound size={14} /> MDP
-                  </button>
                   <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                   <button onClick={handleEditSubmit} className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
                 </div>

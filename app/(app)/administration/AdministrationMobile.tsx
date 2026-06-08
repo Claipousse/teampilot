@@ -36,6 +36,7 @@ type StaffForm = {
 type StaffErrors = Partial<Record<'prenom' | 'nom' | 'role' | 'email', string>>;
 
 type Credentials = { username: string; temp_password: string };
+type ResetUser = { id: number; type: 'player' | 'staff'; firstName: string; lastName: string; detail: string };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -112,6 +113,12 @@ export default function AdministrationMobile() {
   const [credsVisible, setCredsVisible] = useState(false);
   const [creds,        setCreds]        = useState<Credentials | null>(null);
   const [credsCopied,  setCredsCopied]  = useState<Record<string, boolean>>({});
+
+  const [resetPwdOpen,    setResetPwdOpen]    = useState(false);
+  const [resetPwdVisible, setResetPwdVisible] = useState(false);
+  const [resetUsers,      setResetUsers]      = useState<ResetUser[]>([]);
+  const [resetQuery,      setResetQuery]      = useState('');
+  const [resetingId,      setResetingId]      = useState<number | null>(null);
 
   const [delOpen,    setDelOpen]    = useState(false);
   const [delVisible, setDelVisible] = useState(false);
@@ -222,12 +229,33 @@ export default function AdministrationMobile() {
     setTimeout(() => setCredsCopied(prev => ({ ...prev, [key]: false })), 2000);
   };
 
-  const resetStaffPassword = async (staffId: number) => {
-    const res = await fetch(`/api/backend/staff/${staffId}/reset-password`, { method: 'POST' });
+  const openResetPwd = async () => {
+    const [playersRes, staffRes] = await Promise.all([
+      fetch('/api/backend/players'),
+      fetch('/api/backend/staff'),
+    ]);
+    const players: Record<string, unknown>[] = playersRes.ok ? await playersRes.json() : [];
+    const staffList: Record<string, unknown>[] = staffRes.ok ? await staffRes.json() : [];
+    setResetUsers([
+      ...players.map(p => ({ id: p.id as number, type: 'player' as const, firstName: p.first_name as string, lastName: p.last_name as string, detail: (p.position as string) ?? '' })),
+      ...staffList.map(s => ({ id: s.id as number, type: 'staff' as const, firstName: s.first_name as string, lastName: s.last_name as string, detail: (s.role as string) ?? '' })),
+    ]);
+    setResetQuery('');
+    setResetPwdOpen(true);
+    setTimeout(() => setResetPwdVisible(true), 10);
+  };
+  const closeResetPwd = () => { setResetPwdVisible(false); setTimeout(() => setResetPwdOpen(false), 200); };
+
+  const doResetPassword = async (id: number, type: 'player' | 'staff') => {
+    setResetingId(id);
+    const url = type === 'player' ? `/api/backend/players/${id}/reset-password` : `/api/backend/staff/${id}/reset-password`;
+    const res = await fetch(url, { method: 'POST' });
     if (res.ok) {
-      openCreds(await res.json());
-      closeEdit();
+      const data = await res.json();
+      closeResetPwd();
+      openCreds(data);
     }
+    setResetingId(null);
   };
 
   const submitAdd = async () => {
@@ -520,6 +548,16 @@ export default function AdministrationMobile() {
             </div>
             <ChevronRight size={18} className="text-on-surface-variant shrink-0" />
           </a>
+          <button onClick={openResetPwd} className="w-full flex items-center justify-between p-4 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors text-left">
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 bg-[#F97316]/10 rounded-xl flex items-center justify-center shrink-0"><KeyRound size={20} className="text-[#F97316]" /></div>
+              <div>
+                <p className="text-base font-bold text-on-surface">Réinitialiser un mot de passe</p>
+                <p className="text-sm text-on-surface-variant">Générer de nouveaux identifiants</p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-on-surface-variant shrink-0" />
+          </button>
         </div>
       </div>
 
@@ -775,10 +813,6 @@ export default function AdministrationMobile() {
                   <Trash2 size={15} /> {t.common.delete}
                 </button>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => editingId && resetStaffPassword(editingId)}
-                    className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold text-sm">
-                    <KeyRound size={14} /> MDP
-                  </button>
                   <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                   <button onClick={submitEdit} className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
                 </div>
@@ -789,6 +823,65 @@ export default function AdministrationMobile() {
       )}
 
       {/* ── Modal identifiants ── */}
+      {/* ── Modal réinitialiser un mot de passe ── */}
+      {resetPwdOpen && (
+        <>
+          <div className={`fixed inset-0 z-[75] bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${resetPwdVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={closeResetPwd} />
+          <div className="fixed inset-0 z-[75] flex items-end justify-center pointer-events-none">
+            <div className={`bg-surface-container-lowest rounded-t-2xl shadow-2xl w-full max-w-lg pointer-events-auto transition-all duration-200 ${resetPwdVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} flex flex-col max-h-[85vh]`}>
+              <div className="flex items-center justify-between px-5 py-4 border-b border-outline-variant shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-[#F97316]/10 flex items-center justify-center shrink-0">
+                    <KeyRound size={18} className="text-[#F97316]" />
+                  </div>
+                  <p className="text-base font-bold text-on-surface">Réinitialiser un mot de passe</p>
+                </div>
+                <button onClick={closeResetPwd} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
+                  <X size={16} className="text-on-surface-variant" />
+                </button>
+              </div>
+              <div className="px-5 py-3 border-b border-outline-variant shrink-0">
+                <div className="relative">
+                  <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline" />
+                  <input
+                    type="text"
+                    value={resetQuery}
+                    onChange={e => setResetQuery(e.target.value)}
+                    placeholder="Rechercher un membre..."
+                    className="w-full pl-9 pr-4 py-2.5 bg-surface-container border border-outline-variant rounded-xl text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary transition-all"
+                  />
+                </div>
+              </div>
+              <div className="overflow-y-auto flex-1 divide-y divide-outline-variant/50">
+                {resetUsers
+                  .filter(u => `${u.firstName} ${u.lastName}`.toLowerCase().includes(resetQuery.toLowerCase()) || u.detail.toLowerCase().includes(resetQuery.toLowerCase()))
+                  .map(u => (
+                    <div key={`${u.type}-${u.id}`} className="flex items-center justify-between px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 ${u.type === 'player' ? 'bg-secondary' : 'bg-primary'}`}>
+                          {u.firstName[0]}{u.lastName[0]}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-on-surface">{u.firstName} {u.lastName}</p>
+                          <p className="text-xs text-on-surface-variant">{u.detail} · {u.type === 'player' ? 'Joueur' : 'Staff'}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => doResetPassword(u.id, u.type)}
+                        disabled={resetingId === u.id}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#F97316] hover:bg-[#F97316]/10 transition-colors disabled:opacity-50 shrink-0"
+                      >
+                        <KeyRound size={12} />
+                        {resetingId === u.id ? '...' : 'Réinit.'}
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {credsOpen && creds && (
         <>
           <div className={`fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm transition-opacity duration-200 ${credsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />

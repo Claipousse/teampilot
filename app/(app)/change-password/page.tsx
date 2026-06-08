@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Lock, Eye, EyeOff, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function ChangePasswordPage() {
@@ -47,8 +47,18 @@ export default function ChangePasswordPage() {
     `w-full pl-12 pr-12 py-4 bg-surface-container border ${hasErr ? 'border-error' : 'border-outline-variant'} rounded-xl text-base text-on-surface outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all`;
 
   return (
-    <div className="h-screen overflow-hidden bg-surface flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-50 bg-surface flex items-center justify-center px-4 overflow-hidden">
       <div className="w-full max-w-md">
+
+        {!isForced && (
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors mb-5 group"
+          >
+            <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
+            <span className="text-sm font-semibold">Retour</span>
+          </button>
+        )}
 
         <div className="flex flex-col items-center mb-8">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">

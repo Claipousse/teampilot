@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, X, Pencil, Send, Trash2, Upload, AlertTriangle, Copy, Check, KeyRound } from 'lucide-react';
+import NationalitySelect from '@/components/NationalitySelect';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useT } from '@/contexts/LanguageContext';
 
@@ -293,14 +294,6 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
     setTimeout(() => setCredsCopied(prev => ({ ...prev, [key]: false })), 2000);
   };
 
-  const resetPlayerPassword = async (playerId: number) => {
-    const res = await fetch(`/api/backend/players/${playerId}/reset-password`, { method: 'POST' });
-    if (res.ok) {
-      openCreds(await res.json());
-      closeEdit();
-    }
-  };
-
   const handleEditSubmit = async () => {
     const errs = validateForm(editForm);
     if (Object.keys(errs).length > 0) { setEditErrors(errs); return; }
@@ -444,16 +437,14 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
               {errors.position && <p className="text-xs text-error mt-1">{errors.position}</p>}
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>{t.players.formNationality} <span className="text-error">*</span></label>
-              <input type="text" value={form.nationality} onChange={e => setForm(f => ({ ...f, nationality: e.target.value }))} className={inputCls(errors.nationality)} placeholder="Ex : Français" />
-              {errors.nationality && <p className="text-xs text-error mt-1">{errors.nationality}</p>}
-            </div>
-            <div>
-              <label className={labelCls}>Drapeau <span className="font-normal normal-case opacity-60">(emoji)</span></label>
-              <input type="text" value={form.flag} onChange={e => setForm(f => ({ ...f, flag: e.target.value }))} className={inputCls()} placeholder="Ex : 🇫🇷" />
-            </div>
+          <div>
+            <label className={labelCls}>{t.players.formNationality} <span className="text-error">*</span></label>
+            <NationalitySelect
+              value={form.nationality}
+              iso={form.flag}
+              onChange={(label, iso) => setForm(f => ({ ...f, nationality: label, flag: iso }))}
+              error={errors.nationality}
+            />
           </div>
           <div>
             <label className={labelCls}>{t.players.formStatus} <span className="text-error">*</span></label>
@@ -633,7 +624,13 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   <div className="flex-1 min-w-0">
                     <p className="text-xl font-bold text-on-surface">{player.name}</p>
                     <p className="text-base text-on-surface-variant">{player.position}</p>
-                    <p className="text-base text-on-surface-variant">{player.flag} {player.nationality}</p>
+                    <div className="flex items-center gap-1.5 text-base text-on-surface-variant">
+                      {player.flag && /^[a-z]{2}(-[a-z]{3})?$/.test(player.flag) ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={`https://flagcdn.com/w20/${player.flag}.png`} alt="" width={20} height={15} className="rounded-sm object-cover shrink-0" />
+                      ) : (player.flag ? <span>{player.flag}</span> : null)}
+                      <span>{player.nationality}</span>
+                    </div>
                   </div>
                   <span className={`px-4 py-2.5 rounded-xl text-base font-extrabold shrink-0 ${s.badge}`}>{t.players.statuses[player.status]}</span>
                 </div>
@@ -688,7 +685,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                     <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.players.info}</p>
                     <div className="bg-surface-container rounded-2xl overflow-hidden divide-y divide-outline-variant/50">
                       {[
-                        { label: t.players.nationality, value: displayed.nationality ? `${displayed.flag} ${displayed.nationality}` : undefined },
+                        { label: t.players.nationality, value: displayed.nationality ?? undefined },
                         { label: t.players.dob,         value: displayed.dob ? displayed.dob.split('-').reverse().join('/') : undefined },
                         { label: t.players.height,      value: displayed.height },
                         { label: t.players.weight,      value: displayed.weight },
@@ -792,10 +789,6 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   <Trash2 size={16} /> Supprimer le joueur
                 </button>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => editingPlayerId && resetPlayerPassword(editingPlayerId)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">
-                    <KeyRound size={15} /> Réinitialiser le mot de passe
-                  </button>
                   <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                   <button onClick={handleEditSubmit} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
                 </div>

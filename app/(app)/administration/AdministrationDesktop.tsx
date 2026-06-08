@@ -955,7 +955,7 @@ export default function AdministrationDesktop() {
                   .map(u => (
                     <div key={`${u.type}-${u.id}`} className="flex items-center justify-between px-6 py-3.5 hover:bg-surface-container/50 transition-colors">
                       <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 ${u.type === 'player' ? 'bg-secondary' : 'bg-primary'}`}>
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 ${u.type === 'player' ? 'bg-primary' : 'bg-secondary'}`}>
                           {u.firstName[0]}{u.lastName[0]}
                         </div>
                         <div>

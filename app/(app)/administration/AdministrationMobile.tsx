@@ -858,7 +858,7 @@ export default function AdministrationMobile() {
                   .map(u => (
                     <div key={`${u.type}-${u.id}`} className="flex items-center justify-between px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 ${u.type === 'player' ? 'bg-secondary' : 'bg-primary'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 ${u.type === 'player' ? 'bg-primary' : 'bg-secondary'}`}>
                           {u.firstName[0]}{u.lastName[0]}
                         </div>
                         <div>

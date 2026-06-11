@@ -1,95 +1,16 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Calendar, Users, MessageSquare, MapPin, ChevronRight, Shield, AlertTriangle } from 'lucide-react';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useAuth } from '@/contexts/AuthContext';
+import { useDashboard } from '@/hooks/useDashboard';
 import { useT } from '@/contexts/LanguageContext';
-
-type EventTag = 'Match' | 'Entraînement' | 'Récupération' | 'Réunion';
-
-const TAG_STYLE: Record<EventTag, { border: string; badge: string; text: string; dot: string }> = {
-  'Match':        { border: 'border-l-4 border-error',     badge: 'bg-error/10',     text: 'text-error',     dot: 'bg-error' },
-  'Entraînement': { border: 'border-l-4 border-primary',   badge: 'bg-primary/10',   text: 'text-primary',   dot: 'bg-primary' },
-  'Récupération': { border: 'border-l-4 border-secondary', badge: 'bg-secondary/10', text: 'text-secondary', dot: 'bg-secondary' },
-  'Réunion':      { border: 'border-l-4 border-outline',   badge: 'bg-surface-container', text: 'text-on-surface', dot: 'bg-outline' },
-};
-
-const STATUS_BADGE: Record<string, string> = {
-  'Blessé':    'bg-error/10 text-error',
-  'Suspendu':  'bg-[#F97316]/10 text-[#F97316]',
-  'Incertain': 'bg-primary/10 text-primary',
-};
-
-const PLAYER_STATUS: Record<string, { badge: string; dot: string; text: string }> = {
-  'Disponible': { badge: 'bg-secondary/10 text-secondary', dot: 'bg-secondary', text: 'text-secondary' },
-  'Blessé':     { badge: 'bg-error/10 text-error',         dot: 'bg-error',     text: 'text-error' },
-  'Suspendu':   { badge: 'bg-[#F97316]/10 text-[#F97316]', dot: 'bg-[#F97316]', text: 'text-[#F97316]' },
-  'Incertain':  { badge: 'bg-primary/10 text-primary',     dot: 'bg-primary',   text: 'text-primary' },
-};
-
-const SS_SEASON: Record<string, string> = {
-  'À venir':  'bg-[#F97316]/10 text-[#F97316]',
-  'En cours': 'bg-secondary/10 text-secondary',
-  'Terminée': 'bg-error/10 text-error',
-};
-
-function fmtEventDate(iso: string) {
-  const [, m, d] = iso.split('-');
-  return `${d}/${m}`;
-}
+import { TAG_STYLE, STATUS_BADGE, PLAYER_STATUS, SS_SEASON, fmtEventDate, type EventTag } from '@/lib/dashboardUtils';
 
 export default function DashboardMobile() {
-  const { isAdmin } = useCurrentUser();
-  const { user: auth, loading: authLoading } = useAuth();
   const t = useT();
   const router = useRouter();
-
-  const [kpis,        setKpis]        = useState({ total_players: 0, available_players: 0, upcoming_events_count: 0, unread_messages: 0 });
-  const [upcoming,    setUpcoming]    = useState<any[]>([]);
-  const [unavailable, setUnavailable] = useState<any[]>([]);
-  const [summary,     setSummary]     = useState<any>(null);
-  const [recentConvs, setRecentConvs] = useState<any[]>([]);
-  const [myPlayer,    setMyPlayer]    = useState<any>(null);
-  const [teammates,   setTeammates]   = useState<any[]>([]);
-
-  const fetchAll = useCallback(async () => {
-    const [kRes, uRes, unRes, mRes] = await Promise.all([
-      fetch('/api/backend/dashboard/kpis'),
-      fetch('/api/backend/dashboard/upcoming-events'),
-      fetch('/api/backend/dashboard/unavailable-players'),
-      fetch('/api/backend/messages/conversations'),
-    ]);
-    if (kRes.ok)  setKpis(await kRes.json());
-    if (uRes.ok)  setUpcoming(await uRes.json());
-    if (unRes.ok) setUnavailable(await unRes.json());
-    if (mRes.ok)  setRecentConvs((await mRes.json()).slice(0, 3));
-    if (isAdmin) {
-      const sRes = await fetch('/api/backend/dashboard/admin-summary');
-      if (sRes.ok) setSummary(await sRes.json());
-    }
-  }, [isAdmin]);
-
-  useEffect(() => { fetchAll(); }, [fetchAll]);
-
-  useEffect(() => {
-    if (auth?.type !== 'player') return;
-    fetch('/api/backend/players')
-      .then(r => r.ok ? r.json() : [])
-      .then((ps: any[]) => {
-        const me = auth.playerId
-          ? (ps.find((p: any) => p.id === auth.playerId) ?? ps.find((p: any) =>
-              p.first_name?.toLowerCase() === auth.firstName?.toLowerCase() &&
-              p.last_name?.toLowerCase() === auth.lastName?.toLowerCase()))
-          : ps.find((p: any) =>
-              p.first_name?.toLowerCase() === auth.firstName?.toLowerCase() &&
-              p.last_name?.toLowerCase() === auth.lastName?.toLowerCase());
-        setMyPlayer(me ?? null);
-        setTeammates(ps.filter((p: any) => p.id !== me?.id));
-      });
-  }, [auth?.type, auth?.playerId, auth?.firstName, auth?.lastName]);
+  const { upcoming, unavailable, summary, recentConvs, myPlayer, teammates, auth, authLoading, isAdmin } = useDashboard();
 
   if (authLoading) return null;
 
@@ -98,7 +19,7 @@ export default function DashboardMobile() {
   return (
     <div className="flex flex-col gap-6 pb-24">
 
-      {/* Header */}
+      {/* En-tête : titre + date */}
       <div>
         <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">{t.dashboard.pageTitle}</p>
         <h1 className="text-2xl font-extrabold text-on-surface tracking-tight">{t.dashboard.greeting}{firstName ? `, ${firstName}` : ''}</h1>
@@ -107,15 +28,12 @@ export default function DashboardMobile() {
         </p>
       </div>
 
+      {/* Vue joueur */}
       {auth?.type === 'player' ? (
         <>
-          {/* Carte profil joueur */}
+          {/* Carte profil */}
           <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
-
-            {/* Section identité */}
             <div className="flex items-center gap-4 px-5 py-5 border-b border-outline-variant">
-
-              {/* Avatar */}
               <div className="shrink-0">
                 <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center overflow-hidden border-4 border-surface shadow-sm">
                   {myPlayer?.photo_url
@@ -127,8 +45,6 @@ export default function DashboardMobile() {
                   }
                 </div>
               </div>
-
-              {/* Nom + détails */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h2 className="text-xl font-extrabold text-on-surface tracking-tight leading-tight">
@@ -139,9 +55,7 @@ export default function DashboardMobile() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  {myPlayer?.position && (
-                    <span className="text-xs font-semibold text-on-surface-variant">{myPlayer.position}</span>
-                  )}
+                  {myPlayer?.position && <span className="text-xs font-semibold text-on-surface-variant">{myPlayer.position}</span>}
                   {myPlayer?.status && (
                     <>
                       {myPlayer.position && <span className="text-outline text-xs">·</span>}
@@ -157,14 +71,12 @@ export default function DashboardMobile() {
                       <img src={`https://flagcdn.com/w20/${myPlayer.nationality_flag}.png`} alt="" width={16} height={12} className="rounded-sm" />
                     </>
                   )}
-                  {!myPlayer && (
-                    <span className="text-xs text-on-surface-variant">Chargement…</span>
-                  )}
+                  {!myPlayer && <span className="text-xs text-on-surface-variant">Chargement…</span>}
                 </div>
               </div>
             </div>
 
-            {/* Bande de stats */}
+            {/* Stats sur 2 rangées de 3 (mobile) */}
             <div className="grid grid-cols-3 divide-x divide-outline-variant border-b border-outline-variant">
               {([
                 { v: myPlayer?.matches,        label: t.players.matches },
@@ -191,78 +103,12 @@ export default function DashboardMobile() {
             </div>
           </div>
 
-          {/* Prochains événements */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Calendar size={18} className="text-primary" />
-                <h2 className="text-base font-bold text-on-surface">{t.dashboard.upcomingEvents}</h2>
-              </div>
-              <Link href="/calendrier" className="text-xs font-semibold text-primary flex items-center gap-0.5">
-                {t.dashboard.viewAll} <ChevronRight size={13} />
-              </Link>
-            </div>
-            {upcoming.length === 0 ? (
-              <p className="text-sm text-on-surface-variant text-center py-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">{t.dashboard.noUpcomingEvents}</p>
-            ) : (
-              <div className="space-y-2">
-                {upcoming.slice(0, 4).map((ev: any) => {
-                  const ts = TAG_STYLE[ev.tag as EventTag] ?? TAG_STYLE['Réunion'];
-                  return (
-                    <div key={ev.id} onClick={() => router.push(`/calendrier?eventId=${ev.id}`)} className={`flex items-center gap-3 p-4 bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden ${ts.border} cursor-pointer active:brightness-95 transition-all`}>
-                      <div className="shrink-0 text-center min-w-[48px]">
-                        <p className="text-xs text-on-surface-variant font-semibold">{fmtEventDate(ev.event_date)}</p>
-                        <p className="text-sm font-extrabold text-on-surface">{ev.event_time}</p>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-on-surface truncate">{ev.title}</p>
-                        {ev.location && (
-                          <div className="flex items-center gap-1 text-xs text-on-surface-variant mt-0.5">
-                            <MapPin size={10} className="shrink-0" /><span className="truncate">{ev.location}</span>
-                          </div>
-                        )}
-                      </div>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold shrink-0 ${ts.badge} ${ts.text}`}>{ev.tag}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
+          <SectionHeader icon={<Calendar size={18} className="text-primary" />} title={t.dashboard.upcomingEvents} href="/calendrier" linkLabel={t.dashboard.viewAll} />
+          <EventListMobile events={upcoming} t={t} router={router} />
 
-          {/* Messages récents */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <MessageSquare size={18} className="text-on-surface-variant" />
-                <h2 className="text-base font-bold text-on-surface">{t.dashboard.recentMessages}</h2>
-              </div>
-              <Link href="/messagerie" className="text-xs font-semibold text-primary flex items-center gap-0.5">
-                {t.dashboard.viewAll} <ChevronRight size={13} />
-              </Link>
-            </div>
-            {recentConvs.length === 0 ? (
-              <p className="text-sm text-on-surface-variant text-center py-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">{t.dashboard.noMessages}</p>
-            ) : (
-              <div className="space-y-2">
-                {recentConvs.map((conv: any) => (
-                  <Link key={conv.id} href="/messagerie"
-                    className="flex items-center gap-3 p-3 bg-surface-container-lowest border border-outline-variant rounded-2xl">
-                    <div className={`w-10 h-10 rounded-full ${conv.avatar_bg} flex items-center justify-center shrink-0`}>
-                      <span className={`font-bold text-sm ${conv.is_ai ? 'text-white' : 'text-on-surface-variant'}`}>{conv.initials}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-on-surface truncate">{conv.name}</p>
-                      <p className="text-xs text-on-surface-variant truncate">{conv.preview}</p>
-                    </div>
-                    <span className="text-xs text-on-surface-variant shrink-0">{conv.time}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </section>
+          <SectionHeader icon={<MessageSquare size={18} className="text-on-surface-variant" />} title={t.dashboard.recentMessages} href="/messagerie" linkLabel={t.dashboard.viewAll} />
+          <ConvListMobile convs={recentConvs} t={t} />
 
-          {/* Teammates — en bas */}
           <section>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -310,7 +156,7 @@ export default function DashboardMobile() {
         </>
       ) : (
         <>
-          {/* Panneau Admin */}
+          {/* Panneau admin */}
           {isAdmin && (
             <section>
               <div className="flex items-center gap-3 mb-3">
@@ -326,14 +172,12 @@ export default function DashboardMobile() {
                 </Link>
               </div>
               <div className="border border-error/25 bg-error/5 rounded-2xl p-4 space-y-3">
-
                 <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
                   <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">{t.dashboard.clubCard}</p>
                   <p className="text-base font-extrabold text-on-surface">{summary?.club?.name ?? '—'}</p>
                   <p className="text-sm text-on-surface-variant mt-0.5">{summary?.club?.league ?? '—'}</p>
                   <p className="text-xs text-on-surface-variant/60 mt-0.5">{summary?.club?.founded_year ? `${t.dashboard.founded} ${summary.club.founded_year}` : ''}</p>
                 </div>
-
                 <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
                   <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">{t.dashboard.seasonCard}</p>
                   {summary?.season ? (
@@ -347,7 +191,6 @@ export default function DashboardMobile() {
                     </>
                   ) : <p className="text-sm text-on-surface-variant">—</p>}
                 </div>
-
                 <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
                   <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">
                     {t.dashboard.staffCard} · <span className="normal-case font-semibold text-on-surface">{summary?.staff?.length ?? 0} {t.common.members}</span>
@@ -366,83 +209,16 @@ export default function DashboardMobile() {
                     ))}
                   </div>
                 </div>
-
               </div>
             </section>
           )}
 
-          {/* Prochains événements */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Calendar size={18} className="text-primary" />
-                <h2 className="text-base font-bold text-on-surface">{t.dashboard.upcomingEvents}</h2>
-              </div>
-              <Link href="/calendrier" className="text-xs font-semibold text-primary flex items-center gap-0.5">
-                {t.dashboard.viewAll} <ChevronRight size={13} />
-              </Link>
-            </div>
-            {upcoming.length === 0 ? (
-              <p className="text-sm text-on-surface-variant text-center py-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">{t.dashboard.noUpcomingEvents}</p>
-            ) : (
-              <div className="space-y-2">
-                {upcoming.slice(0, 4).map((ev: any) => {
-                  const ts = TAG_STYLE[ev.tag as EventTag] ?? TAG_STYLE['Réunion'];
-                  return (
-                    <div key={ev.id} onClick={() => router.push(`/calendrier?eventId=${ev.id}`)} className={`flex items-center gap-3 p-4 bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden ${ts.border} cursor-pointer active:brightness-95 transition-all`}>
-                      <div className="shrink-0 text-center min-w-[48px]">
-                        <p className="text-xs text-on-surface-variant font-semibold">{fmtEventDate(ev.event_date)}</p>
-                        <p className="text-sm font-extrabold text-on-surface">{ev.event_time}</p>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-on-surface truncate">{ev.title}</p>
-                        {ev.location && (
-                          <div className="flex items-center gap-1 text-xs text-on-surface-variant mt-0.5">
-                            <MapPin size={10} className="shrink-0" /><span className="truncate">{ev.location}</span>
-                          </div>
-                        )}
-                      </div>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold shrink-0 ${ts.badge} ${ts.text}`}>{ev.tag}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
+          <SectionHeader icon={<Calendar size={18} className="text-primary" />} title={t.dashboard.upcomingEvents} href="/calendrier" linkLabel={t.dashboard.viewAll} />
+          <EventListMobile events={upcoming} t={t} router={router} />
 
-          {/* Messages récents */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <MessageSquare size={18} className="text-on-surface-variant" />
-                <h2 className="text-base font-bold text-on-surface">{t.dashboard.recentMessages}</h2>
-              </div>
-              <Link href="/messagerie" className="text-xs font-semibold text-primary flex items-center gap-0.5">
-                {t.dashboard.viewAll} <ChevronRight size={13} />
-              </Link>
-            </div>
-            {recentConvs.length === 0 ? (
-              <p className="text-sm text-on-surface-variant text-center py-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">{t.dashboard.noMessages}</p>
-            ) : (
-              <div className="space-y-2">
-                {recentConvs.map((conv: any) => (
-                  <Link key={conv.id} href="/messagerie"
-                    className="flex items-center gap-3 p-3 bg-surface-container-lowest border border-outline-variant rounded-2xl">
-                    <div className={`w-10 h-10 rounded-full ${conv.avatar_bg} flex items-center justify-center shrink-0`}>
-                      <span className={`font-bold text-sm ${conv.is_ai ? 'text-white' : 'text-on-surface-variant'}`}>{conv.initials}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-on-surface truncate">{conv.name}</p>
-                      <p className="text-xs text-on-surface-variant truncate">{conv.preview}</p>
-                    </div>
-                    <span className="text-xs text-on-surface-variant shrink-0">{conv.time}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </section>
+          <SectionHeader icon={<MessageSquare size={18} className="text-on-surface-variant" />} title={t.dashboard.recentMessages} href="/messagerie" linkLabel={t.dashboard.viewAll} />
+          <ConvListMobile convs={recentConvs} t={t} />
 
-          {/* Joueurs non disponibles */}
           <section>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -483,10 +259,81 @@ export default function DashboardMobile() {
               </div>
             )}
           </section>
-
         </>
       )}
+    </div>
+  );
+}
 
+// ─── Sous-composants locaux ───────────────────────────────────────────────────
+
+// En-tête de section réutilisable (titre + lien "voir tout")
+function SectionHeader({ icon, title, href, linkLabel }: { icon: React.ReactNode; title: string; href: string; linkLabel: string }) {
+  return (
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-2">
+        {icon}
+        <h2 className="text-base font-bold text-on-surface">{title}</h2>
+      </div>
+      <Link href={href} className="text-xs font-semibold text-primary flex items-center gap-0.5">
+        {linkLabel} <ChevronRight size={13} />
+      </Link>
+    </div>
+  );
+}
+
+// Liste des événements (version mobile)
+function EventListMobile({ events, t, router }: { events: any[]; t: any; router: any }) {
+  if (events.length === 0) {
+    return <p className="text-sm text-on-surface-variant text-center py-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">{t.dashboard.noUpcomingEvents}</p>;
+  }
+  return (
+    <div className="space-y-2">
+      {events.slice(0, 4).map((ev: any) => {
+        const ts = TAG_STYLE[ev.tag as EventTag] ?? TAG_STYLE['Réunion'];
+        return (
+          <div key={ev.id} onClick={() => router.push(`/calendrier?eventId=${ev.id}`)}
+            className={`flex items-center gap-3 p-4 bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden ${ts.border} cursor-pointer active:brightness-95 transition-all`}>
+            <div className="shrink-0 text-center min-w-[48px]">
+              <p className="text-xs text-on-surface-variant font-semibold">{fmtEventDate(ev.event_date)}</p>
+              <p className="text-sm font-extrabold text-on-surface">{ev.event_time}</p>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-on-surface truncate">{ev.title}</p>
+              {ev.location && (
+                <div className="flex items-center gap-1 text-xs text-on-surface-variant mt-0.5">
+                  <MapPin size={10} className="shrink-0" /><span className="truncate">{ev.location}</span>
+                </div>
+              )}
+            </div>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-bold shrink-0 ${ts.badge} ${ts.text}`}>{ev.tag}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Liste des conversations récentes (version mobile)
+function ConvListMobile({ convs, t }: { convs: any[]; t: any }) {
+  if (convs.length === 0) {
+    return <p className="text-sm text-on-surface-variant text-center py-4 bg-surface-container-lowest border border-outline-variant rounded-2xl">{t.dashboard.noMessages}</p>;
+  }
+  return (
+    <div className="space-y-2">
+      {convs.map((conv: any) => (
+        <Link key={conv.id} href="/messagerie"
+          className="flex items-center gap-3 p-3 bg-surface-container-lowest border border-outline-variant rounded-2xl">
+          <div className={`w-10 h-10 rounded-full ${conv.avatar_bg} flex items-center justify-center shrink-0`}>
+            <span className={`font-bold text-sm ${conv.is_ai ? 'text-white' : 'text-on-surface-variant'}`}>{conv.initials}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-on-surface truncate">{conv.name}</p>
+            <p className="text-xs text-on-surface-variant truncate">{conv.preview}</p>
+          </div>
+          <span className="text-xs text-on-surface-variant shrink-0">{conv.time}</span>
+        </Link>
+      ))}
     </div>
   );
 }

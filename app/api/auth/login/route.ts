@@ -19,12 +19,15 @@ export async function POST(req: NextRequest) {
   const data = await res.json();
   const cookieStore = await cookies();
 
+  // httpOnly empêche JavaScript de lire le cookie → protection contre le vol de token (XSS)
+  // secure est activé uniquement en production car localhost n'est pas HTTPS
+  // maxAge = 24h, cohérent avec l'expiration JWT côté backend
   cookieStore.set('token', data.access_token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure:   process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24,
-    path: '/',
+    maxAge:   60 * 60 * 24,
+    path:     '/',
   });
 
   return NextResponse.json({ user: data.user });

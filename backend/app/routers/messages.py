@@ -105,9 +105,10 @@ async def list_conversations(
             .limit(1)
         )).scalar_one_or_none()
 
-        display_name     = conv.name
-        display_initials = conv.initials
-        display_role     = conv.role
+        display_name      = conv.name
+        display_initials  = conv.initials
+        display_role      = conv.role
+        display_role_type = conv.role_type
         members = None
 
         if conv.is_group:
@@ -126,7 +127,9 @@ async def list_conversations(
                 for _, u in rows
             ]
         elif not conv.is_ai:
-            # Résoudre nom/initiales depuis l'AUTRE participant (pas celui qui consulte)
+            # Résoudre nom/initiales/rôle depuis l'AUTRE participant (pas celui qui consulte)
+            # On recalcule aussi role_type en direct pour éviter le bug où la valeur
+            # stockée en DB reflète la perspective du créateur, pas du visiteur actuel.
             other = (await db.execute(
                 select(User, StaffMember)
                 .outerjoin(StaffMember, User.staff_id == StaffMember.id)
@@ -138,15 +141,16 @@ async def list_conversations(
             )).first()
             if other:
                 other_user, other_sm = other
-                display_name     = f"{other_user.first_name} {other_user.last_name}"
-                display_initials = f"{other_user.first_name[0]}{other_user.last_name[0]}"
-                display_role     = other_sm.role if other_sm else None
+                display_name      = f"{other_user.first_name} {other_user.last_name}"
+                display_initials  = f"{other_user.first_name[0]}{other_user.last_name[0]}"
+                display_role      = other_sm.role if other_sm else None
+                display_role_type = _role_type_with_sm(other_user, other_sm)
 
         sort_key = last.created_at if last else conv.created_at
         result_with_time.append((
             ConversationRead(
                 id=conv.id, name=display_name, category=conv.category,
-                role_type=conv.role_type, is_group=conv.is_group, is_ai=conv.is_ai,
+                role_type=display_role_type, is_group=conv.is_group, is_ai=conv.is_ai,
                 initials=display_initials, avatar_bg=conv.avatar_bg, role=display_role,
                 preview=(f"Vous : {last.text}" if last.sender_id == current_user.id else last.text) if last else None,
                 time=_fmt_time(last.created_at) if last else None,

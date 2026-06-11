@@ -20,10 +20,12 @@ export default function LoginPage() {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      // trim + toLowerCase : les identifiants backend sont générés en minuscules (prenom.nom)
       body: JSON.stringify({ username: username.trim().toLowerCase(), password }),
     });
     if (res.ok) {
       const data = await res.json();
+      // Première connexion avec mot de passe temporaire → forcer le changement avant d'entrer dans l'app
       if (data.user?.must_change_password) {
         router.push('/change-password');
       } else {

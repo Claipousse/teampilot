@@ -39,13 +39,10 @@ type DetailInfo = {
   year: number;
 };
 
-const MONTHS    = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-const DAYS_FR   = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-const DAYS      = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
-const MINI_DAYS = ['Lu','Ma','Me','Je','Ve','Sa','Di'];
+// Nombre max d'événements affichés dans une cellule avant le lien "+X de plus"
 const MAX_VISIBLE = 2;
 
+// Styles Tailwind appliqués sur chaque événement dans la grille selon son type
 const TAG_COLOR: Record<EventTag, string> = {
   'Match':        'bg-error text-white',
   'Entraînement': 'border-l-4 border-primary bg-primary/10 text-primary',
@@ -55,6 +52,7 @@ const TAG_COLOR: Record<EventTag, string> = {
 
 const TAGS: EventTag[] = ['Match', 'Entraînement', 'Récupération', 'Réunion'];
 
+// Style du bouton de sélection de type quand il est actif (dans les formulaires création/édition)
 const TAG_ACTIVE: Record<EventTag, string> = {
   'Match':        'bg-error/10 text-error border-error',
   'Entraînement': 'bg-primary/10 text-primary border-primary',
@@ -76,6 +74,8 @@ const TAG_BADGE: Record<EventTag, string> = {
   'Réunion':      'bg-surface-container-high text-on-surface-variant',
 };
 
+// Génère un tableau linéaire de jours (null = cases vides avant le 1er)
+// Le +6 % 7 convertit dimanche=0 en dimanche=6 pour une semaine démarrant le lundi
 function getCalGrid(year: number, month: number): (number | null)[] {
   const first = new Date(year, month, 1);
   const last  = new Date(year, month + 1, 0);
@@ -86,6 +86,8 @@ function getCalGrid(year: number, month: number): (number | null)[] {
 }
 
 
+// Génère la grille semaine par semaine (tableau de tableaux de 7 cellules).
+// Les jours hors du mois sont marqués outside:true pour être grisés visuellement.
 function generateWeeks(year: number, month: number, eventsMap: Record<number, CalEvent[]>): CalCell[][] {
   const firstDay = new Date(year, month, 1);
   const lastDay  = new Date(year, month + 1, 0);
@@ -145,6 +147,9 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
   const [createErrors,   setCreateErrors]   = useState({ title: false });
 
   const [eventsMap, setEventsMap] = useState<Record<number, CalEvent[]>>({});
+  // Ref pour mémoriser l'ID d'événement cible entre deux effets qui se déclenchent séquentiellement :
+  // effet 1 change le mois (setCurrent) → effet 2 charge les events → effet 3 ouvre le détail.
+  // Un state ne fonctionnerait pas car les re-renders intermédiaires le réinitialiseraient.
   const pendingEventIdRef = useRef<number | null>(openEventId ?? null);
 
   const { isAdmin: canEdit, type: userType } = useCurrentUser();
@@ -168,7 +173,7 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
 
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
 
-  // Navigate to the right month when openEventId is provided
+  // Quand on arrive via un lien externe (?eventId=X), navigue d'abord vers le bon mois
   useEffect(() => {
     if (!openEventId) return;
     pendingEventIdRef.current = openEventId;
@@ -182,7 +187,7 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
       .catch(() => {});
   }, [openEventId]);
 
-  // Once eventsMap updates, open the pending event detail
+  // Une fois que le bon mois est chargé, ouvre le détail de l'événement ciblé
   useEffect(() => {
     const targetId = pendingEventIdRef.current;
     if (targetId === null) return;

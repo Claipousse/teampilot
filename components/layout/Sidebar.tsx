@@ -20,6 +20,7 @@ export default function Sidebar() {
     { label: t.nav.players,        href: '/joueurs',        icon: Users,           adminOnly: false },
     { label: t.nav.calendar,       href: '/calendrier',     icon: Calendar,        adminOnly: false },
     { label: t.nav.messaging,      href: '/messagerie',     icon: MessageSquare,   adminOnly: false },
+    // Administration est masquée aux non-admins — les joueurs et le staff ne doivent pas la voir
     { label: t.nav.administration, href: '/administration', icon: Shield,          adminOnly: true  },
   ];
 
@@ -41,20 +42,16 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 px-2 xl:px-4 py-4 xl:py-6 space-y-1 xl:space-y-2 overflow-y-auto">
         {visibleItems.map((item) => {
-          const Icon = item.icon;
+          const Icon     = item.icon;
           const isActive = pathname === item.href;
 
+          // L'item Administration a un style rouge distinct pour signaler son caractère sensible
           if (item.adminOnly) {
             return (
-              <Link
-                key={item.href}
-                href={item.href}
+              <Link key={item.href} href={item.href}
                 className={`flex items-center gap-3 xl:gap-4 px-3 xl:px-5 py-3 xl:py-4 rounded-xl transition-all text-base xl:text-lg font-semibold ${
-                  isActive
-                    ? 'bg-red-900/80 text-red-200'
-                    : 'text-red-400/70 hover:text-red-300 hover:bg-red-500/10'
-                }`}
-              >
+                  isActive ? 'bg-red-900/80 text-red-200' : 'text-red-400/70 hover:text-red-300 hover:bg-red-500/10'
+                }`}>
                 <Icon size={20} className="shrink-0" />
                 {item.label}
               </Link>
@@ -62,15 +59,10 @@ export default function Sidebar() {
           }
 
           return (
-            <Link
-              key={item.href}
-              href={item.href}
+            <Link key={item.href} href={item.href}
               className={`flex items-center gap-3 xl:gap-4 px-3 xl:px-5 py-3 xl:py-4 rounded-xl transition-all text-base xl:text-lg font-semibold ${
-                isActive
-                  ? 'bg-primary text-white'
-                  : 'text-white/60 hover:text-white hover:bg-white/10'
-              }`}
-            >
+                isActive ? 'bg-primary text-white' : 'text-white/60 hover:text-white hover:bg-white/10'
+              }`}>
               <Icon size={20} className="shrink-0" />
               {item.label}
             </Link>

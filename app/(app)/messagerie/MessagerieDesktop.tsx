@@ -25,7 +25,7 @@ type Conversation = {
   role?: string; members?: Member[]; unread?: boolean;
 };
 
-// ── Types API ────────────────────────────────────────────────────────────────
+// ── Types API (format brut renvoyé par le backend) ───────────────────────────
 
 type ApiMessage = {
   id: number; conversation_id: number; sender_id: number | null;
@@ -55,7 +55,7 @@ type ApiUsersGrouped = {
   coaches: ApiUserCard[]; staff: ApiUserCard[]; players: ApiUserCard[];
 };
 
-// ── Conversions ──────────────────────────────────────────────────────────────
+// ── Conversions (API brut → types internes) ───────────────────────────────────
 
 function toMessage(m: ApiMessage, userId: number): Message {
   const time = m.created_at
@@ -101,6 +101,7 @@ function toConversation(c: ApiConversation): Conversation {
 
 // ── Helpers visuels ───────────────────────────────────────────────────────────
 
+// Couleur du nom affiché selon le rôle (coach = brun/ambre, joueur = primary, staff = secondary)
 function nameColor(roleType?: string): string {
   switch (roleType) {
     case 'ai':
@@ -111,6 +112,7 @@ function nameColor(roleType?: string): string {
   }
 }
 
+// Bordure + fond coloré de la ligne active dans la liste selon le rôle
 function roleAccent(roleType?: string): { border: string; dot: string; bg: string } {
   switch (roleType) {
     case 'ai':
@@ -121,6 +123,7 @@ function roleAccent(roleType?: string): { border: string; dot: string; bg: strin
   }
 }
 
+// Détermine le roleType pour afficher les couleurs correctes dans le modal de création
 function userRoleType(u: ApiUserCard): RoleType {
   if (u.user_type === 'player') return 'player';
   if (u.is_admin || (u.role && u.role.toLowerCase().includes('coach'))) return 'coach';
@@ -156,6 +159,8 @@ export default function MessagerieDesktop() {
 
   const messagesEndRef  = useRef<HTMLDivElement>(null);
   const plusRef         = useRef<HTMLDivElement>(null);
+  // Mémorise l'ID de la dernière conversation créée mais sans message envoyé.
+  // Si l'utilisateur repart sans écrire, elle est supprimée automatiquement (cleanupEmptyConv).
   const newEmptyConvRef = useRef<number | null>(null);
 
   const aiConv    = useMemo(() => conversations.find(c => c.isAI),    [conversations]);
@@ -195,13 +200,16 @@ export default function MessagerieDesktop() {
     fetch(`/api/backend/messages/conversations/${activeConv.id}/messages`)
       .then(r => r.ok ? r.json() : [])
       .then((data: ApiMessage[]) => setMessages(data.map(m => toMessage(m, user.id))));
+    // Prévient le hook useNotifications (Header/MobileHeader) d'effacer les notifications
+    // de message de cette conversation — évite un re-fetch inutile
     window.dispatchEvent(new CustomEvent('dismiss-message-notifs', { detail: { convName: activeConv.name } }));
   }, [activeConv?.id, user?.id]);
 
   // Scroll en bas à chaque nouveau message
   useEffect(() => { messagesEndRef.current?.scrollIntoView(); }, [messages]);
 
-  // Polling conversations (5s)
+  // Polling toutes les 5s faute de WebSocket côté backend.
+  // On rafraîchit la liste des conversations pour mettre à jour les aperçus et les indicateurs non-lus.
   useEffect(() => {
     const id = setInterval(() => {
       fetch('/api/backend/messages/conversations')
@@ -212,7 +220,9 @@ export default function MessagerieDesktop() {
     return () => clearInterval(id);
   }, []);
 
-  // Polling messages actifs (5s)
+  // Polling des messages de la conversation active (5s).
+  // On compare le dernier ID reçu avec le dernier ID connu : on ne met à jour que si de nouveaux messages sont arrivés
+  // (évite un re-render inutile à chaque tick)
   useEffect(() => {
     if (!activeConv || !user) return;
     const convId = activeConv.id;
@@ -223,7 +233,7 @@ export default function MessagerieDesktop() {
         .then((data: ApiMessage[] | null) => {
           if (!data) return;
           setMessages(prev => {
-            const lastId = prev.length > 0 ? prev[prev.length - 1].id : -1;
+            const lastId  = prev.length > 0 ? prev[prev.length - 1].id : -1;
             const newMsgs = data.map(m => toMessage(m, userId));
             return newMsgs.length > 0 && newMsgs[newMsgs.length - 1].id > lastId ? newMsgs : prev;
           });
@@ -233,7 +243,8 @@ export default function MessagerieDesktop() {
     return () => clearInterval(id);
   }, [activeConv?.id, user?.id]);
 
-  // Nettoyage conversation vide en quittant
+  // Supprime la conversation créée si aucun message n'a été envoyé.
+  // Appelé avant chaque changement de conversation pour ne pas laisser de conv fantôme en DB.
   const cleanupEmptyConv = async () => {
     const emptyId = newEmptyConvRef.current;
     if (emptyId === null) return;
@@ -287,7 +298,7 @@ export default function MessagerieDesktop() {
       if (!r.ok) return;
       const data: ApiConversation = await r.json();
       const conv = toConversation(data);
-      // Si conversation déjà existante, juste l'activer
+      // Si la conversation existe déjà en liste locale, on l'active sans la dupliquer
       const existing = conversations.find(c => c.id === conv.id);
       if (existing) {
         closeCreate();

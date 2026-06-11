@@ -48,6 +48,7 @@ const STAFF_ROLES = [
 
 const SAISON_STATUTS: SaisonStatus[] = ['À venir', 'En cours', 'Terminée'];
 
+// Styles Tailwind par statut de saison — centralisés ici pour éviter du ternaire en cascade dans le JSX
 const SS: Record<SaisonStatus, { active: string; hover: string; badge: string; text: string; dot: string }> = {
   'À venir':  { active: 'bg-[#F97316]/10 text-[#F97316] border-[#F97316]', hover: 'hover:text-[#F97316] hover:border-[#F97316]', badge: 'bg-[#F97316]/10 text-[#F97316]', text: 'text-[#F97316]', dot: 'bg-[#F97316]' },
   'En cours': { active: 'bg-secondary/10 text-secondary border-secondary', hover: 'hover:text-secondary hover:border-secondary',    badge: 'bg-secondary/10 text-secondary',  text: 'text-secondary',  dot: 'bg-secondary' },
@@ -87,6 +88,7 @@ export default function AdministrationDesktop() {
 
   // Saison
   const [saison,       setSaison]       = useState<SaisonData>(EMPTY_SAISON);
+  // null = aucune saison active en base → submitSaison fera un POST + activate plutôt qu'un PATCH
   const [saisonId,     setSaisonId]     = useState<number | null>(null);
   const [saisonOpen,   setSaisonOpen]   = useState(false);
   const [saisonVisible,setSaisonVisible]= useState(false);
@@ -126,8 +128,10 @@ export default function AdministrationDesktop() {
   const [delOpen,    setDelOpen]    = useState(false);
   const [delVisible, setDelVisible] = useState(false);
   const [delName,    setDelName]    = useState('');
+  // Compte à rebours 3 s affiché sur le bouton de confirmation — empêche la suppression accidentelle
   const [delTimer,   setDelTimer]   = useState(3);
   const delTimerRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Ref (pas state) pour éviter que le changement du callback ne relance le rendu du modal
   const onDelConfirmed = useRef<(() => void) | null>(null);
 
   // ── Initial fetch ─────────────────────────────────────────────────────────
@@ -203,6 +207,7 @@ export default function AdministrationDesktop() {
     if (saisonId) {
       res = await fetch(`/api/backend/seasons/${saisonId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     } else {
+      // Création d'une nouvelle saison : POST puis activation immédiate (l'API exige deux appels séparés)
       res = await fetch('/api/backend/seasons', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       if (res.ok) {
         const created = await res.json();
@@ -303,6 +308,8 @@ export default function AdministrationDesktop() {
   };
 
   // ── Delete confirmation ───────────────────────────────────────────────────────
+  // openDel est générique : l'appelant passe son propre callback de suppression,
+  // ce qui permet de réutiliser un seul modal pour supprimer un staff, un club, etc.
 
   const openDel = (name: string, onConfirmed: () => void) => {
     onDelConfirmed.current = onConfirmed;
@@ -321,6 +328,7 @@ export default function AdministrationDesktop() {
     closeDel();
   };
 
+  // Démarre le compte à rebours dès que le modal s'ouvre — s'arrête quand il atteint 0
   useEffect(() => {
     if (!delOpen) return;
     setDelTimer(3);
@@ -438,6 +446,7 @@ export default function AdministrationDesktop() {
           <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Accès &amp; Sécurité</p>
           <div>
             <label className={labelCls}>Identifiant de connexion</label>
+            {/* normalize NFD puis strip diacritiques — ex: "Élodie" → "elodie", identique à la logique backend */}
             <div className="px-4 py-3 bg-surface-container-high border border-outline-variant rounded-xl text-base text-on-surface-variant font-mono">
               {form.prenom && form.nom
                 ? `${form.prenom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}.${form.nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}`

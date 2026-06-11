@@ -8,10 +8,6 @@ import { useT } from '@/contexts/LanguageContext';
 
 type EventTag = 'Match' | 'Entraînement' | 'Récupération' | 'Réunion';
 
-const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-const DAYS_FR   = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-const DAYS_SHORT = ['LUN','MAR','MER','JEU','VEN','SAM','DIM'];
-const MINI_DAYS  = ['Lu','Ma','Me','Je','Ve','Sa','Di'];
 
 type MobileEvent = {
   id?: number;
@@ -35,6 +31,7 @@ type DetailInfo = {
 
 const TAGS: EventTag[] = ['Match', 'Entraînement', 'Récupération', 'Réunion'];
 
+// Style actif pour les boutons de sélection de type dans les formulaires
 const TAG_ACTIVE: Record<EventTag, string> = {
   'Match':        'bg-error/10 text-error border-error',
   'Entraînement': 'bg-primary/10 text-primary border-primary',
@@ -49,6 +46,8 @@ const TAG_HOVER: Record<EventTag, string> = {
   'Réunion':      'hover:text-on-surface hover:border-outline',
 };
 
+// Mini-calendrier mensuel (sélection de date dans les formulaires)
+// Le +6 % 7 ramène dimanche=6 pour commencer la semaine le lundi
 function getCalGrid(year: number, month: number): (number | null)[] {
   const first = new Date(year, month, 1);
   const last  = new Date(year, month + 1, 0);
@@ -58,6 +57,7 @@ function getCalGrid(year: number, month: number): (number | null)[] {
   return grid;
 }
 
+// Associe chaque type d'événement à une icône Lucide et une couleur pour la vue mobile
 const TAG_MOBILE: Record<EventTag, { border: string; IconComp: LucideIcon; iconColor: string; iconBg: string }> = {
   'Match':        { border: 'border-l-error',     IconComp: Trophy,   iconColor: 'text-error',     iconBg: 'bg-error/10' },
   'Entraînement': { border: 'border-l-primary',   IconComp: Dumbbell, iconColor: 'text-primary',   iconBg: 'bg-primary/10' },
@@ -94,12 +94,15 @@ const EVENT_POOLS: MobileEvent[][] = [
   ],
 ];
 
+// Fallback pour les jours sans données backend : retourne des événements fictifs
+// déterministes basés sur un hash de la date (même résultat à chaque rendu)
 function getEventsForKey(key: string): MobileEvent[] {
   const parts = key.split('-').map(Number);
   const hash = Math.abs(parts[0] * 12 * 31 + parts[1] * 31 + parts[2]);
   return EVENT_POOLS[hash % EVENT_POOLS.length];
 }
 
+// Retourne le lundi de la semaine contenant `date`
 function getMondayOfWeek(date: Date): Date {
   const d = new Date(date);
   const day = d.getDay();
@@ -157,7 +160,10 @@ export default function CalendrierMobile({ openCreate = false, openEventId }: { 
   const [createCalYear,  setCreateCalYear]  = useState(today.getFullYear());
   const [createErrors,   setCreateErrors]   = useState({ title: false });
 
+  // Clé : "YYYY-M-D" (mois 0-indexé pour correspondre à Date.getMonth())
   const [eventsMap, setEventsMap] = useState<Record<string, MobileEvent[]>>({});
+  // Même pattern que CalendrierDesktop : mémorise l'ID d'événement à ouvrir
+  // une fois que les données du bon mois sont chargées
   const pendingEventIdRef = useRef<number | null>(openEventId ?? null);
 
   const { isAdmin: canEdit, type: userType } = useCurrentUser();
@@ -188,6 +194,7 @@ export default function CalendrierMobile({ openCreate = false, openEventId }: { 
     });
   }, []);
 
+  // Une semaine peut chevaucher deux mois — on charge les deux si nécessaire
   useEffect(() => {
     const months = new Set(weekDays.map(d => `${d.year}-${d.month}`));
     months.forEach(m => {

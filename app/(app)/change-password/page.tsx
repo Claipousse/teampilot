@@ -8,6 +8,8 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function ChangePasswordPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  // Par défaut true pendant le chargement de l'auth : évite d'afficher brièvement le mode "volontaire"
+  // avant que user soit hydraté, puis de basculer — le mode forcé est le plus restrictif.
   const isForced = user?.mustChangePassword ?? true;
 
   const [current, setCurrent]   = useState('');
@@ -26,6 +28,7 @@ export default function ChangePasswordPage() {
 
     setLoading(true);
     const body: Record<string, string> = { new_password: next };
+    // En mode forcé, le mot de passe temporaire a déjà été vérifié au login → pas besoin de le renvoyer
     if (!isForced) body.current_password = current;
 
     const res = await fetch('/api/backend/auth/change-password', {

@@ -5,183 +5,40 @@ import { Search, X, Pencil, Send, Trash2, Upload, AlertTriangle, Copy, Check, Ke
 import NationalitySelect from '@/components/NationalitySelect';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useT } from '@/contexts/LanguageContext';
+import {
+  type Player, type PlayerForm, type FormErrors, type Credentials,
+  EMPTY_FORM, POSITION_OPTIONS, STATUSES_FORM, FOOT_OPTIONS, POSITIONS, STATUSES,
+  S, STATUS_ACTIVE, STATUS_HOVER,
+  playerFromApi, validateForm, contractColor, ph, inputCls, labelCls,
+} from '@/lib/playerUtils';
 
-type PlayerStatus = 'Disponible' | 'Blessé' | 'Suspendu' | 'Incertain';
+// Filtre de position (les onglets en haut de la liste)
 type PositionFilter = 'Tous' | 'GK' | 'DEF' | 'MIL' | 'ATT';
-
-type Player = {
-  id: number;
-  firstName: string;
-  lastName: string;
-  initials: string;
-  number: number;
-  name: string;
-  position: string;
-  positionShort: 'GK' | 'DEF' | 'MIL' | 'ATT';
-  nationality?: string;
-  flag?: string;
-  dob?: string;
-  height?: string;
-  weight?: string;
-  foot?: string;
-  status: PlayerStatus;
-  injury?: string;
-  returnDate?: string;
-  contract?: string;
-  academy?: string;
-  photoUrl?: string;
-  stats?: {
-    matches?: number; goals?: number; assists?: number;
-    yellowCards?: number; redCards?: number; minutes?: number;
-    cleanSheets?: number; goalsConceded?: number;
-  };
-  notes?: string;
-};
-
-type PlayerForm = {
-  prenom: string; nom: string; number: string;
-  position: string; positionShort: 'GK' | 'DEF' | 'MIL' | 'ATT' | '';
-  nationality: string; flag: string;
-  status: PlayerStatus | '';
-  dob: string; height: string; weight: string; foot: string;
-  injury: string; returnDate: string;
-  contract: string; academy: string;
-  notes: string; photoUrl: string;
-};
-
-type FormErrors = Partial<Record<'prenom' | 'nom' | 'number' | 'position' | 'nationality' | 'status', string>>;
-
-type Credentials = { username: string; temp_password: string };
-
-const EMPTY_FORM: PlayerForm = {
-  prenom: '', nom: '', number: '',
-  position: '', positionShort: '',
-  nationality: '', flag: '',
-  status: 'Disponible' as PlayerStatus,
-  dob: '', height: '', weight: '', foot: '',
-  injury: '', returnDate: '',
-  contract: '', academy: '',
-  notes: '', photoUrl: '',
-};
-
-const POSITION_OPTIONS: { label: string; short: 'GK' | 'DEF' | 'MIL' | 'ATT' }[] = [
-  { label: 'Gardien de but',    short: 'GK' },
-  { label: 'Défenseur Central', short: 'DEF' },
-  { label: 'Arrière Droit',     short: 'DEF' },
-  { label: 'Arrière Gauche',    short: 'DEF' },
-  { label: 'Milieu Défensif',   short: 'MIL' },
-  { label: 'Milieu Central',    short: 'MIL' },
-  { label: 'Milieu Offensif',   short: 'MIL' },
-  { label: 'Ailier Droit',      short: 'ATT' },
-  { label: 'Ailier Gauche',     short: 'ATT' },
-  { label: 'Attaquant Centre',  short: 'ATT' },
-];
-
-const STATUSES_FORM: PlayerStatus[] = ['Disponible', 'Blessé', 'Suspendu', 'Incertain'];
-const FOOT_OPTIONS = ['Droit', 'Gauche', 'Les deux'] as const;
-
-const S: Record<PlayerStatus, { badge: string; dot: string; bg: string; text: string }> = {
-  'Disponible': { badge: 'bg-secondary/10 text-secondary',  dot: 'bg-secondary', bg: 'bg-secondary/5 border-secondary/20',  text: 'text-secondary' },
-  'Blessé':     { badge: 'bg-error/10 text-error',          dot: 'bg-error',     bg: 'bg-error/5 border-error/20',          text: 'text-error' },
-  'Suspendu':   { badge: 'bg-[#F97316]/10 text-[#F97316]',  dot: 'bg-[#F97316]', bg: 'bg-[#F97316]/5 border-[#F97316]/20', text: 'text-[#F97316]' },
-  'Incertain':  { badge: 'bg-primary/10 text-primary',      dot: 'bg-primary',   bg: 'bg-primary/5 border-primary/20',      text: 'text-primary' },
-};
-
-const STATUS_ACTIVE: Record<PlayerStatus, string> = {
-  'Disponible': 'bg-secondary/10 text-secondary border-secondary',
-  'Blessé':     'bg-error/10 text-error border-error',
-  'Suspendu':   'bg-[#F97316]/10 text-[#F97316] border-[#F97316]',
-  'Incertain':  'bg-primary/10 text-primary border-primary',
-};
-
-const STATUS_HOVER: Record<PlayerStatus, string> = {
-  'Disponible': 'hover:text-secondary hover:border-secondary',
-  'Blessé':     'hover:text-error hover:border-error',
-  'Suspendu':   'hover:text-[#F97316] hover:border-[#F97316]',
-  'Incertain':  'hover:text-primary hover:border-primary',
-};
-
-const POSITIONS: PositionFilter[] = ['Tous', 'GK', 'DEF', 'MIL', 'ATT'];
-const STATUSES: (PlayerStatus | 'Tous')[] = ['Tous', 'Disponible', 'Blessé', 'Suspendu', 'Incertain'];
-
-const ph = (v: string | number | undefined) => v !== undefined && v !== '' ? String(v) : '—';
-
-function playerFromApi(p: any): Player {
-  return {
-    id: p.id,
-    firstName: p.first_name,
-    lastName: p.last_name,
-    initials: (p.first_name[0] + p.last_name[0]).toUpperCase(),
-    name: `${p.last_name} ${p.first_name.charAt(0)}.`,
-    number: p.shirt_number,
-    position: p.position,
-    positionShort: p.position_short as Player['positionShort'],
-    nationality: p.nationality,
-    flag: p.nationality_flag ?? undefined,
-    dob: p.date_of_birth ?? undefined,
-    height: p.height_cm ? `${p.height_cm} cm` : undefined,
-    weight: p.weight_kg ? `${p.weight_kg} kg` : undefined,
-    foot: p.preferred_foot ?? undefined,
-    status: p.status as PlayerStatus,
-    injury: p.injury_description ?? undefined,
-    returnDate: p.return_date_estimate ?? undefined,
-    contract: p.contract_end_date ?? undefined,
-    academy: p.academy ?? undefined,
-    photoUrl: p.photo_url ?? undefined,
-    notes: p.notes ?? undefined,
-    stats: {
-      matches: p.matches, goals: p.goals, assists: p.assists,
-      yellowCards: p.yellow_cards, redCards: p.red_cards,
-      minutes: p.minutes_played, cleanSheets: p.clean_sheets,
-      goalsConceded: p.goals_conceded,
-    },
-  };
-}
-
-function contractColor(date?: string): string {
-  if (!date) return 'text-on-surface-variant';
-  const [y, m] = date.split('-').map(Number);
-  const months = (y - 2026) * 12 + (m - 6);
-  if (months < 0)  return 'text-error font-bold';
-  if (months < 12) return 'text-[#F97316] font-bold';
-  return 'text-secondary font-semibold';
-}
-
-function validateForm(form: PlayerForm): FormErrors {
-  const e: FormErrors = {};
-  if (!form.prenom.trim())      e.prenom      = 'Champ obligatoire';
-  if (!form.nom.trim())         e.nom         = 'Champ obligatoire';
-  if (!form.number.trim())      e.number      = 'Champ obligatoire';
-  if (!form.position)           e.position    = 'Champ obligatoire';
-  if (!form.nationality.trim()) e.nationality = 'Champ obligatoire';
-  if (!form.status)             e.status      = 'Champ obligatoire';
-  return e;
-}
-
-const inputCls = (err?: string) =>
-  `w-full px-4 py-3 bg-surface-container border ${err ? 'border-error' : 'border-outline-variant'} rounded-xl text-base text-on-surface outline-none focus:ring-2 focus:ring-primary transition-all`;
-const labelCls = 'text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block';
 
 export default function JoueursDesktop({ openCreate = false }: { openCreate?: boolean }) {
   const t = useT();
   const { isAdmin } = useCurrentUser();
-  const [players, setPlayers]           = useState<Player[]>([]);
-  const [posFilter, setPosFilter]       = useState<PositionFilter>('Tous');
-  const [statusFilter, setStatusFilter] = useState<PlayerStatus | 'Tous'>('Tous');
-  const [search, setSearch]             = useState('');
-  const [selected, setSelected]         = useState<Player | null>(null);
-  const [displayed, setDisplayed]       = useState<Player | null>(null);
-  const [panelVisible, setPanelVisible] = useState(false);
-  const [notes, setNotes]               = useState<Record<number, string>>({});
 
+  // ─── État de la liste ─────────────────────────────────────────────────────
+  const [players,       setPlayers]       = useState<Player[]>([]);
+  const [posFilter,     setPosFilter]     = useState<PositionFilter>('Tous');
+  const [statusFilter,  setStatusFilter]  = useState<Player['status'] | 'Tous'>('Tous');
+  const [search,        setSearch]        = useState('');
+  const [selected,      setSelected]      = useState<Player | null>(null);
+  const [displayed,     setDisplayed]     = useState<Player | null>(null);
+  const [panelVisible,  setPanelVisible]  = useState(false);
+  const [notes,         setNotes]         = useState<Record<number, string>>({});
+
+  // ─── Modal modification ───────────────────────────────────────────────────
   const [editOpen,        setEditOpen]        = useState(false);
   const [editVisible,     setEditVisible]     = useState(false);
   const [editForm,        setEditForm]        = useState<PlayerForm>(EMPTY_FORM);
   const [editErrors,      setEditErrors]      = useState<FormErrors>({});
   const [editingPlayerId, setEditingPlayerId] = useState<number | null>(null);
-  const editPhotoRef   = useRef<HTMLInputElement>(null);
-  const editScrollRef  = useRef<HTMLDivElement>(null);
+  const editPhotoRef  = useRef<HTMLInputElement>(null);
+  const editScrollRef = useRef<HTMLDivElement>(null);
 
+  // ─── Modal création ───────────────────────────────────────────────────────
   const [createOpen,    setCreateOpen]    = useState(false);
   const [createVisible, setCreateVisible] = useState(false);
   const [createForm,    setCreateForm]    = useState<PlayerForm>(EMPTY_FORM);
@@ -189,11 +46,13 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
   const createPhotoRef  = useRef<HTMLInputElement>(null);
   const createScrollRef = useRef<HTMLDivElement>(null);
 
+  // ─── Modal identifiants (affiché une seule fois après création) ───────────
   const [credsOpen,    setCredsOpen]    = useState(false);
   const [credsVisible, setCredsVisible] = useState(false);
   const [creds,        setCreds]        = useState<Credentials | null>(null);
   const [credsCopied,  setCredsCopied]  = useState<Record<string, boolean>>({});
 
+  // ─── Modal confirmation suppression (timer 3s anti-clic accidentel) ───────
   const [delOpen,    setDelOpen]    = useState(false);
   const [delVisible, setDelVisible] = useState(false);
   const [delName,    setDelName]    = useState('');
@@ -201,12 +60,16 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
   const delTimerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const onDelConfirmed = useRef<(() => void) | null>(null);
 
+  // ─── Chargement des joueurs ───────────────────────────────────────────────
+
   const fetchPlayers = useCallback(async () => {
     const res = await fetch('/api/backend/players');
     if (res.ok) setPlayers((await res.json()).map(playerFromApi));
   }, []);
 
   useEffect(() => { fetchPlayers(); }, [fetchPlayers]);
+
+  // ─── Panneau de détail ────────────────────────────────────────────────────
 
   const openDetailPanel = (p: Player) => {
     setDisplayed(p); setSelected(p);
@@ -217,6 +80,8 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
     setPanelVisible(false);
     setTimeout(() => { setSelected(null); setDisplayed(null); }, 300);
   };
+
+  // ─── Modal suppression ────────────────────────────────────────────────────
 
   const openDel = (name: string, onConfirmed: () => void) => {
     onDelConfirmed.current = onConfirmed;
@@ -235,6 +100,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
     closeDel();
   };
 
+  // Timer de sécurité : le bouton confirmer est bloqué 3 secondes
   useEffect(() => {
     if (!delOpen) return;
     setDelTimer(3);
@@ -244,33 +110,31 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
     return () => { if (delTimerRef.current) clearInterval(delTimerRef.current); };
   }, [delOpen]);
 
+  // ─── Modal modification ───────────────────────────────────────────────────
+
   const openEdit = (player: Player) => {
     setEditingPlayerId(player.id);
     setEditForm({
-      prenom: player.firstName,
-      nom: player.lastName,
+      prenom: player.firstName, nom: player.lastName,
       number: String(player.number),
-      position: player.position,
-      positionShort: player.positionShort,
-      nationality: player.nationality ?? '',
-      flag: player.flag ?? '',
+      position: player.position, positionShort: player.positionShort,
+      nationality: player.nationality ?? '', flag: player.flag ?? '',
       status: player.status,
       dob: player.dob ?? '',
       height: player.height?.replace(' cm', '') ?? '',
       weight: player.weight?.replace(' kg', '') ?? '',
       foot: player.foot ?? '',
-      injury: player.injury ?? '',
-      returnDate: player.returnDate ?? '',
-      contract: player.contract ?? '',
-      academy: player.academy ?? '',
-      notes: player.notes ?? '',
-      photoUrl: player.photoUrl ?? '',
+      injury: player.injury ?? '', returnDate: player.returnDate ?? '',
+      contract: player.contract ?? '', academy: player.academy ?? '',
+      notes: player.notes ?? '', photoUrl: player.photoUrl ?? '',
     });
     setEditErrors({});
     setEditOpen(true);
     setTimeout(() => setEditVisible(true), 10);
   };
   const closeEdit = () => { setEditVisible(false); setTimeout(() => { setEditOpen(false); setEditingPlayerId(null); }, 200); };
+
+  // ─── Modal création ───────────────────────────────────────────────────────
 
   const openCreateForm = () => {
     setCreateForm(EMPTY_FORM);
@@ -280,25 +144,29 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
   };
   const closeCreate = () => { setCreateVisible(false); setTimeout(() => setCreateOpen(false), 200); };
 
+  // ─── Modal identifiants ───────────────────────────────────────────────────
+
   const openCreds = (data: Credentials) => {
-    setCreds(data);
-    setCredsCopied({});
+    setCreds(data); setCredsCopied({});
     setCredsOpen(true);
     setTimeout(() => setCredsVisible(true), 10);
   };
-  const closeCreds = () => {
-    setCredsVisible(false);
-    setTimeout(() => { setCredsOpen(false); setCreds(null); }, 200);
-  };
+  const closeCreds = () => { setCredsVisible(false); setTimeout(() => { setCredsOpen(false); setCreds(null); }, 200); };
   const copyField = (key: string, value: string) => {
     navigator.clipboard.writeText(value);
     setCredsCopied(prev => ({ ...prev, [key]: true }));
     setTimeout(() => setCredsCopied(prev => ({ ...prev, [key]: false })), 2000);
   };
 
+  // ─── Soumissions formulaires ──────────────────────────────────────────────
+
   const handleEditSubmit = async () => {
     const errs = validateForm(editForm);
-    if (Object.keys(errs).length > 0) { setEditErrors(errs); editScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    if (Object.keys(errs).length > 0) {
+      setEditErrors(errs);
+      editScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     const body: Record<string, unknown> = {
       first_name: editForm.prenom, last_name: editForm.nom,
       shirt_number: parseInt(editForm.number), position: editForm.position,
@@ -326,7 +194,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
 
   const handleCreateSubmit = async () => {
     const errs = validateForm(createForm);
-    if (Object.keys(errs).length > 0) { setCreateErrors(errs); createScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    if (Object.keys(errs).length > 0) {
+      setCreateErrors(errs);
+      createScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     const res = await fetch('/api/backend/players', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -355,8 +227,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
     }
   };
 
+  // Ouvre automatiquement le formulaire création si on arrive via l'URL ?new=true
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (openCreate) openCreateForm(); }, []);
+
+  // ─── Données dérivées ─────────────────────────────────────────────────────
 
   const filtered = players.filter(p =>
     (posFilter === 'Tous' || p.positionShort === posFilter) &&
@@ -374,6 +249,9 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
 
   const PANEL_W = 'w-[320px] xl:w-[400px] panel-detail';
 
+  // ─── Corps de formulaire partagé (création + modification) ───────────────
+  // Accepte les setters des deux formulaires pour ne pas dupliquer le JSX
+
   const renderFormBody = (
     form: PlayerForm,
     setForm: React.Dispatch<React.SetStateAction<PlayerForm>>,
@@ -389,7 +267,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
         {/* Photo */}
         <div className="flex items-center gap-5 pb-6 border-b border-outline-variant">
           <div className="w-20 h-20 rounded-2xl bg-surface-container-high flex items-center justify-center overflow-hidden shrink-0 border-2 border-outline-variant">
-            {form.photoUrl ? <img src={form.photoUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-2xl font-bold text-on-surface-variant">{initials}</span>}
+            {form.photoUrl
+              // eslint-disable-next-line @next/next/no-img-element
+              ? <img src={form.photoUrl} alt="" className="w-full h-full object-cover" />
+              : <span className="text-2xl font-bold text-on-surface-variant">{initials}</span>
+            }
           </div>
           <div className="space-y-2">
             <input ref={photoRef} type="file" accept="image/*" className="hidden" onChange={e => {
@@ -398,15 +280,20 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
               reader.onload = ev => setForm(f => ({ ...f, photoUrl: ev.target?.result as string }));
               reader.readAsDataURL(file);
             }} />
-            <button onClick={() => photoRef.current?.click()} className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors">
+            <button onClick={() => photoRef.current?.click()}
+              className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors">
               <Upload size={15} className="text-on-surface-variant" /> Choisir une photo
             </button>
-            {form.photoUrl && <button onClick={() => setForm(f => ({ ...f, photoUrl: '' }))} className="text-xs text-error hover:underline block">Retirer la photo</button>}
+            {form.photoUrl && (
+              <button onClick={() => setForm(f => ({ ...f, photoUrl: '' }))} className="text-xs text-error hover:underline block">
+                Retirer la photo
+              </button>
+            )}
             <p className="text-xs text-on-surface-variant/60">JPG, PNG ou WebP</p>
           </div>
         </div>
 
-        {/* Identité */}
+        {/* Identité (champs obligatoires) */}
         <div className="space-y-4">
           <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Identité <span className="text-error font-normal normal-case">— champs obligatoires</span></p>
           <div className="grid grid-cols-2 gap-4">
@@ -435,19 +322,18 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                 setForm(f => ({ ...f, position: pos, positionShort: short }));
               }} className={`${inputCls(errors.position)} cursor-pointer`}>
                 <option value="">{t.players.formPosition}...</option>
-                {POSITION_OPTIONS.map(p => <option key={p.label} value={p.label}>{t.players.positions[p.label as keyof typeof t.players.positions] ?? p.label}</option>)}
+                {POSITION_OPTIONS.map(p => (
+                  <option key={p.label} value={p.label}>
+                    {t.players.positions[p.label as keyof typeof t.players.positions] ?? p.label}
+                  </option>
+                ))}
               </select>
               {errors.position && <p className="text-xs text-error mt-1">{errors.position}</p>}
             </div>
           </div>
           <div>
             <label className={labelCls}>{t.players.formNationality} <span className="text-error">*</span></label>
-            <NationalitySelect
-              value={form.nationality}
-              iso={form.flag}
-              onChange={(label, iso) => setForm(f => ({ ...f, nationality: label, flag: iso }))}
-              error={errors.nationality}
-            />
+            <NationalitySelect value={form.nationality} iso={form.flag} onChange={(label, iso) => setForm(f => ({ ...f, nationality: label, flag: iso }))} error={errors.nationality} />
           </div>
           <div>
             <label className={labelCls}>{t.players.formStatus} <span className="text-error">*</span></label>
@@ -463,7 +349,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
           </div>
         </div>
 
-        {/* Infos personnelles */}
+        {/* Informations personnelles (optionnel) */}
         <div className="space-y-4 pt-2 border-t border-outline-variant">
           <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Informations personnelles <span className="font-normal normal-case opacity-60">(optionnel)</span></p>
           <div className="grid grid-cols-2 gap-4">
@@ -507,7 +393,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
           )}
         </div>
 
-        {/* Contrat */}
+        {/* Contrat (optionnel) */}
         <div className="space-y-4 pt-2 border-t border-outline-variant">
           <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Contrat <span className="font-normal normal-case opacity-60">(optionnel)</span></p>
           <div className="grid grid-cols-2 gap-4">
@@ -522,7 +408,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
           </div>
         </div>
 
-        {/* Compte — aperçu à la création */}
+        {/* Aperçu du compte à créer (uniquement en mode création) */}
         {!isEdit && (
           <div className="space-y-3 pt-2 border-t border-outline-variant">
             <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Compte d&apos;accès</p>
@@ -543,10 +429,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
           </div>
         )}
 
-        {/* Notes */}
+        {/* Notes du coach (optionnel) */}
         <div className="space-y-2 pt-2 border-t border-outline-variant">
           <label className={labelCls}>Notes du coach <span className="font-normal normal-case opacity-60">(optionnel)</span></label>
-          <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} placeholder="Observations, consignes particulières..."
+          <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3}
+            placeholder="Observations, consignes particulières..."
             className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base text-on-surface placeholder:text-outline resize-none outline-none focus:ring-2 focus:ring-primary transition-all" />
         </div>
 
@@ -554,10 +441,12 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
     );
   };
 
+  // ─── Rendu ────────────────────────────────────────────────────────────────
+
   return (
     <div className="flex gap-5 h-full overflow-hidden">
 
-      {/* ── Liste ── */}
+      {/* Liste */}
       <div className="flex-1 min-w-0 flex flex-col gap-5 overflow-y-auto">
 
         <div className="flex items-center gap-4 flex-wrap">
@@ -574,6 +463,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
           )}
         </div>
 
+        {/* Compteurs par statut */}
         <div className="grid grid-cols-2 3xl:grid-cols-4 gap-3">
           {([
             { label: 'Disponibles', count: counts.Disponible, s: S['Disponible'] },
@@ -589,10 +479,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
           ))}
         </div>
 
+        {/* Filtres position + statut */}
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-1 bg-surface-container rounded-xl p-1">
             {POSITIONS.map(pos => (
-              <button key={pos} onClick={() => setPosFilter(pos)}
+              <button key={pos} onClick={() => setPosFilter(pos as PositionFilter)}
                 className={`px-4 py-2 rounded-lg text-base font-bold transition-all ${posFilter === pos ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-on-surface'}`}>
                 {pos === 'Tous' ? t.players.posAll : pos}
               </button>
@@ -609,6 +500,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
           <p className="text-base text-on-surface-variant ml-auto">{filtered.length} {filtered.length > 1 ? t.players.playerPlural : t.players.player}</p>
         </div>
 
+        {/* Grille de cartes joueurs */}
         <div className="grid grid-cols-2 gap-4">
           {filtered.map(player => {
             const s = S[player.status];
@@ -618,7 +510,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                 <div className="flex items-center gap-4">
                   <div className="relative shrink-0">
                     <div className="w-16 h-16 rounded-xl bg-surface-container-high flex items-center justify-center overflow-hidden">
-                      {player.photoUrl ? <img src={player.photoUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-2xl font-bold text-on-surface-variant">{player.initials}</span>}
+                      {player.photoUrl
+                        // eslint-disable-next-line @next/next/no-img-element
+                        ? <img src={player.photoUrl} alt="" className="w-full h-full object-cover" />
+                        : <span className="text-2xl font-bold text-on-surface-variant">{player.initials}</span>
+                      }
                     </div>
                     <div className="absolute -bottom-2 -right-2 bg-primary rounded-lg px-1.5 py-0.5">
                       <span className="text-white text-sm font-bold">#{player.number}</span>
@@ -643,7 +539,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
         </div>
       </div>
 
-      {/* ── Panneau détail ── */}
+      {/* Panneau de détail (slide depuis la droite) */}
       <div className={`shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${panelVisible ? `${PANEL_W} opacity-100` : 'w-0 opacity-0'}`}>
         {displayed && (() => {
           const s = S[displayed.status];
@@ -665,7 +561,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   <div className="flex items-center gap-5">
                     <div className="relative shrink-0">
                       <div className="w-20 h-20 rounded-2xl bg-surface-container-high flex items-center justify-center overflow-hidden">
-                        {displayed.photoUrl ? <img src={displayed.photoUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-3xl font-bold text-on-surface-variant">{displayed.initials}</span>}
+                        {displayed.photoUrl
+                          // eslint-disable-next-line @next/next/no-img-element
+                          ? <img src={displayed.photoUrl} alt="" className="w-full h-full object-cover" />
+                          : <span className="text-3xl font-bold text-on-surface-variant">{displayed.initials}</span>
+                        }
                       </div>
                       <div className="absolute -bottom-2 -right-2 bg-primary rounded-xl px-2 py-1">
                         <span className="text-white text-base font-bold">#{displayed.number}</span>
@@ -676,14 +576,13 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                       <p className="text-base text-on-surface-variant mb-3">{displayed.position}</p>
                       <span className={`px-4 py-2 rounded-xl text-base font-extrabold ${s.badge}`}>{t.players.statuses[displayed.status]}</span>
                     </div>
-                    <div className="relative group">
-                      <a href="/messagerie" className="w-13 h-13 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary/10 transition-colors">
-                        <Send size={24} className="text-on-surface-variant" />
-                      </a>
-                    </div>
+                    <a href="/messagerie" className="w-13 h-13 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary/10 transition-colors">
+                      <Send size={24} className="text-on-surface-variant" />
+                    </a>
                   </div>
                 </div>
                 <div className="p-5 space-y-5">
+                  {/* Infos générales */}
                   <div>
                     <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.players.info}</p>
                     <div className="bg-surface-container rounded-2xl overflow-hidden divide-y divide-outline-variant/50">
@@ -701,6 +600,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                       ))}
                     </div>
                   </div>
+                  {/* Statistiques */}
                   <div>
                     <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.players.stats} · 2026–2027</p>
                     {displayed.positionShort === 'GK' ? (
@@ -720,12 +620,12 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                     ) : (
                       <div className="grid grid-cols-3 gap-3">
                         {[
-                          { label: t.players.matches,  value: st.matches,     color: 'text-on-surface' },
-                          { label: t.players.goals,    value: st.goals,       color: 'text-primary' },
-                          { label: t.players.assists,  value: st.assists,     color: 'text-secondary' },
-                          { label: '🟨',               value: st.yellowCards, color: 'text-[#F97316]' },
-                          { label: '🟥',               value: st.redCards,    color: 'text-error' },
-                          { label: t.players.minutes,  value: st.minutes !== undefined ? `${st.minutes}'` : undefined, color: 'text-on-surface-variant' },
+                          { label: t.players.matches, value: st.matches,     color: 'text-on-surface' },
+                          { label: t.players.goals,   value: st.goals,       color: 'text-primary' },
+                          { label: t.players.assists, value: st.assists,     color: 'text-secondary' },
+                          { label: '🟨',              value: st.yellowCards, color: 'text-[#F97316]' },
+                          { label: '🟥',              value: st.redCards,    color: 'text-error' },
+                          { label: t.players.minutes, value: st.minutes !== undefined ? `${st.minutes}'` : undefined, color: 'text-on-surface-variant' },
                         ].map((stat, i) => (
                           <div key={i} className="bg-surface-container rounded-xl p-4 text-center">
                             <p className={`text-4xl font-extrabold ${stat.value !== undefined ? stat.color : 'text-outline'}`}>{ph(stat.value)}</p>
@@ -735,6 +635,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                       </div>
                     )}
                   </div>
+                  {/* Statut médical */}
                   <div>
                     <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Statut médical</p>
                     <div className={`rounded-2xl p-4 border ${s.bg}`}>
@@ -746,12 +647,15 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                       {displayed.returnDate && <p className="text-base text-on-surface-variant ml-6 mt-1">↩ {displayed.returnDate}</p>}
                     </div>
                   </div>
+                  {/* Contrat */}
                   <div>
                     <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.players.contract}</p>
                     <div className="bg-surface-container rounded-2xl overflow-hidden divide-y divide-outline-variant/50">
                       <div className="flex items-center justify-between px-4 py-3.5">
                         <p className="text-base text-on-surface-variant">{t.players.contract}</p>
-                        <p className={`text-base ${displayed.contract ? contractColor(displayed.contract) : 'text-outline'}`}>{displayed.contract ? displayed.contract.split('-').reverse().join('/') : '—'}</p>
+                        <p className={`text-base ${displayed.contract ? contractColor(displayed.contract) : 'text-outline'}`}>
+                          {displayed.contract ? displayed.contract.split('-').reverse().join('/') : '—'}
+                        </p>
                       </div>
                       <div className="flex items-center justify-between px-4 py-3.5">
                         <p className="text-base text-on-surface-variant">{t.players.academy}</p>
@@ -759,9 +663,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                       </div>
                     </div>
                   </div>
+                  {/* Notes */}
                   <div>
                     <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Notes du coach</p>
-                    <textarea value={notes[displayed.id] ?? (displayed.notes ?? '')} onChange={e => setNotes(prev => ({ ...prev, [displayed.id]: e.target.value }))}
+                    <textarea value={notes[displayed.id] ?? (displayed.notes ?? '')}
+                      onChange={e => setNotes(prev => ({ ...prev, [displayed.id]: e.target.value }))}
                       rows={4} placeholder="Ajouter une note..."
                       className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-2xl text-base text-on-surface placeholder:text-outline resize-none outline-none focus:ring-2 focus:ring-primary transition-all" />
                   </div>
@@ -772,7 +678,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
         })()}
       </div>
 
-      {/* ── Modal modification ── */}
+      {/* Modal modification */}
       {editOpen && (
         <>
           <div className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${editVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={closeEdit} />
@@ -801,7 +707,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
         </>
       )}
 
-      {/* ── Modal création ── */}
+      {/* Modal création */}
       {createOpen && (
         <>
           <div className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${createVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={closeCreate} />
@@ -821,7 +727,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
         </>
       )}
 
-      {/* ── Modal identifiants ── */}
+      {/* Modal identifiants (affiché une seule fois après création d'un joueur) */}
       {credsOpen && creds && (
         <>
           <div className={`fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm transition-opacity duration-200 ${credsVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />
@@ -855,16 +761,14 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                 <p className="text-xs text-on-surface-variant leading-relaxed">Le joueur devra changer son mot de passe dès la première connexion.</p>
               </div>
               <div className="flex justify-end px-7 pb-6">
-                <button onClick={closeCreds} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">
-                  Fermer
-                </button>
+                <button onClick={closeCreds} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Fermer</button>
               </div>
             </div>
           </div>
         </>
       )}
 
-      {/* ── Modal confirmation suppression ── */}
+      {/* Modal confirmation suppression */}
       {delOpen && (
         <>
           <div className={`fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm transition-opacity duration-200 ${delVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} />

@@ -4,6 +4,9 @@ import { useState, useRef, useEffect } from 'react';
 
 type Nat = { label: string; iso: string };
 
+// Cache module-level : partagé entre toutes les instances NationalitySelect dans la page.
+// _promise déduplique les appels concurrents — si deux composants montent simultanément,
+// un seul fetch part ; le second attend la même promesse.
 let _cache: Nat[] | null = null;
 let _promise: Promise<Nat[]> | null = null;
 
@@ -13,7 +16,7 @@ function loadNationalities(): Promise<Nat[]> {
   _promise = fetch('/api/nationalities')
     .then(r => r.ok ? r.json() : [])
     .then((data: Nat[]) => { _cache = data; return _cache; })
-    .catch(() => { _promise = null; return []; });
+    .catch(() => { _promise = null; return []; }); // reset sur erreur pour permettre un retry
   return _promise;
 }
 
@@ -46,10 +49,11 @@ export default function NationalitySelect({ value, iso, onChange, error }: Props
     : nats;
 
   function handleBlur() {
-    // Revert to last valid selection if the typed text doesn't match exactly
+    // 150 ms pour laisser le onClick de l'option s'exécuter avant de fermer la liste :
+    // blur se déclenche avant click, donc sans délai le dropdown disparaîtrait au moment du clic.
     setTimeout(() => {
       if (!ref.current?.contains(document.activeElement)) {
-        setQuery(value);
+        setQuery(value); // revert si l'utilisateur a tapé sans sélectionner
         setOpen(false);
       }
     }, 150);
@@ -86,7 +90,7 @@ export default function NationalitySelect({ value, iso, onChange, error }: Props
             <button
               key={n.iso}
               type="button"
-              onMouseDown={e => e.preventDefault()}
+              onMouseDown={e => e.preventDefault()} // empêche le blur sur l'input avant que onClick ne s'exécute
               onClick={() => { onChange(n.label, n.iso); setQuery(n.label); setOpen(false); }}
               className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-surface-container text-sm text-left transition-colors"
             >

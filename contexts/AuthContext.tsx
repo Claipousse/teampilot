@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+// Représente l'utilisateur connecté, tel que renvoyé par /api/auth/me
 export type AuthUser = {
   id: number;
   username: string;
@@ -10,9 +11,9 @@ export type AuthUser = {
   lastName: string;
   isAdmin: boolean;
   type: 'player' | 'staff';
-  mustChangePassword: boolean;
-  playerId?: number;
-  staffId?: number;
+  mustChangePassword: boolean; // vrai pour les nouveaux comptes avec mot de passe temporaire
+  playerId?: number;           // défini uniquement si type === 'player'
+  staffId?: number;            // défini uniquement si type === 'staff'
 };
 
 type AuthCtxType = {
@@ -32,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Vérifie la session dès le montage en appelant l'API /me
   useEffect(() => {
     fetch('/api/auth/me')
       .then(r => (r.ok ? r.json() : null))
@@ -49,6 +51,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             staffId: data.staff_id ?? undefined,
           };
           setUser(u);
+          // Redirige immédiatement si le mot de passe temporaire n'a pas encore été changé
+          // Sauf si on est déjà sur /change-password, pour éviter la boucle infinie
           if (u.mustChangePassword) {
             const path = window.location.pathname;
             if (!path.includes('/change-password')) {

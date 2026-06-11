@@ -44,7 +44,7 @@ function fmtEventDate(iso: string) {
 
 export default function DashboardDesktop() {
   const { isAdmin } = useCurrentUser();
-  const { user: auth } = useAuth();
+  const { user: auth, loading: authLoading } = useAuth();
   const t = useT();
   const router = useRouter();
 
@@ -76,20 +76,28 @@ export default function DashboardDesktop() {
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
   useEffect(() => {
-    if (auth?.type === 'player' && auth.playerId) {
-      fetch('/api/backend/players')
-        .then(r => r.ok ? r.json() : [])
-        .then((ps: any[]) => {
-          setMyPlayer(ps.find((p: any) => p.id === auth.playerId) ?? null);
-          setTeammates(ps.filter((p: any) => p.id !== auth.playerId));
-        });
-    }
-  }, [auth?.type, auth?.playerId]);
+    if (auth?.type !== 'player') return;
+    fetch('/api/backend/players')
+      .then(r => r.ok ? r.json() : [])
+      .then((ps: any[]) => {
+        const me = auth.playerId
+          ? (ps.find((p: any) => p.id === auth.playerId) ?? ps.find((p: any) =>
+              p.first_name?.toLowerCase() === auth.firstName?.toLowerCase() &&
+              p.last_name?.toLowerCase() === auth.lastName?.toLowerCase()))
+          : ps.find((p: any) =>
+              p.first_name?.toLowerCase() === auth.firstName?.toLowerCase() &&
+              p.last_name?.toLowerCase() === auth.lastName?.toLowerCase());
+        setMyPlayer(me ?? null);
+        setTeammates(ps.filter((p: any) => p.id !== me?.id));
+      });
+  }, [auth?.type, auth?.playerId, auth?.firstName, auth?.lastName]);
+
+  if (authLoading) return null;
 
   const fullName = auth ? `${auth.firstName} ${auth.lastName}` : '';
 
   return (
-    <div className="flex flex-col gap-6 h-full overflow-y-auto">
+    <div className="flex flex-col gap-6">
 
       {/* Header */}
       <div className="flex items-start justify-between">
@@ -108,106 +116,84 @@ export default function DashboardDesktop() {
 
       {auth?.type === 'player' ? (
         <>
-          {/* Player hero card */}
-          {myPlayer && (
-            <div className="relative bg-gradient-to-br from-primary/8 via-primary/4 to-transparent border border-primary/20 rounded-2xl p-8 overflow-hidden">
-              <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-primary/5 pointer-events-none" />
-              <div className="relative flex items-start gap-8">
+          {/* Carte profil joueur */}
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
 
-                {/* Avatar + number */}
-                <div className="flex flex-col items-center gap-3 shrink-0">
-                  <div className="w-28 h-28 rounded-2xl border-2 border-primary/30 overflow-hidden bg-primary/10 flex items-center justify-center">
-                    {myPlayer.photo_url
-                      // eslint-disable-next-line @next/next/no-img-element
-                      ? <img src={myPlayer.photo_url} alt="" className="w-full h-full object-cover" />
-                      : <span className="text-5xl font-extrabold text-primary">{myPlayer.first_name?.[0]}{myPlayer.last_name?.[0]}</span>
-                    }
-                  </div>
-                  <span className="px-4 py-1.5 rounded-full bg-primary text-white text-sm font-extrabold">#{myPlayer.shirt_number}</span>
+            {/* Section identité */}
+            <div className="flex items-center gap-6 px-8 py-6 border-b border-outline-variant">
+
+              {/* Avatar */}
+              <div className="relative shrink-0">
+                <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center overflow-hidden border-4 border-surface shadow-sm">
+                  {myPlayer?.photo_url
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={myPlayer.photo_url} alt="" className="w-full h-full object-cover" />
+                    : <span className="text-2xl font-extrabold text-white">
+                        {(auth?.firstName?.[0] ?? '?').toUpperCase()}{(auth?.lastName?.[0] ?? '').toUpperCase()}
+                      </span>
+                  }
                 </div>
+                {myPlayer?.shirt_number != null && (
+                  <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary border-2 border-surface flex items-center justify-center">
+                    <span className="text-white text-[10px] font-extrabold leading-none">{myPlayer.shirt_number}</span>
+                  </div>
+                )}
+              </div>
 
-                {/* Info + stats */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 flex-wrap mb-3">
-                    <span className={`px-3 py-1 rounded-full text-sm font-bold ${PLAYER_STATUS[myPlayer.status]?.badge ?? ''}`}>
+              {/* Nom + détails */}
+              <div className="flex-1 min-w-0">
+                <h2 className="text-2xl font-extrabold text-on-surface tracking-tight leading-tight mb-1">
+                  {auth?.firstName ?? '—'}{' '}
+                  <span className="text-primary">{auth?.lastName ?? ''}</span>
+                </h2>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  {myPlayer?.position && (
+                    <span className="text-sm font-semibold text-on-surface-variant">{myPlayer.position}</span>
+                  )}
+                  {myPlayer?.position && myPlayer?.status && (
+                    <span className="text-outline">·</span>
+                  )}
+                  {myPlayer?.status && (
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${PLAYER_STATUS[myPlayer.status]?.badge ?? 'bg-surface-container text-on-surface-variant'}`}>
                       {t.players.statuses[myPlayer.status as keyof typeof t.players.statuses] ?? myPlayer.status}
                     </span>
-                    {myPlayer.nationality_flag && /^[a-z]{2}/.test(myPlayer.nationality_flag) && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={`https://flagcdn.com/w20/${myPlayer.nationality_flag}.png`} alt="" width={20} height={15} className="rounded-sm" />
-                    )}
-                    {myPlayer.nationality && <span className="text-sm text-on-surface-variant">{myPlayer.nationality}</span>}
-                  </div>
-                  <h2 className="text-4xl font-extrabold text-on-surface tracking-tight mb-1">
-                    {myPlayer.first_name} <span className="text-primary">{myPlayer.last_name}</span>
-                  </h2>
-                  <p className="text-lg text-on-surface-variant">{myPlayer.position}</p>
-
-                  {/* Season stats */}
-                  <div className="grid grid-cols-6 gap-4 mt-6 pt-5 border-t border-outline-variant/50">
-                    {([
-                      { v: myPlayer.matches,         label: t.players.matches },
-                      { v: myPlayer.goals,           label: t.players.goals },
-                      { v: myPlayer.assists,         label: t.players.assists },
-                      { v: myPlayer.minutes_played,  label: t.players.minutes },
-                      { v: myPlayer.yellow_cards,    label: t.players.yellowCards },
-                      { v: myPlayer.red_cards,       label: t.players.redCards },
-                    ] as const).map(({ v, label }) => (
-                      <div key={label} className="text-center">
-                        <p className="text-3xl font-extrabold text-primary leading-none">{v ?? 0}</p>
-                        <p className="text-xs text-on-surface-variant uppercase tracking-wider mt-1.5">{label}</p>
-                      </div>
-                    ))}
-                  </div>
+                  )}
+                  {myPlayer?.nationality_flag && /^[a-z]{2}/.test(myPlayer.nationality_flag) && (
+                    <>
+                      <span className="text-outline">·</span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`https://flagcdn.com/w20/${myPlayer.nationality_flag}.png`} alt="" width={18} height={13} className="rounded-sm" />
+                      {myPlayer.nationality && <span className="text-sm text-on-surface-variant">{myPlayer.nationality}</span>}
+                    </>
+                  )}
+                  {!myPlayer && (
+                    <span className="text-sm text-on-surface-variant">Chargement…</span>
+                  )}
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Teammates */}
-          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <Users size={20} className="text-primary" />
-                <h2 className="text-lg font-bold text-on-surface">{t.dashboard.teammates}</h2>
-                <span className="text-xs text-on-surface-variant/60">
-                  {teammates.filter((p: any) => p.status === 'Disponible').length}/{teammates.length} {t.dashboard.kpiAvailable}
-                </span>
-              </div>
-              <Link href="/joueurs" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
-                {t.dashboard.viewPlayersList} <ChevronRight size={14} />
+              {/* Lien vers profil */}
+              <Link href="/joueurs" className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl border border-outline-variant text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors">
+                Mon profil <ChevronRight size={14} />
               </Link>
             </div>
-            {teammates.length === 0 ? (
-              <p className="text-sm text-on-surface-variant text-center py-4">{t.dashboard.noTeammates}</p>
-            ) : (
-              <div className="grid grid-cols-4 gap-3">
-                {teammates.map((tm: any) => {
-                  const ss = PLAYER_STATUS[tm.status] ?? PLAYER_STATUS['Disponible'];
-                  const ini = ((tm.first_name?.[0] ?? '') + (tm.last_name?.[0] ?? '')).toUpperCase();
-                  return (
-                    <div key={tm.id} className="flex items-center gap-3 p-3 bg-surface-container rounded-xl">
-                      <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden shrink-0">
-                        {tm.photo_url
-                          // eslint-disable-next-line @next/next/no-img-element
-                          ? <img src={tm.photo_url} alt="" className="w-full h-full object-cover rounded-full" />
-                          : <span className="text-sm font-bold text-on-surface-variant">{ini}</span>
-                        }
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-on-surface truncate">{tm.first_name} {tm.last_name?.charAt(0)}.</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className={`w-1.5 h-1.5 rounded-full ${ss.dot} shrink-0`} />
-                          <span className={`text-xs font-semibold ${ss.text}`}>
-                            {t.players.statuses[tm.status as keyof typeof t.players.statuses] ?? tm.status}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+
+            {/* Bande de stats */}
+            <div className="grid grid-cols-6 divide-x divide-outline-variant">
+              {([
+                { v: myPlayer?.matches,        label: t.players.matches },
+                { v: myPlayer?.goals,          label: t.players.goals },
+                { v: myPlayer?.assists,        label: t.players.assists },
+                { v: myPlayer?.minutes_played, label: t.players.minutes },
+                { v: myPlayer?.yellow_cards,   label: t.players.yellowCards },
+                { v: myPlayer?.red_cards,      label: t.players.redCards },
+              ] as const).map(({ v, label }) => (
+                <div key={label} className="py-5 text-center">
+                  <p className="text-3xl font-extrabold text-on-surface leading-none">{v ?? 0}</p>
+                  <p className="text-xs text-on-surface-variant uppercase tracking-wider mt-1.5">{label}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Events + Messages for player */}
@@ -279,6 +265,52 @@ export default function DashboardDesktop() {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Teammates — en bas */}
+          <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <Users size={20} className="text-primary" />
+                <h2 className="text-lg font-bold text-on-surface">{t.dashboard.teammates}</h2>
+                <span className="text-xs text-on-surface-variant/60">
+                  {teammates.filter((p: any) => p.status === 'Disponible').length}/{teammates.length} {t.dashboard.kpiAvailable}
+                </span>
+              </div>
+              <Link href="/joueurs" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+                {t.dashboard.viewPlayersList} <ChevronRight size={14} />
+              </Link>
+            </div>
+            {teammates.length === 0 ? (
+              <p className="text-sm text-on-surface-variant text-center py-4">{t.dashboard.noTeammates}</p>
+            ) : (
+              <div className="grid grid-cols-4 gap-3">
+                {teammates.map((tm: any) => {
+                  const ss = PLAYER_STATUS[tm.status] ?? PLAYER_STATUS['Disponible'];
+                  const ini = ((tm.first_name?.[0] ?? '') + (tm.last_name?.[0] ?? '')).toUpperCase();
+                  return (
+                    <div key={tm.id} className="flex items-center gap-3 p-3 bg-surface-container rounded-xl">
+                      <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden shrink-0">
+                        {tm.photo_url
+                          // eslint-disable-next-line @next/next/no-img-element
+                          ? <img src={tm.photo_url} alt="" className="w-full h-full object-cover rounded-full" />
+                          : <span className="text-sm font-bold text-on-surface-variant">{ini}</span>
+                        }
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-on-surface truncate">{tm.first_name} {tm.last_name?.charAt(0)}.</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className={`w-1.5 h-1.5 rounded-full ${ss.dot} shrink-0`} />
+                          <span className={`text-xs font-semibold ${ss.text}`}>
+                            {t.players.statuses[tm.status as keyof typeof t.players.statuses] ?? tm.status}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </>
       ) : (

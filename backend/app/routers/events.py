@@ -36,7 +36,7 @@ async def upcoming_events(db: AsyncSession = Depends(get_db)):
 async def create_event(
     data: EventCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_staff),
+    current_user: User = Depends(require_admin),
 ):
     event = Event(**data.model_dump(), created_by=current_user.id)
     db.add(event)

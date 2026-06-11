@@ -39,9 +39,10 @@ async def list_staff(search: str = "", role: str = "", db: AsyncSession = Depend
 
 @router.post("", response_model=StaffCreatedResponse, dependencies=[Depends(require_admin)])
 async def create_staff(data: StaffMemberCreate, db: AsyncSession = Depends(get_db)):
-    existing_sm = await db.execute(select(StaffMember).where(StaffMember.email == data.email))
-    if existing_sm.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Email déjà utilisé")
+    if data.email:
+        existing_sm = await db.execute(select(StaffMember).where(StaffMember.email == data.email))
+        if existing_sm.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Email déjà utilisé")
 
     member = StaffMember(
         first_name=data.first_name,

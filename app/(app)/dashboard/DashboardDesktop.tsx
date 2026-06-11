@@ -309,23 +309,95 @@ export default function DashboardDesktop() {
         </>
       ) : (
         <>
-          {/* KPIs */}
-          <div className="grid grid-cols-3 gap-4">
-            {([
-              { label: t.dashboard.kpiPlayers,  value: kpis.total_players,          sub: `${kpis.available_players} ${t.dashboard.kpiAvailable}`, Icon: Users,         accent: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/20',   href: '/joueurs' },
-              { label: t.dashboard.kpiEvents,   value: kpis.upcoming_events_count,  sub: t.dashboard.kpiUpcoming,                                  Icon: Calendar,      accent: 'text-secondary', bg: 'bg-secondary/5', border: 'border-secondary/20', href: '/calendrier' },
-              { label: t.dashboard.kpiMessages, value: kpis.unread_messages,        sub: t.dashboard.kpiUnread,                                    Icon: MessageSquare, accent: 'text-error',     bg: 'bg-error/5',     border: 'border-error/20',     href: '/messagerie' },
-            ] as const).map(kpi => (
-              <Link key={kpi.label} href={kpi.href} className={`${kpi.bg} border ${kpi.border} rounded-2xl p-5 flex flex-col gap-2 hover:brightness-[0.97] transition-all`}>
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{kpi.label}</p>
-                  <kpi.Icon size={18} className={kpi.accent} />
+          {/* Panneau Admin */}
+          {isAdmin && (
+            <div className="border border-error/25 bg-error/5 rounded-2xl p-6">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-error/80 flex items-center justify-center shrink-0">
+                  <Shield size={16} className="text-white" />
                 </div>
-                <p className={`text-4xl font-extrabold leading-none ${kpi.accent}`}>{kpi.value}</p>
-                <p className="text-sm text-on-surface-variant">{kpi.sub}</p>
-              </Link>
-            ))}
-          </div>
+                <div>
+                  <h2 className="text-lg font-bold text-on-surface">{t.dashboard.adminPanel}</h2>
+                  <p className="text-xs text-on-surface-variant">{t.dashboard.adminOnly}</p>
+                </div>
+                <Link href="/administration" className="ml-auto text-sm font-semibold text-error/80 hover:underline flex items-center gap-1">
+                  {t.common.manage} <ChevronRight size={14} />
+                </Link>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+
+                {/* Club */}
+                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex flex-col gap-4">
+                  <div>
+                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.dashboard.clubCard}</p>
+                    <p className="text-base font-extrabold text-on-surface">{summary?.club?.name ?? '—'}</p>
+                    <p className="text-sm text-on-surface-variant mt-1">{summary?.club?.league ?? '—'}</p>
+                    <p className="text-xs text-on-surface-variant/60 mt-1">{summary?.club?.founded_year ? `${t.dashboard.founded} ${summary.club.founded_year}` : ''}{summary?.club?.city ? ` · ${summary.club.city}` : ''}</p>
+                  </div>
+                  <div className="border-t border-outline-variant pt-4 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest w-16 shrink-0">Email</span>
+                      <span className="text-xs text-on-surface truncate">{summary?.club?.email ?? '—'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest w-16 shrink-0">Tél.</span>
+                      <span className="text-xs text-on-surface">{summary?.club?.phone ?? '—'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Saison */}
+                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex flex-col gap-4">
+                  <div>
+                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.dashboard.seasonCard}</p>
+                    {summary?.season ? (
+                      <>
+                        <div className="flex items-center gap-2 mb-2">
+                          <p className="text-base font-extrabold text-on-surface">{summary.season.label}</p>
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${SS_SEASON[summary.season.status] ?? ''}`}>{summary.season.status}</span>
+                        </div>
+                        <p className="text-sm text-on-surface-variant">{summary.season.competitions}</p>
+                        <p className="text-xs text-on-surface-variant/60 mt-1">{t.dashboard.objective} {summary.season.objective}</p>
+                      </>
+                    ) : <p className="text-sm text-on-surface-variant">—</p>}
+                  </div>
+                  {summary?.season && (
+                    <div className="border-t border-outline-variant pt-4 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-on-surface-variant">{t.dashboard.start}</span>
+                        <span className="font-semibold text-on-surface">{fmtDate(summary.season.start_date)}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-on-surface-variant">{t.dashboard.end}</span>
+                        <span className="font-semibold text-on-surface">{fmtDate(summary.season.end_date)}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Staff */}
+                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5">
+                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">
+                    {t.dashboard.staffCard} · <span className="normal-case font-semibold text-on-surface">{summary?.staff?.length ?? 0} {t.common.members}</span>
+                  </p>
+                  <div className="space-y-2.5 max-h-44 overflow-y-auto pr-1">
+                    {(summary?.staff ?? []).map((s: any, i: number) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <span className="text-xs font-bold text-primary">{s.first_name[0]}{s.last_name[0]}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-on-surface truncate">{s.first_name} {s.last_name}</p>
+                          <p className="text-xs text-on-surface-variant truncate">{s.role}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
 
           {/* Événements + Messages */}
           <div className="grid grid-cols-5 gap-4">
@@ -447,95 +519,6 @@ export default function DashboardDesktop() {
             )}
           </div>
 
-          {/* Panneau Admin */}
-          {isAdmin && (
-            <div className="border border-error/25 bg-error/5 rounded-2xl p-6">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-8 h-8 rounded-lg bg-error/80 flex items-center justify-center shrink-0">
-                  <Shield size={16} className="text-white" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-on-surface">{t.dashboard.adminPanel}</h2>
-                  <p className="text-xs text-on-surface-variant">{t.dashboard.adminOnly}</p>
-                </div>
-                <Link href="/administration" className="ml-auto text-sm font-semibold text-error/80 hover:underline flex items-center gap-1">
-                  {t.common.manage} <ChevronRight size={14} />
-                </Link>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-
-                {/* Club */}
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex flex-col gap-4">
-                  <div>
-                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.dashboard.clubCard}</p>
-                    <p className="text-base font-extrabold text-on-surface">{summary?.club?.name ?? '—'}</p>
-                    <p className="text-sm text-on-surface-variant mt-1">{summary?.club?.league ?? '—'}</p>
-                    <p className="text-xs text-on-surface-variant/60 mt-1">{summary?.club?.founded_year ? `${t.dashboard.founded} ${summary.club.founded_year}` : ''}{summary?.club?.city ? ` · ${summary.club.city}` : ''}</p>
-                  </div>
-                  <div className="border-t border-outline-variant pt-4 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest w-16 shrink-0">Email</span>
-                      <span className="text-xs text-on-surface truncate">{summary?.club?.email ?? '—'}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest w-16 shrink-0">Tél.</span>
-                      <span className="text-xs text-on-surface">{summary?.club?.phone ?? '—'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Saison */}
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 flex flex-col gap-4">
-                  <div>
-                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.dashboard.seasonCard}</p>
-                    {summary?.season ? (
-                      <>
-                        <div className="flex items-center gap-2 mb-2">
-                          <p className="text-base font-extrabold text-on-surface">{summary.season.label}</p>
-                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${SS_SEASON[summary.season.status] ?? ''}`}>{summary.season.status}</span>
-                        </div>
-                        <p className="text-sm text-on-surface-variant">{summary.season.competitions}</p>
-                        <p className="text-xs text-on-surface-variant/60 mt-1">{t.dashboard.objective} {summary.season.objective}</p>
-                      </>
-                    ) : <p className="text-sm text-on-surface-variant">—</p>}
-                  </div>
-                  {summary?.season && (
-                    <div className="border-t border-outline-variant pt-4 space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-on-surface-variant">{t.dashboard.start}</span>
-                        <span className="font-semibold text-on-surface">{fmtDate(summary.season.start_date)}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-on-surface-variant">{t.dashboard.end}</span>
-                        <span className="font-semibold text-on-surface">{fmtDate(summary.season.end_date)}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Staff */}
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-5">
-                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">
-                    {t.dashboard.staffCard} · <span className="normal-case font-semibold text-on-surface">{summary?.staff?.length ?? 0} {t.common.members}</span>
-                  </p>
-                  <div className="space-y-2.5 max-h-44 overflow-y-auto pr-1">
-                    {(summary?.staff ?? []).map((s: any, i: number) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <span className="text-xs font-bold text-primary">{s.first_name[0]}{s.last_name[0]}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-on-surface truncate">{s.first_name} {s.last_name}</p>
-                          <p className="text-xs text-on-surface-variant truncate">{s.role}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          )}
         </>
       )}
 

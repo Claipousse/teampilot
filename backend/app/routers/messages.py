@@ -148,7 +148,7 @@ async def list_conversations(
                 id=conv.id, name=display_name, category=conv.category,
                 role_type=conv.role_type, is_group=conv.is_group, is_ai=conv.is_ai,
                 initials=display_initials, avatar_bg=conv.avatar_bg, role=display_role,
-                preview=last.text if last else None,
+                preview=(f"Vous : {last.text}" if last.sender_id == current_user.id else last.text) if last else None,
                 time=_fmt_time(last.created_at) if last else None,
                 members=members,
             ),

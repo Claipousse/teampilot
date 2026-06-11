@@ -5,7 +5,7 @@ class StaffMemberCreate(BaseModel):
     first_name: str
     last_name: str
     role: str
-    email: EmailStr
+    email: EmailStr | None = None
     phone: str | None = None
     since_date: str | None = None
     notes: str | None = None
@@ -28,7 +28,7 @@ class StaffMemberRead(BaseModel):
     first_name: str
     last_name: str
     role: str
-    email: str
+    email: str | None
     phone: str | None
     since_date: str | None
     photo_url: str | None

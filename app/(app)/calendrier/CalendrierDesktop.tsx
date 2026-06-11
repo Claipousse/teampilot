@@ -122,6 +122,7 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
   const [detailVisible, setDetailVisible] = useState(false);
   const [editEvent, setEditEvent]       = useState<CalEvent | null>(null);
   const [editVisible, setEditVisible]   = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [editForm, setEditForm] = useState({
     title: '', tag: 'Entraînement' as EventTag,
     lieu: '', remarques: '',
@@ -146,7 +147,7 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
   const pendingEventIdRef = useRef<number | null>(openEventId ?? null);
 
   const { isAdmin: canEdit, type: userType } = useCurrentUser();
-  const canCreate = userType !== 'player';
+  const canCreate = canEdit;
   const t = useT();
 
   const fetchEvents = useCallback(async () => {
@@ -211,7 +212,7 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
     setDetailInfo({ event, day, month: current.getMonth(), year: current.getFullYear() });
     setTimeout(() => setDetailVisible(true), 10);
   };
-  const closeDetail = () => { setDetailVisible(false); setTimeout(() => setDetailInfo(null), 200); };
+  const closeDetail = () => { setDetailVisible(false); setDeleteConfirm(false); setTimeout(() => setDetailInfo(null), 200); };
 
   const openEdit = (event: CalEvent, day: number) => {
     const [h, m] = event.time.split(':').map(Number);
@@ -396,7 +397,35 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
               </div>
 
               {canEdit && (
-                <div className="px-7 py-4 border-t border-outline-variant shrink-0 flex justify-end">
+                <div className="px-7 py-4 border-t border-outline-variant shrink-0 flex items-center justify-between">
+                  {deleteConfirm ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-on-surface-variant">Confirmer ?</span>
+                      <button
+                        onClick={async () => {
+                          if (!detailInfo.event.id) return;
+                          await fetch(`/api/backend/events/${detailInfo.event.id}`, { method: 'DELETE' });
+                          await fetchEvents(); closeDetail();
+                        }}
+                        className="px-4 py-2 rounded-xl bg-error text-white font-semibold text-sm transition-colors"
+                      >
+                        Supprimer
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirm(false)}
+                        className="px-4 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold text-sm"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setDeleteConfirm(true)}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold"
+                    >
+                      <Trash2 size={16} /> {t.common.delete}
+                    </button>
+                  )}
                   <button
                     onClick={() => { closeDetail(); setTimeout(() => openEdit(detailInfo.event, detailInfo.day), 200); }}
                     className="flex items-center gap-2 px-5 py-2.5 bg-error hover:bg-error/90 text-white rounded-xl font-semibold transition-colors"
@@ -544,25 +573,16 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between px-8 py-5 border-t border-outline-variant shrink-0">
+              <div className="flex items-center justify-end px-8 py-5 border-t border-outline-variant shrink-0 gap-3">
+                <button onClick={closeEdit} className="px-5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                 <button onClick={async () => {
                   if (!editEvent?.id) return;
-                  await fetch(`/api/backend/events/${editEvent.id}`, { method: 'DELETE' });
-                  await fetchEvents(); closeEdit(); closeDetail();
-                }} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold">
-                  <Trash2 size={16} /> {t.common.delete}
-                </button>
-                <div className="flex items-center gap-3">
-                  <button onClick={closeEdit} className="px-5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
-                  <button onClick={async () => {
-                    if (!editEvent?.id) return;
-                    await fetch(`/api/backend/events/${editEvent.id}`, {
-                      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ title: editForm.title, tag: editForm.tag, event_date: `${editForm.year}-${pad(editForm.month + 1)}-${pad(editForm.day)}`, event_time: `${pad(editForm.hour)}:${pad(editForm.minute)}`, location: editForm.lieu || null, notes: editForm.remarques || null }),
-                    });
-                    await fetchEvents(); closeEdit();
-                  }} className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
-                </div>
+                  await fetch(`/api/backend/events/${editEvent.id}`, {
+                    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: editForm.title, tag: editForm.tag, event_date: `${editForm.year}-${pad(editForm.month + 1)}-${pad(editForm.day)}`, event_time: `${pad(editForm.hour)}:${pad(editForm.minute)}`, location: editForm.lieu || null, notes: editForm.remarques || null }),
+                  });
+                  await fetchEvents(); closeEdit();
+                }} className="px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
               </div>
 
             </div>

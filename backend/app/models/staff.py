@@ -20,7 +20,7 @@ class StaffMember(Base):
     first_name: Mapped[str] = mapped_column(String, nullable=False)
     last_name: Mapped[str] = mapped_column(String, nullable=False)
     role: Mapped[str] = mapped_column(String, nullable=False)
-    email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    email: Mapped[str | None] = mapped_column(String, unique=True, index=True, nullable=True)
     phone: Mapped[str | None] = mapped_column(String, nullable=True)
     since_date: Mapped[str | None] = mapped_column(String, nullable=True)  # YYYY-MM-DD
     photo_url: Mapped[str | None] = mapped_column(String, nullable=True)

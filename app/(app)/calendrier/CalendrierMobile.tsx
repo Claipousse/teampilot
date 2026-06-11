@@ -132,6 +132,7 @@ export default function CalendrierMobile({ openCreate = false, openEventId }: { 
 
   const [detailInfo, setDetailInfo] = useState<DetailInfo | null>(null);
   const [detailVisible, setDetailVisible] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
 
   const [editEvent, setEditEvent] = useState<MobileEvent | null>(null);
   const [editVisible, setEditVisible] = useState(false);
@@ -159,7 +160,7 @@ export default function CalendrierMobile({ openCreate = false, openEventId }: { 
   const pendingEventIdRef = useRef<number | null>(openEventId ?? null);
 
   const { isAdmin: canEdit, type: userType } = useCurrentUser();
-  const canCreate = userType !== 'player';
+  const canCreate = canEdit;
   const t = useT();
 
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -206,7 +207,7 @@ export default function CalendrierMobile({ openCreate = false, openEventId }: { 
     setDetailInfo({ event, dayLabel, dateStr: event.time });
     setTimeout(() => setDetailVisible(true), 10);
   };
-  const closeDetail = () => { setDetailVisible(false); setTimeout(() => setDetailInfo(null), 200); };
+  const closeDetail = () => { setDetailVisible(false); setDeleteConfirm(false); setTimeout(() => setDetailInfo(null), 200); };
 
   const openEdit = (event: MobileEvent) => {
     const [h, m] = event.time.split(':').map(Number);
@@ -408,7 +409,40 @@ export default function CalendrierMobile({ openCreate = false, openEventId }: { 
               </div>
 
               {canEdit && (
-                <div className="px-7 py-4 border-t border-outline-variant shrink-0 flex justify-end">
+                <div className="px-7 py-4 border-t border-outline-variant shrink-0 flex items-center justify-between">
+                  {deleteConfirm ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-on-surface-variant">Confirmer ?</span>
+                      <button
+                        onClick={async () => {
+                          if (!detailInfo.event.id) return;
+                          await fetch(`/api/backend/events/${detailInfo.event.id}`, { method: 'DELETE' });
+                          setEventsMap(prev => {
+                            const next = { ...prev };
+                            for (const key of Object.keys(next)) next[key] = next[key].filter(e => e.id !== detailInfo.event.id);
+                            return next;
+                          });
+                          closeDetail();
+                        }}
+                        className="px-4 py-2 rounded-xl bg-error text-white font-semibold text-sm transition-colors"
+                      >
+                        Supprimer
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirm(false)}
+                        className="px-4 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold text-sm"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setDeleteConfirm(true)}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold"
+                    >
+                      <Trash2 size={16} /> {t.common.delete}
+                    </button>
+                  )}
                   <button
                     onClick={openEditFromDetail}
                     className="flex items-center gap-2 px-5 py-2.5 bg-error hover:bg-error/90 text-white rounded-xl font-semibold transition-colors"
@@ -538,30 +572,16 @@ export default function CalendrierMobile({ openCreate = false, openEventId }: { 
 
               </div>
 
-              <div className="flex items-center justify-between px-6 py-4 border-t border-outline-variant shrink-0">
+              <div className="flex items-center justify-end px-6 py-4 border-t border-outline-variant shrink-0 gap-2">
+                <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                 <button onClick={async () => {
                   if (!editEvent?.id) return;
-                  await fetch(`/api/backend/events/${editEvent.id}`, { method: 'DELETE' });
-                  setEventsMap(prev => {
-                    const next = { ...prev };
-                    for (const key of Object.keys(next)) next[key] = next[key].filter(e => e.id !== editEvent.id);
-                    return next;
+                  await fetch(`/api/backend/events/${editEvent.id}`, {
+                    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: editForm.title, tag: editForm.tag, event_date: `${editForm.year}-${pad(editForm.month + 1)}-${pad(editForm.day)}`, event_time: `${pad(editForm.hour)}:${pad(editForm.minute)}`, location: editForm.lieu || null, notes: editForm.remarques || null }),
                   });
-                  closeEdit(); closeDetail();
-                }} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold">
-                  <Trash2 size={16} /> {t.common.delete}
-                </button>
-                <div className="flex items-center gap-2">
-                  <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
-                  <button onClick={async () => {
-                    if (!editEvent?.id) return;
-                    await fetch(`/api/backend/events/${editEvent.id}`, {
-                      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ title: editForm.title, tag: editForm.tag, event_date: `${editForm.year}-${pad(editForm.month + 1)}-${pad(editForm.day)}`, event_time: `${pad(editForm.hour)}:${pad(editForm.minute)}`, location: editForm.lieu || null, notes: editForm.remarques || null }),
-                    });
-                    await fetchEventsForMonth(editForm.year, editForm.month); closeEdit();
-                  }} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
-                </div>
+                  await fetchEventsForMonth(editForm.year, editForm.month); closeEdit();
+                }} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.save}</button>
               </div>
 
             </div>

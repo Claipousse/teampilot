@@ -336,7 +336,6 @@ export default function AdministrationMobile() {
     if (!f.prenom.trim()) e.prenom = 'Champ obligatoire';
     if (!f.nom.trim())    e.nom    = 'Champ obligatoire';
     if (!f.role)          e.role   = 'Champ obligatoire';
-    if (!f.email.trim())  e.email  = 'Champ obligatoire';
     void isEdit;
     return e;
   }
@@ -399,7 +398,7 @@ export default function AdministrationMobile() {
             {errors.role && <p className="text-xs text-error mt-1">{errors.role}</p>}
           </div>
           <div>
-            <label className={labelCls}>Email <span className="text-error">*</span></label>
+            <label className={labelCls}>Email <span className="font-normal normal-case opacity-60">(optionnel)</span></label>
             <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className={inputCls(errors.email)} placeholder="nom@club.com" />
             {errors.email && <p className="text-xs text-error mt-1">{errors.email}</p>}
           </div>
@@ -682,7 +681,7 @@ export default function AdministrationMobile() {
                     </div>
                   </div>
                   <div>
-                    <label className={labelCls}>Email <span className="text-error">*</span></label>
+                    <label className={labelCls}>Email <span className="font-normal normal-case opacity-60">(optionnel)</span></label>
                     <input type="email" value={clubForm.email} onChange={e => setClubForm(f => ({ ...f, email: e.target.value }))} className={inputCls(clubErrors.email)} placeholder="admin@club.com" />
                     {clubErrors.email && <p className="text-xs text-error mt-1">{clubErrors.email}</p>}
                   </div>

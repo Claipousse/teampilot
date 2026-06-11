@@ -310,23 +310,66 @@ export default function DashboardMobile() {
         </>
       ) : (
         <>
-          {/* KPIs */}
-          <div className="grid grid-cols-3 gap-3">
-            {([
-              { label: t.dashboard.kpiPlayers,  value: kpis.total_players,         sub: `${kpis.available_players} ${t.dashboard.kpiAvailable}`, Icon: Users,         accent: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/20',   href: '/joueurs' },
-              { label: t.dashboard.kpiEvents,   value: kpis.upcoming_events_count, sub: t.dashboard.kpiUpcoming,                                  Icon: Calendar,      accent: 'text-secondary', bg: 'bg-secondary/5', border: 'border-secondary/20', href: '/calendrier' },
-              { label: t.dashboard.kpiMessages, value: kpis.unread_messages,       sub: t.dashboard.kpiUnread,                                    Icon: MessageSquare, accent: 'text-error',     bg: 'bg-error/5',     border: 'border-error/20',     href: '/messagerie' },
-            ] as const).map(kpi => (
-              <Link key={kpi.label} href={kpi.href} className={`${kpi.bg} border ${kpi.border} rounded-2xl p-4 flex flex-col gap-1.5 active:brightness-95 transition-all`}>
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{kpi.label}</p>
-                  <kpi.Icon size={16} className={kpi.accent} />
+          {/* Panneau Admin */}
+          {isAdmin && (
+            <section>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-7 h-7 rounded-lg bg-error/80 flex items-center justify-center shrink-0">
+                  <Shield size={14} className="text-white" />
                 </div>
-                <p className={`text-3xl font-extrabold leading-none ${kpi.accent}`}>{kpi.value}</p>
-                <p className="text-xs text-on-surface-variant">{kpi.sub}</p>
-              </Link>
-            ))}
-          </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-base font-bold text-on-surface">{t.dashboard.adminPanel}</h2>
+                  <p className="text-xs text-on-surface-variant">{t.dashboard.adminOnly}</p>
+                </div>
+                <Link href="/administration" className="text-xs font-semibold text-error/80 flex items-center gap-0.5 shrink-0">
+                  {t.common.manage} <ChevronRight size={13} />
+                </Link>
+              </div>
+              <div className="border border-error/25 bg-error/5 rounded-2xl p-4 space-y-3">
+
+                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">{t.dashboard.clubCard}</p>
+                  <p className="text-base font-extrabold text-on-surface">{summary?.club?.name ?? '—'}</p>
+                  <p className="text-sm text-on-surface-variant mt-0.5">{summary?.club?.league ?? '—'}</p>
+                  <p className="text-xs text-on-surface-variant/60 mt-0.5">{summary?.club?.founded_year ? `${t.dashboard.founded} ${summary.club.founded_year}` : ''}</p>
+                </div>
+
+                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">{t.dashboard.seasonCard}</p>
+                  {summary?.season ? (
+                    <>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-base font-extrabold text-on-surface">{summary.season.label}</p>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${SS_SEASON[summary.season.status] ?? ''}`}>{summary.season.status}</span>
+                      </div>
+                      <p className="text-sm text-on-surface-variant">{summary.season.competitions}</p>
+                      <p className="text-xs text-on-surface-variant/60 mt-0.5">{t.dashboard.objective} {summary.season.objective}</p>
+                    </>
+                  ) : <p className="text-sm text-on-surface-variant">—</p>}
+                </div>
+
+                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
+                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">
+                    {t.dashboard.staffCard} · <span className="normal-case font-semibold text-on-surface">{summary?.staff?.length ?? 0} {t.common.members}</span>
+                  </p>
+                  <div className="space-y-2.5 max-h-32 overflow-y-auto pr-1">
+                    {(summary?.staff ?? []).map((s: any, i: number) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <span className="text-xs font-bold text-primary">{s.first_name[0]}{s.last_name[0]}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-on-surface truncate">{s.first_name} {s.last_name}</p>
+                          <p className="text-xs text-on-surface-variant truncate">{s.role}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </section>
+          )}
 
           {/* Prochains événements */}
           <section>
@@ -441,66 +484,6 @@ export default function DashboardMobile() {
             )}
           </section>
 
-          {/* Panneau Admin */}
-          {isAdmin && (
-            <section>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-error/80 flex items-center justify-center shrink-0">
-                  <Shield size={14} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-base font-bold text-on-surface">{t.dashboard.adminPanel}</h2>
-                  <p className="text-xs text-on-surface-variant">{t.dashboard.adminOnly}</p>
-                </div>
-                <Link href="/administration" className="text-xs font-semibold text-error/80 flex items-center gap-0.5 shrink-0">
-                  {t.common.manage} <ChevronRight size={13} />
-                </Link>
-              </div>
-              <div className="border border-error/25 bg-error/5 rounded-2xl p-4 space-y-3">
-
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
-                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">{t.dashboard.clubCard}</p>
-                  <p className="text-base font-extrabold text-on-surface">{summary?.club?.name ?? '—'}</p>
-                  <p className="text-sm text-on-surface-variant mt-0.5">{summary?.club?.league ?? '—'}</p>
-                  <p className="text-xs text-on-surface-variant/60 mt-0.5">{summary?.club?.founded_year ? `${t.dashboard.founded} ${summary.club.founded_year}` : ''}</p>
-                </div>
-
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
-                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">{t.dashboard.seasonCard}</p>
-                  {summary?.season ? (
-                    <>
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-base font-extrabold text-on-surface">{summary.season.label}</p>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${SS_SEASON[summary.season.status] ?? ''}`}>{summary.season.status}</span>
-                      </div>
-                      <p className="text-sm text-on-surface-variant">{summary.season.competitions}</p>
-                      <p className="text-xs text-on-surface-variant/60 mt-0.5">{t.dashboard.objective} {summary.season.objective}</p>
-                    </>
-                  ) : <p className="text-sm text-on-surface-variant">—</p>}
-                </div>
-
-                <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-4">
-                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">
-                    {t.dashboard.staffCard} · <span className="normal-case font-semibold text-on-surface">{summary?.staff?.length ?? 0} {t.common.members}</span>
-                  </p>
-                  <div className="space-y-2.5 max-h-32 overflow-y-auto pr-1">
-                    {(summary?.staff ?? []).map((s: any, i: number) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <span className="text-xs font-bold text-primary">{s.first_name[0]}{s.last_name[0]}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-on-surface truncate">{s.first_name} {s.last_name}</p>
-                          <p className="text-xs text-on-surface-variant truncate">{s.role}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-            </section>
-          )}
         </>
       )}
 

@@ -123,7 +123,7 @@ export default function DashboardDesktop() {
             <div className="flex items-center gap-6 px-8 py-6 border-b border-outline-variant">
 
               {/* Avatar */}
-              <div className="relative shrink-0">
+              <div className="shrink-0">
                 <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center overflow-hidden border-4 border-surface shadow-sm">
                   {myPlayer?.photo_url
                     // eslint-disable-next-line @next/next/no-img-element
@@ -133,19 +133,18 @@ export default function DashboardDesktop() {
                       </span>
                   }
                 </div>
-                {myPlayer?.shirt_number != null && (
-                  <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary border-2 border-surface flex items-center justify-center">
-                    <span className="text-white text-[10px] font-extrabold leading-none">{myPlayer.shirt_number}</span>
-                  </div>
-                )}
               </div>
 
               {/* Nom + détails */}
               <div className="flex-1 min-w-0">
-                <h2 className="text-2xl font-extrabold text-on-surface tracking-tight leading-tight mb-1">
-                  {auth?.firstName ?? '—'}{' '}
-                  <span className="text-primary">{auth?.lastName ?? ''}</span>
-                </h2>
+                <div className="flex items-center gap-2.5 mb-1">
+                  <h2 className="text-2xl font-extrabold text-on-surface tracking-tight leading-tight">
+                    {auth?.firstName ?? '—'} {auth?.lastName ?? ''}
+                  </h2>
+                  {myPlayer?.shirt_number != null && (
+                    <span className="px-2 py-0.5 rounded-md bg-surface-container text-sm font-extrabold text-on-surface-variant">#{myPlayer.shirt_number}</span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2.5 flex-wrap">
                   {myPlayer?.position && (
                     <span className="text-sm font-semibold text-on-surface-variant">{myPlayer.position}</span>
@@ -171,11 +170,6 @@ export default function DashboardDesktop() {
                   )}
                 </div>
               </div>
-
-              {/* Lien vers profil */}
-              <Link href="/joueurs" className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl border border-outline-variant text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors">
-                Mon profil <ChevronRight size={14} />
-              </Link>
             </div>
 
             {/* Bande de stats */}
@@ -183,8 +177,8 @@ export default function DashboardDesktop() {
               {([
                 { v: myPlayer?.matches,        label: t.players.matches },
                 { v: myPlayer?.goals,          label: t.players.goals },
-                { v: myPlayer?.assists,        label: t.players.assists },
-                { v: myPlayer?.minutes_played, label: t.players.minutes },
+                { v: myPlayer?.assists,        label: 'Passes décisives' },
+                { v: myPlayer?.minutes_played, label: 'Minutes jouées' },
                 { v: myPlayer?.yellow_cards,   label: t.players.yellowCards },
                 { v: myPlayer?.red_cards,      label: t.players.redCards },
               ] as const).map(({ v, label }) => (

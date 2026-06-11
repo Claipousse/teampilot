@@ -116,7 +116,7 @@ export default function DashboardMobile() {
             <div className="flex items-center gap-4 px-5 py-5 border-b border-outline-variant">
 
               {/* Avatar */}
-              <div className="relative shrink-0">
+              <div className="shrink-0">
                 <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center overflow-hidden border-4 border-surface shadow-sm">
                   {myPlayer?.photo_url
                     // eslint-disable-next-line @next/next/no-img-element
@@ -126,19 +126,18 @@ export default function DashboardMobile() {
                       </span>
                   }
                 </div>
-                {myPlayer?.shirt_number != null && (
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-primary border-2 border-surface flex items-center justify-center">
-                    <span className="text-white text-[9px] font-extrabold leading-none">{myPlayer.shirt_number}</span>
-                  </div>
-                )}
               </div>
 
               {/* Nom + détails */}
               <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-extrabold text-on-surface tracking-tight leading-tight mb-1">
-                  {auth?.firstName ?? '—'}{' '}
-                  <span className="text-primary">{auth?.lastName ?? ''}</span>
-                </h2>
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-xl font-extrabold text-on-surface tracking-tight leading-tight">
+                    {auth?.firstName ?? '—'} {auth?.lastName ?? ''}
+                  </h2>
+                  {myPlayer?.shirt_number != null && (
+                    <span className="px-1.5 py-0.5 rounded-md bg-surface-container text-xs font-extrabold text-on-surface-variant">#{myPlayer.shirt_number}</span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   {myPlayer?.position && (
                     <span className="text-xs font-semibold text-on-surface-variant">{myPlayer.position}</span>
@@ -170,7 +169,7 @@ export default function DashboardMobile() {
               {([
                 { v: myPlayer?.matches,        label: t.players.matches },
                 { v: myPlayer?.goals,          label: t.players.goals },
-                { v: myPlayer?.assists,        label: t.players.assists },
+                { v: myPlayer?.assists,        label: 'Passes décisives' },
               ] as const).map(({ v, label }) => (
                 <div key={label} className="py-4 text-center">
                   <p className="text-2xl font-extrabold text-on-surface leading-none">{v ?? 0}</p>
@@ -180,7 +179,7 @@ export default function DashboardMobile() {
             </div>
             <div className="grid grid-cols-3 divide-x divide-outline-variant">
               {([
-                { v: myPlayer?.minutes_played, label: t.players.minutes },
+                { v: myPlayer?.minutes_played, label: 'Minutes jouées' },
                 { v: myPlayer?.yellow_cards,   label: t.players.yellowCards },
                 { v: myPlayer?.red_cards,      label: t.players.redCards },
               ] as const).map(({ v, label }) => (

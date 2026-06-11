@@ -142,6 +142,7 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
   });
   const [createCalMonth, setCreateCalMonth] = useState(today.getMonth());
   const [createCalYear,  setCreateCalYear]  = useState(today.getFullYear());
+  const [createErrors,   setCreateErrors]   = useState({ title: false });
 
   const [eventsMap, setEventsMap] = useState<Record<number, CalEvent[]>>({});
   const pendingEventIdRef = useRef<number | null>(openEventId ?? null);
@@ -231,6 +232,7 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
     setCreateForm({ title: '', tag: 'Entraînement', lieu: '', remarques: '', day: now.getDate(), month: now.getMonth(), year: now.getFullYear(), hour: 10, minute: 0 });
     setCreateCalMonth(now.getMonth());
     setCreateCalYear(now.getFullYear());
+    setCreateErrors({ title: false });
     setCreateOpen(true);
     setTimeout(() => setCreateVisible(true), 10);
   };
@@ -606,10 +608,14 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
               <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
 
                 <div>
-                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">{t.calendar.fieldTitle}</label>
-                  <input type="text" value={createForm.title} onChange={e => setCreateForm(f => ({ ...f, title: e.target.value }))}
+                  <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2 block">
+                    {t.calendar.fieldTitle} <span className="text-error">*</span>
+                  </label>
+                  <input type="text" value={createForm.title}
+                    onChange={e => { setCreateForm(f => ({ ...f, title: e.target.value })); if (e.target.value.trim()) setCreateErrors(err => ({ ...err, title: false })); }}
                     placeholder={t.calendar.fieldTitlePlaceholder}
-                    className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base outline-none focus:ring-2 focus:ring-primary transition-all placeholder:text-outline" />
+                    className={`w-full px-4 py-3 bg-surface-container border rounded-xl text-base outline-none focus:ring-2 transition-all placeholder:text-outline ${createErrors.title ? 'border-error focus:ring-error' : 'border-outline-variant focus:ring-primary'}`} />
+                  {createErrors.title && <p className="mt-1.5 text-xs font-semibold text-error">Ce champ est obligatoire</p>}
                 </div>
 
                 <div>
@@ -701,7 +707,7 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
               <div className="flex items-center justify-end px-8 py-5 border-t border-outline-variant shrink-0 gap-3">
                 <button onClick={closeCreateForm} className="px-5 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                 <button onClick={async () => {
-                  if (!createForm.title.trim()) return;
+                  if (!createForm.title.trim()) { setCreateErrors({ title: true }); return; }
                   await fetch('/api/backend/events', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ title: createForm.title, tag: createForm.tag, event_date: `${createForm.year}-${pad(createForm.month + 1)}-${pad(createForm.day)}`, event_time: `${pad(createForm.hour)}:${pad(createForm.minute)}`, location: createForm.lieu || null, notes: createForm.remarques || null }),

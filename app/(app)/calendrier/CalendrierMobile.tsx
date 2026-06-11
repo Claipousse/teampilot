@@ -254,6 +254,7 @@ export default function CalendrierMobile({ openCreate = false, openEventId }: { 
   // Navigate to the right week when openEventId is provided
   useEffect(() => {
     if (!openEventId) return;
+    pendingEventIdRef.current = openEventId;
     fetch(`/api/backend/events/${openEventId}`)
       .then(r => r.ok ? r.json() : null)
       .then(evt => {
@@ -263,13 +264,11 @@ export default function CalendrierMobile({ openCreate = false, openEventId }: { 
         const eventMonday = getMondayOfWeek(eventDate);
         const offset = Math.round((eventMonday.getTime() - baseMondayRef.getTime()) / (7 * 24 * 60 * 60 * 1000));
         const key = `${y}-${m - 1}-${d}`;
-        pendingEventIdRef.current = openEventId;
         setWeekOffset(offset);
         setActiveKey(key);
       })
       .catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [openEventId]);
 
   // Once eventsMap updates, open the pending event detail
   useEffect(() => {

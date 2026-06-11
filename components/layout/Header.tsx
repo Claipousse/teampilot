@@ -144,6 +144,20 @@ export default function Header() {
     await fetch(`/api/backend/notifications/${id}`, { method: 'DELETE' }).catch(() => {});
   };
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { convName } = (e as CustomEvent<{ convName: string }>).detail;
+      setEvents(prev => {
+        const prefix = convName + ' : ';
+        const toDelete = prev.filter(n => n.kind === 'message' && n.title.startsWith(prefix));
+        toDelete.forEach(n => fetch(`/api/backend/notifications/${n.id}`, { method: 'DELETE' }).catch(() => {}));
+        return prev.filter(n => !(n.kind === 'message' && n.title.startsWith(prefix)));
+      });
+    };
+    window.addEventListener('dismiss-message-notifs', handler);
+    return () => window.removeEventListener('dismiss-message-notifs', handler);
+  }, []);
+
   const openEventNotif = (n: NotifEvent) => {
     removeEvent(n.id);
     setNotifOpen(false);

@@ -195,10 +195,43 @@ export default function MessagerieDesktop() {
     fetch(`/api/backend/messages/conversations/${activeConv.id}/messages`)
       .then(r => r.ok ? r.json() : [])
       .then((data: ApiMessage[]) => setMessages(data.map(m => toMessage(m, user.id))));
+    window.dispatchEvent(new CustomEvent('dismiss-message-notifs', { detail: { convName: activeConv.name } }));
   }, [activeConv?.id, user?.id]);
 
   // Scroll en bas à chaque nouveau message
   useEffect(() => { messagesEndRef.current?.scrollIntoView(); }, [messages]);
+
+  // Polling conversations (5s)
+  useEffect(() => {
+    const id = setInterval(() => {
+      fetch('/api/backend/messages/conversations')
+        .then(r => r.ok ? r.json() : null)
+        .then((data: ApiConversation[] | null) => { if (data) setConversations(data.map(toConversation)); })
+        .catch(() => {});
+    }, 5000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Polling messages actifs (5s)
+  useEffect(() => {
+    if (!activeConv || !user) return;
+    const convId = activeConv.id;
+    const userId = user.id;
+    const id = setInterval(() => {
+      fetch(`/api/backend/messages/conversations/${convId}/messages`)
+        .then(r => r.ok ? r.json() : null)
+        .then((data: ApiMessage[] | null) => {
+          if (!data) return;
+          setMessages(prev => {
+            const lastId = prev.length > 0 ? prev[prev.length - 1].id : -1;
+            const newMsgs = data.map(m => toMessage(m, userId));
+            return newMsgs.length > 0 && newMsgs[newMsgs.length - 1].id > lastId ? newMsgs : prev;
+          });
+        })
+        .catch(() => {});
+    }, 5000);
+    return () => clearInterval(id);
+  }, [activeConv?.id, user?.id]);
 
   // Nettoyage conversation vide en quittant
   const cleanupEmptyConv = async () => {
@@ -324,7 +357,12 @@ export default function MessagerieDesktop() {
       if (r.ok) {
         const msg: ApiMessage = await r.json();
         setMessages(prev => [...prev, toMessage(msg, user.id)]);
-        newEmptyConvRef.current = null; // has messages now
+        newEmptyConvRef.current = null;
+        const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        setConversations(prev => {
+          const updated = prev.map(c => c.id === activeConv.id ? { ...c, preview: `Vous : ${text}`, time: now } : c);
+          return [...updated.filter(c => c.id === activeConv.id), ...updated.filter(c => c.id !== activeConv.id)];
+        });
       }
     } finally {
       setSending(false);

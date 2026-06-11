@@ -170,17 +170,16 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
   // Navigate to the right month when openEventId is provided
   useEffect(() => {
     if (!openEventId) return;
+    pendingEventIdRef.current = openEventId;
     fetch(`/api/backend/events/${openEventId}`)
       .then(r => r.ok ? r.json() : null)
       .then(evt => {
         if (!evt) return;
         const [y, m] = evt.event_date.split('-').map(Number);
-        pendingEventIdRef.current = openEventId;
         setCurrent(new Date(y, m - 1, 1));
       })
       .catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [openEventId]);
 
   // Once eventsMap updates, open the pending event detail
   useEffect(() => {

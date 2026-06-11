@@ -40,7 +40,7 @@ export default function LoginPage() {
 
       {/* Panneau gauche*/}
       <section className="hidden lg:block lg:w-1/2 relative bg-inverse-surface overflow-hidden shrink-0">
-        <Image src="/image_login.png" alt="Football player" fill className="object-cover object-center" priority />
+        <Image src="/image_login.png" alt="Football player" fill sizes="50vw" className="object-cover object-center" priority />
         <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface via-inverse-surface/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-transparent to-inverse-surface/40" />
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
@@ -63,7 +63,7 @@ export default function LoginPage() {
 
         <div className="flex items-center gap-3 shrink-0">
           <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-md">
-            <Image src="/logo-icon.png" alt="TeamPilot" width={32} height={32} />
+            <Image src="/logo-icon.png" alt="TeamPilot" width={32} height={32} style={{ width: 32, height: 'auto' }} />
           </div>
           <span className="text-2xl font-bold text-on-surface">Teampilot AI</span>
         </div>

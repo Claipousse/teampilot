@@ -99,15 +99,16 @@ export default function MobileHeader() {
         <span className="text-base font-bold text-primary">Teampilot AI</span>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-3">
 
         {/* Langue FR / EN */}
         <button
           onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
-          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors text-base"
+          className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors"
           title={lang === 'fr' ? 'Switch to English' : 'Passer en français'}
         >
-          {lang === 'fr' ? '🇫🇷' : '🇬🇧'}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={lang === 'fr' ? 'https://flagcdn.com/w40/fr.png' : 'https://flagcdn.com/w40/gb.png'} alt={lang === 'fr' ? 'FR' : 'EN'} width={26} height={20} className="rounded-sm object-cover" />
         </button>
 
         {/* Notifications */}

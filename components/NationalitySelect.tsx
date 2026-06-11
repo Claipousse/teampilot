@@ -10,15 +10,9 @@ let _promise: Promise<Nat[]> | null = null;
 function loadNationalities(): Promise<Nat[]> {
   if (_cache) return Promise.resolve(_cache);
   if (_promise) return _promise;
-  _promise = fetch('https://restcountries.com/v3.1/all?fields=cca2,demonyms', { cache: 'force-cache' })
-    .then(r => r.json())
-    .then((data: Array<{ cca2: string; demonyms?: { fra?: { m?: string } } }>) => {
-      _cache = data
-        .filter(c => c.demonyms?.fra?.m)
-        .map(c => ({ label: c.demonyms!.fra!.m!, iso: c.cca2.toLowerCase() }))
-        .sort((a, b) => a.label.localeCompare(b.label, 'fr'));
-      return _cache;
-    })
+  _promise = fetch('/api/nationalities')
+    .then(r => r.ok ? r.json() : [])
+    .then((data: Nat[]) => { _cache = data; return _cache; })
     .catch(() => { _promise = null; return []; });
   return _promise;
 }
@@ -51,6 +45,16 @@ export default function NationalitySelect({ value, iso, onChange, error }: Props
     ? nats.filter(n => n.label.toLowerCase().includes(query.toLowerCase()))
     : nats;
 
+  function handleBlur() {
+    // Revert to last valid selection if the typed text doesn't match exactly
+    setTimeout(() => {
+      if (!ref.current?.contains(document.activeElement)) {
+        setQuery(value);
+        setOpen(false);
+      }
+    }, 150);
+  }
+
   const cls = `w-full py-3 pr-4 bg-surface-container border ${error ? 'border-error' : 'border-outline-variant'} rounded-xl text-base text-on-surface outline-none focus:ring-2 focus:ring-primary transition-all ${iso ? 'pl-10' : 'pl-4'}`;
 
   return (
@@ -71,6 +75,7 @@ export default function NationalitySelect({ value, iso, onChange, error }: Props
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true); }}
           onFocus={e => { e.target.select(); setOpen(true); }}
+          onBlur={handleBlur}
           placeholder={nats.length === 0 ? 'Chargement…' : 'Ex : Français'}
           className={cls}
         />

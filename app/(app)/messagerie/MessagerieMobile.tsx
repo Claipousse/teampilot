@@ -147,6 +147,7 @@ export default function MessagerieMobile() {
   const [createMode,    setCreateMode]    = useState<CreateMode>(null);
   const [createVisible, setCreateVisible] = useState(false);
   const [createTab,     setCreateTab]     = useState<CreateTab>('joueurs');
+  const [createSearch,  setCreateSearch]  = useState('');
   const [plusOpen,      setPlusOpen]      = useState(false);
   const [usersGrouped,  setUsersGrouped]  = useState<ApiUsersGrouped | null>(null);
   const [groupSelected, setGroupSelected] = useState<Set<number>>(new Set());
@@ -220,6 +221,7 @@ export default function MessagerieMobile() {
     setGroupSelected(new Set());
     setGroupName('');
     setCreateTab('joueurs');
+    setCreateSearch('');
     setCreateMode(mode);
     setTimeout(() => setCreateVisible(true), 10);
     if (!usersGrouped) {
@@ -522,9 +524,12 @@ export default function MessagerieMobile() {
                 {/* Onglets */}
                 <div className="flex mx-5 mt-3 mb-1 bg-surface-container rounded-xl p-1 gap-1 shrink-0">
                   {(['joueurs', 'staff', 'coachs'] as CreateTab[]).map(tab => {
-                    const count = tab === 'joueurs' ? (usersGrouped?.players.length ?? 0)
-                      : tab === 'staff'   ? (usersGrouped?.staff.length   ?? 0)
-                      :                     (usersGrouped?.coaches.length ?? 0);
+                    const base = tab === 'joueurs' ? (usersGrouped?.players ?? [])
+                      : tab === 'staff' ? (usersGrouped?.staff ?? [])
+                      :                   (usersGrouped?.coaches ?? []);
+                    const count = createSearch
+                      ? base.filter(u => `${u.first_name} ${u.last_name}`.toLowerCase().includes(createSearch.toLowerCase()) || (u.role ?? '').toLowerCase().includes(createSearch.toLowerCase())).length
+                      : base.length;
                     return (
                       <button key={tab} onClick={() => setCreateTab(tab)}
                         className={`flex-1 py-2 rounded-lg text-sm font-semibold capitalize transition-all flex items-center justify-center gap-1 ${createTab === tab ? 'bg-surface-container-lowest text-on-surface shadow-sm' : 'text-on-surface-variant'}`}>
@@ -535,16 +540,41 @@ export default function MessagerieMobile() {
                   })}
                 </div>
 
+                {/* Recherche */}
+                <div className="px-5 py-3 border-b border-outline-variant shrink-0">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={15} />
+                    <input
+                      type="text"
+                      placeholder="Rechercher…"
+                      value={createSearch}
+                      onChange={e => setCreateSearch(e.target.value)}
+                      className="w-full pl-9 pr-8 py-2.5 bg-surface-container rounded-xl text-sm text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none transition-all"
+                    />
+                    {createSearch && (
+                      <button
+                        onClick={() => setCreateSearch('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full hover:bg-outline/20 transition-colors"
+                      >
+                        <X size={12} className="text-outline" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Liste */}
                 <div className="flex-1 overflow-y-auto px-3 py-2">
                   {!usersGrouped ? (
                     <div className="p-6 text-center text-sm text-on-surface-variant">Chargement…</div>
                   ) : (() => {
-                    const list = createTab === 'joueurs' ? usersGrouped.players
+                    const raw = createTab === 'joueurs' ? usersGrouped.players
                       : createTab === 'staff'   ? usersGrouped.staff
                       :                           usersGrouped.coaches;
+                    const list = createSearch
+                      ? raw.filter(u => `${u.first_name} ${u.last_name}`.toLowerCase().includes(createSearch.toLowerCase()) || (u.role ?? '').toLowerCase().includes(createSearch.toLowerCase()))
+                      : raw;
                     if (list.length === 0)
-                      return <div className="p-6 text-center text-sm text-on-surface-variant">Aucun membre dans cette catégorie</div>;
+                      return <div className="p-6 text-center text-sm text-on-surface-variant">{createSearch ? 'Aucun résultat' : 'Aucun membre dans cette catégorie'}</div>;
                     return list.map(u => {
                       const rt = userRoleType(u);
                       const initials = `${u.first_name[0]}${u.last_name[0]}`;

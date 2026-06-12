@@ -40,11 +40,11 @@ Ouvrir [http://localhost:3000](http://localhost:3000).
 
 **Comptes de test**
 
-| Rôle | Email | Mot de passe |
-|------|-------|-------------|
-| Admin (staff) | `admin@teampilot.com` | `admin123` |
-| Staff (non admin) | `staff@teampilot.com` | `staff123` |
-| Joueur | `joueur@teampilot.com` | `player123` |
+| Rôle | Username | Email | Mot de passe |
+|------|----------|-------|-------------|
+| Admin | `admin.test` | `admin@teampilot.com` | `admin123` |
+| Staff | `staff.test` | `staff@teampilot.com` | `staff123` |
+| Joueur | `joueur.test` | `joueur@teampilot.com` | `joueur123` |
 
 ---
 

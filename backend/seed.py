@@ -45,14 +45,12 @@ async def seed():
             sm = exists.scalar_one_or_none()
             if sm:
                 stats[cat][1] += 1
-                # Backfill username if missing
                 user_ex = await db.execute(select(User).where(User.staff_id == sm.id))
                 u = user_ex.scalar_one_or_none()
                 if u and not u.username:
                     base = make_username_base(first, last)
                     u.username = await _unique_username(base)
                     u.must_change_password = False
-                print(f"  ℹ️  {first} {last}  ({role})")
                 return None
             sm = StaffMember(first_name=first, last_name=last, role=role,
                              email=email, phone=phone, since_date=since)
@@ -68,7 +66,6 @@ async def seed():
                             is_admin=is_admin, type="staff", staff_id=sm.id,
                             must_change_password=False))
             stats[cat][0] += 1
-            print(f"  ✅ {first} {last}  —  {role}")
             return sm
 
         async def ensure_player(pd, email):
@@ -77,14 +74,12 @@ async def seed():
             p = exists.scalar_one_or_none()
             if p:
                 stats["players"][1] += 1
-                # Backfill username if missing
                 user_ex = await db.execute(select(User).where(User.player_id == p.id))
                 u = user_ex.scalar_one_or_none()
                 if u and not u.username:
                     base = make_username_base(pd["first_name"], pd["last_name"])
                     u.username = await _unique_username(base)
                     u.must_change_password = False
-                print(f"  ℹ️  {pd['first_name']} {pd['last_name']}  (#{pd['shirt_number']})")
                 return None
             p = Player(**pd)
             db.add(p)
@@ -99,71 +94,63 @@ async def seed():
                             is_admin=False, type="player", player_id=p.id,
                             must_change_password=False))
             stats["players"][0] += 1
-            print(f"  ✅ {pd['first_name']} {pd['last_name']}  —  {pd['position']}  #{pd['shirt_number']}")
             return p
 
         # ── Admin ──────────────────────────────────────────────────────────────
-        print(f"\n{DIV}\n  👤  ADMIN\n{DIV}")
         admin_ex = await db.execute(select(User).where(User.email == "admin@teampilot.com"))
         admin_user_obj = admin_ex.scalar_one_or_none()
         if not admin_user_obj:
-            db.add(User(email="admin@teampilot.com", username="clement.conrie",
+            db.add(User(email="admin@teampilot.com", username="admin.test",
                         hashed_password=hash_password("admin123"),
-                        first_name="Clément", last_name="Conrié",
+                        first_name="Admin", last_name="Test",
                         is_admin=True, type="staff", must_change_password=False))
             await db.flush()
-            print("  ✅ Créé  :  clement.conrie  /  admin123")
         else:
             if not admin_user_obj.username:
-                admin_user_obj.username = "clement.conrie"
+                admin_user_obj.username = "admin.test"
                 admin_user_obj.must_change_password = False
-            print("  ℹ️  Déjà existant  :  clement.conrie")
 
         # ── Comptes de test ────────────────────────────────────────────────────
-        print(f"\n{DIV}\n  🧪  COMPTES DE TEST\n{DIV}")
         staff_ex = await db.execute(select(User).where(User.email == "staff@teampilot.com"))
         staff_user_obj = staff_ex.scalar_one_or_none()
         if not staff_user_obj:
-            sm_alex = StaffMember(first_name="Alex", last_name="Martin", role="Logistique",
+            sm_test = StaffMember(first_name="Staff", last_name="Test", role="Logistique",
                                   email="staff@teampilot.com", phone="+44 20 5678 9012",
                                   since_date="2025-01-01")
-            db.add(sm_alex)
+            db.add(sm_test)
             await db.flush()
-            db.add(User(email="staff@teampilot.com", username="alex.martin",
+            db.add(User(email="staff@teampilot.com", username="staff.test",
                         hashed_password=hash_password("staff123"),
-                        first_name="Alex", last_name="Martin",
-                        is_admin=False, type="staff", staff_id=sm_alex.id,
+                        first_name="Staff", last_name="Test",
+                        is_admin=False, type="staff", staff_id=sm_test.id,
                         must_change_password=False))
-            print("  ✅ Créé  :  alex.martin  /  staff123")
         else:
             if not staff_user_obj.username:
-                staff_user_obj.username = "alex.martin"
+                staff_user_obj.username = "staff.test"
                 staff_user_obj.must_change_password = False
-            print("  ℹ️  Déjà existant  :  alex.martin")
 
         joueur_ex = await db.execute(select(User).where(User.email == "joueur@teampilot.com"))
         joueur_user_obj = joueur_ex.scalar_one_or_none()
         if not joueur_user_obj:
-            tp = Player(first_name="Jamie", last_name="Dupont", shirt_number=77,
+            tp = Player(first_name="Joueur", last_name="Test", shirt_number=77,
                         position="Milieu Offensif", position_short="MIL",
                         nationality="Français", status="Disponible",
                         contract_end_date="2027-06-30")
             db.add(tp)
             await db.flush()
-            db.add(User(email="joueur@teampilot.com", username="jamie.dupont",
-                        hashed_password=hash_password("player123"),
-                        first_name="Jamie", last_name="Dupont",
+            db.add(User(email="joueur@teampilot.com", username="joueur.test",
+                        hashed_password=hash_password("joueur123"),
+                        first_name="Joueur", last_name="Test",
                         is_admin=False, type="player", player_id=tp.id,
                         must_change_password=False))
-            print("  ✅ Créé  :  jamie.dupont  /  player123")
         else:
             if not joueur_user_obj.username:
-                joueur_user_obj.username = "jamie.dupont"
+                joueur_user_obj.username = "joueur.test"
                 joueur_user_obj.must_change_password = False
-            print("  ℹ️  Déjà existant  :  jamie.dupont")
+
+        print("  ✅ Comptes tests créés  (admin.test / staff.test / joueur.test)")
 
         # ── Club & Saison ──────────────────────────────────────────────────────
-        print(f"\n{DIV}\n  🏟️   CLUB & SAISON\n{DIV}")
         club_ex = await db.execute(select(Club).where(Club.id == 1))
         if not club_ex.scalar_one_or_none():
             db.add(Club(id=1, name="Metropolis United FC", founded_year="1924",
@@ -171,9 +158,7 @@ async def seed():
                         phone="+44 20 7946 0012", address="United Training Complex",
                         city="London, SE1 7PB, UK"))
             await db.flush()
-            print("  ✅ Club  :  Metropolis United FC")
-        else:
-            print("  ℹ️  Club déjà existant")
+            print("  ✅ Club créé  :  Metropolis United FC")
 
         season_ex = await db.execute(select(Season).where(Season.is_active == True))
         if not season_ex.scalar_one_or_none():
@@ -181,110 +166,60 @@ async def seed():
                           end_date="2027-05-31", competitions="Premier League · FA Cup",
                           objective="Top 4 · Quart FA Cup", status="En cours", is_active=True))
             await db.flush()
-            print("  ✅ Saison  :  2026/2027")
-        else:
-            print("  ℹ️  Saison déjà existante")
+            print("  ✅ Saison créée  :  2026/2027")
 
-        # ── Coachs (20) ────────────────────────────────────────────────────────
-        print(f"\n{DIV}\n  🎯  COACHS  (20)\n{DIV}")
+        # ── Coachs (5) ─────────────────────────────────────────────────────────
         for first, last, role, email, phone, since, is_admin in [
-            ("Thomas",     "Laurent",   "Coach Principal",             "tlaurent@metropolisunited.com",   "+44 20 1234 5678", "2022-07-01", False),
-            ("Pierre",     "Moreau",    "Coach Adjoint",               "pmoreau@metropolisunited.com",    "+44 20 1234 5679", "2023-01-15", False),
-            ("Marc",       "Rousseau",  "Directeur Technique",         "mrousseauc@metropolisunited.com", "+44 20 1234 5680", "2021-08-01", True),
-            ("Jean",       "Bernard",   "Coach Gardiens",              "jbernard@metropolisunited.com",   "+44 20 1234 5681", "2023-07-01", False),
-            ("Florent",    "Garnier",   "Coach Attaque",               "fgarnier@metropolisunited.com",   "+44 20 1234 5682", "2024-02-01", False),
-            ("Sébastien",  "Petit",     "Coach Défense",               "spetit@metropolisunited.com",     "+44 20 1234 5683", "2022-09-01", False),
-            ("Antoine",    "Dupont",    "Coach Milieu",                "adupont@metropolisunited.com",    "+44 20 1234 5684", "2023-06-15", False),
-            ("Nicolas",    "Faure",     "Coach Technique",             "nfaure@metropolisunited.com",     "+44 20 1234 5685", "2024-01-01", False),
-            ("Christophe", "Leroy",     "Coach Adjoint Défense",       "cleroy@metropolisunited.com",     "+44 20 1234 5686", "2024-07-01", False),
-            ("Vincent",    "Leroux",    "Coach Préparation Physique",  "vleroux@metropolisunited.com",    "+44 20 1234 5687", "2023-03-01", False),
-            ("Cédric",     "Fontaine",  "Coach Vidéo",                 "cfontainec@metropolisunited.com", "+44 20 1234 5688", "2024-05-01", False),
-            ("Romain",     "Chevalier", "Coach Espoirs",               "rchevalier@metropolisunited.com", "+44 20 1234 5689", "2022-11-01", False),
-            ("Julien",     "Masson",    "Coach U23",                   "jmasson@metropolisunited.com",    "+44 20 1234 5690", "2023-08-01", False),
-            ("Emmanuel",   "Colin",     "Coach Adjoint Fitness",       "ecolin@metropolisunited.com",     "+44 20 1234 5691", "2024-03-15", False),
-            ("Patrick",    "Martin",    "Coach Mental",                "pmartin@metropolisunited.com",    "+44 20 1234 5692", "2023-09-01", False),
-            ("David",      "Simon",     "Coach Stratégie Offensive",   "dsimon@metropolisunited.com",     "+44 20 1234 5693", "2024-06-01", False),
-            ("Marc",       "Léger",     "Coach Coordination",          "mleger@metropolisunited.com",     "+44 20 1234 5694", "2023-04-01", False),
-            ("François",   "Perrin",    "Coach Tactique Défensif",     "fperrin@metropolisunited.com",    "+44 20 1234 5695", "2024-09-01", False),
-            ("Stéphane",   "Bourgeois", "Coach Technique Adjoint",     "sbourgeois@metropolisunited.com", "+44 20 1234 5696", "2023-10-01", False),
-            ("Bruno",      "Lacroix",   "Coach Récupération",          "blacroix@metropolisunited.com",   "+44 20 1234 5697", "2024-11-01", False),
+            ("Thomas",    "Laurent",  "Coach Principal",            "tlaurent@metropolisunited.com",   "+44 20 1234 5678", "2022-07-01", False),
+            ("Pierre",    "Moreau",   "Coach Adjoint",              "pmoreau@metropolisunited.com",    "+44 20 1234 5679", "2023-01-15", False),
+            ("Marc",      "Rousseau", "Directeur Technique",        "mrousseauc@metropolisunited.com", "+44 20 1234 5680", "2021-08-01", True),
+            ("Jean",      "Bernard",  "Coach Gardiens",             "jbernard@metropolisunited.com",   "+44 20 1234 5681", "2023-07-01", False),
+            ("Florent",   "Garnier",  "Coach Attaque",              "fgarnier@metropolisunited.com",   "+44 20 1234 5682", "2024-02-01", False),
         ]:
             await ensure_staff(first, last, role, email, phone, since, is_admin)
+        c, s = stats["coaches"]
+        print(f"  ✅ Coachs  —  {c} créé(s), {s} existant(s)")
 
-        # ── Staff non-coaches (30) ─────────────────────────────────────────────
-        print(f"\n{DIV}\n  👥  STAFF  (30)\n{DIV}")
+        # ── Staff non-coaches (10) ─────────────────────────────────────────────
         for first, last, role, email, phone, since in [
-            ("Sophie",    "Moreau",    "Kinésithérapeute",          "smoreau@metropolisunited.com",    "+44 20 2345 6789", "2023-08-15"),
-            ("David",     "Park",      "Analyste Vidéo",            "dpark@metropolisunited.com",      "+44 20 3456 7890", "2024-01-01"),
-            ("Claire",    "Dupuis",    "Médecin",                   "cdupuis@metropolisunited.com",    "+44 20 4567 8901", "2021-09-01"),
-            ("Marie",     "Leblanc",   "Nutritionniste",            "mleblanc@metropolisunited.com",   "+44 20 5678 0001", "2023-05-01"),
-            ("Paul",      "Girard",    "Ostéopathe",                "pgirard@metropolisunited.com",    "+44 20 5678 0002", "2024-02-15"),
-            ("Julie",     "Renard",    "Physiothérapeute",          "jrenard@metropolisunited.com",    "+44 20 5678 0003", "2023-09-01"),
-            ("Marc",      "Lefevre",   "Intendant",                 "mlefevre@metropolisunited.com",   "+44 20 5678 0004", "2022-03-01"),
-            ("Aurélie",   "Dumont",    "Directrice Administrative", "adumont@metropolisunited.com",    "+44 20 5678 0005", "2021-07-01"),
-            ("Eric",      "Mercier",   "Responsable Sécurité",      "emercier@metropolisunited.com",   "+44 20 5678 0006", "2022-11-01"),
-            ("Laura",     "Simon",     "Responsable Communication", "lsimon@metropolisunited.com",     "+44 20 5678 0007", "2023-01-15"),
-            ("Baptiste",  "Roussel",   "Intendant Équipement",      "broussels@metropolisunited.com",  "+44 20 5678 0008", "2024-04-01"),
-            ("Isabelle",  "Moreau",    "Secrétaire Médicale",       "imoreau@metropolisunited.com",    "+44 20 5678 0009", "2023-06-01"),
-            ("Karim",     "Benali",    "Analyste Performance",      "kbenali@metropolisunited.com",    "+44 20 5678 0010", "2024-07-01"),
-            ("Nathalie",  "Leconte",   "Responsable Billetterie",   "nleconte@metropolisunited.com",   "+44 20 5678 0011", "2022-08-01"),
-            ("Olivier",   "Roux",      "Technicien Terrain",        "oroux@metropolisunited.com",      "+44 20 5678 0012", "2023-02-01"),
-            ("Sandrine",  "Giroud",    "Assistante de Direction",   "sgiroud@metropolisunited.com",    "+44 20 5678 0013", "2021-10-01"),
-            ("Franck",    "Duval",     "Responsable Logistique",    "fduval@metropolisunited.com",     "+44 20 5678 0014", "2022-06-01"),
-            ("Amélie",    "Blanc",     "Diététicienne",             "ablanc@metropolisunited.com",     "+44 20 5678 0015", "2024-03-01"),
-            ("Yann",      "Fontaine",  "Psychologue",               "yfontaine@metropolisunited.com",  "+44 20 5678 0016", "2023-07-15"),
-            ("Céline",    "Martin",    "Infirmière",                "cmartin@metropolisunited.com",    "+44 20 5678 0017", "2022-04-01"),
-            ("Hugo",      "Bernard",   "Préparateur Physique",      "hbernard@metropolisunited.com",   "+44 20 5678 0018", "2023-11-01"),
-            ("Lucie",     "Lambert",   "Chargée Relations Joueurs", "llambert@metropolisunited.com",   "+44 20 5678 0019", "2024-01-15"),
-            ("Bertrand",  "Chassagne", "Chef Cuisinier",            "bchassagne@metropolisunited.com", "+44 20 5678 0020", "2022-09-01"),
-            ("Monique",   "Perrot",    "Responsable Linge",         "mperrot@metropolisunited.com",    "+44 20 5678 0021", "2021-05-01"),
-            ("Sylvain",   "Dupré",     "Agent de Sécurité",         "sdupre@metropolisunited.com",     "+44 20 5678 0022", "2023-03-15"),
-            ("Denis",     "Faure",     "Responsable Médias",        "dfaure@metropolisunited.com",     "+44 20 5678 0023", "2024-08-01"),
-            ("Caroline",  "Petit",     "Conseillère Juridique",     "cpetit@metropolisunited.com",     "+44 20 5678 0024", "2022-12-01"),
-            ("Thierry",   "Moreau",    "Responsable IT",            "tmoreau@metropolisunited.com",    "+44 20 5678 0025", "2024-10-01"),
-            ("Antoine",   "Poulain",   "Responsable Recrutement",   "apoulain@metropolisunited.com",   "+44 20 5678 0026", "2023-08-01"),
-            ("Virginie",  "Lebrun",    "Coordinatrice Médicale",    "vlebrun@metropolisunited.com",    "+44 20 5678 0027", "2022-02-01"),
+            ("Sophie",   "Moreau",  "Kinésithérapeute",          "smoreau@metropolisunited.com",  "+44 20 2345 6789", "2023-08-15"),
+            ("David",    "Park",    "Analyste Vidéo",            "dpark@metropolisunited.com",    "+44 20 3456 7890", "2024-01-01"),
+            ("Claire",   "Dupuis",  "Médecin",                   "cdupuis@metropolisunited.com",  "+44 20 4567 8901", "2021-09-01"),
+            ("Marie",    "Leblanc", "Nutritionniste",            "mleblanc@metropolisunited.com", "+44 20 5678 0001", "2023-05-01"),
+            ("Paul",     "Girard",  "Ostéopathe",                "pgirard@metropolisunited.com",  "+44 20 5678 0002", "2024-02-15"),
+            ("Julie",    "Renard",  "Physiothérapeute",          "jrenard@metropolisunited.com",  "+44 20 5678 0003", "2023-09-01"),
+            ("Marc",     "Lefevre", "Intendant",                 "mlefevre@metropolisunited.com", "+44 20 5678 0004", "2022-03-01"),
+            ("Aurélie",  "Dumont",  "Directrice Administrative", "adumont@metropolisunited.com",  "+44 20 5678 0005", "2021-07-01"),
+            ("Eric",     "Mercier", "Responsable Sécurité",      "emercier@metropolisunited.com", "+44 20 5678 0006", "2022-11-01"),
+            ("Laura",    "Simon",   "Responsable Communication", "lsimon@metropolisunited.com",   "+44 20 5678 0007", "2023-01-15"),
         ]:
             await ensure_staff(first, last, role, email, phone, since)
+        c, s = stats["staff"]
+        print(f"  ✅ Staff  —  {c} créé(s), {s} existant(s)")
 
-        # ── Joueurs (30) ───────────────────────────────────────────────────────
-        print(f"\n{DIV}\n  ⚽  JOUEURS  (30)\n{DIV}")
+        # ── Joueurs (15) ───────────────────────────────────────────────────────
         for pd, email in [
-            (dict(first_name="Marcus",    last_name="Valentin",  shirt_number=8,  position="Milieu Central",    position_short="MIL", nationality="Anglais",    date_of_birth="1998-03-15", height_cm=182, weight_kg=78,  preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", academy="Manchester Academy", matches=22, goals=4,  assists=9,  yellow_cards=3, minutes_played=1850, notes="Excellent visionnaire du jeu."),  "m.valentin@metropolisunited.com"),
-            (dict(first_name="Julian",    last_name="Romero",    shirt_number=3,  position="Arrière Gauche",    position_short="DEF", nationality="Espagnol",   nationality_flag="🇪🇸", date_of_birth="2000-07-22", height_cm=175, weight_kg=72,  preferred_foot="Gauche", status="Blessé",     contract_end_date="2025-06-30", academy="Atletico Madrid B", matches=14, assists=3, yellow_cards=2, minutes_played=1170, injury_description="Ischio-jambiers", return_date_estimate="Dans 3 semaines"), "j.romero@metropolisunited.com"),
-            (dict(first_name="Kevin",     last_name="Larson",    shirt_number=9,  position="Attaquant Centre",  position_short="ATT", nationality="Français",   nationality_flag="🇫🇷", date_of_birth="1996-11-08", height_cm=186, weight_kg=82,  preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", academy="OL Academy", matches=22, goals=11, assists=4, yellow_cards=1, minutes_played=1940, notes="Meilleur buteur."), "k.larson@metropolisunited.com"),
-            (dict(first_name="Stefan",    last_name="Koch",      shirt_number=1,  position="Gardien de but",    position_short="GK",  nationality="Allemand",   nationality_flag="🇩🇪", date_of_birth="1995-05-14", height_cm=192, weight_kg=88,  preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", academy="Bayern Youth", matches=22, clean_sheets=9, goals_conceded=18, minutes_played=1980), "s.koch@metropolisunited.com"),
-            (dict(first_name="Alex",      last_name="Mendez",    shirt_number=5,  position="Défenseur Central", position_short="DEF", nationality="Brésilien",  nationality_flag="🇧🇷", date_of_birth="1997-01-30", height_cm=188, weight_kg=84,  preferred_foot="Droit",  status="Suspendu",   contract_end_date="2026-06-30", academy="Flamengo Youth", matches=19, goals=2, assists=1, yellow_cards=5, red_cards=1, minutes_played=1710, injury_description="2 matchs de suspension"), "a.mendez@metropolisunited.com"),
-            (dict(first_name="Tom",       last_name="Owen",      shirt_number=11, position="Ailier Droit",      position_short="ATT", nationality="Anglais",    date_of_birth="2001-09-19", height_cm=178, weight_kg=74,  preferred_foot="Gauche", status="Incertain",  contract_end_date="2027-06-30", academy="Chelsea Academy", matches=18, goals=6, assists=7, yellow_cards=1, minutes_played=1420, injury_description="Gêne musculaire cuisse", return_date_estimate="Décision avant le match"), "t.owen@metropolisunited.com"),
-            (dict(first_name="Antoine",   last_name="Moreau",    shirt_number=2,  position="Arrière Droit",     position_short="DEF", nationality="Français",   nationality_flag="🇫🇷", date_of_birth="2001-04-12", height_cm=180, weight_kg=76,  preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", matches=20, goals=1, assists=4, minutes_played=1800), "a.moreau@metropolisunited.com"),
-            (dict(first_name="Samuel",    last_name="Blanc",     shirt_number=4,  position="Défenseur Central", position_short="DEF", nationality="Français",   nationality_flag="🇫🇷", date_of_birth="1999-08-20", height_cm=190, weight_kg=86,  preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=21, goals=2, assists=1, yellow_cards=2, minutes_played=1890), "s.blanc@metropolisunited.com"),
-            (dict(first_name="Eric",      last_name="Dubois",    shirt_number=6,  position="Milieu Défensif",   position_short="MIL", nationality="Belge",      nationality_flag="🇧🇪", date_of_birth="1998-12-05", height_cm=183, weight_kg=79,  preferred_foot="Droit",  status="Disponible", contract_end_date="2026-06-30", matches=19, goals=3, assists=6, yellow_cards=4, minutes_played=1710), "e.dubois@metropolisunited.com"),
-            (dict(first_name="Theo",      last_name="Durand",    shirt_number=7,  position="Ailier Gauche",     position_short="ATT", nationality="Français",   nationality_flag="🇫🇷", date_of_birth="2002-03-28", height_cm=176, weight_kg=71,  preferred_foot="Gauche", status="Disponible", contract_end_date="2029-06-30", matches=17, goals=5, assists=8, minutes_played=1530), "t.durand@metropolisunited.com"),
-            (dict(first_name="Maxime",    last_name="Girard",    shirt_number=10, position="Meneur de jeu",     position_short="MIL", nationality="Français",   nationality_flag="🇫🇷", date_of_birth="1997-06-14", height_cm=177, weight_kg=73,  preferred_foot="Gauche", status="Disponible", contract_end_date="2028-06-30", matches=22, goals=7, assists=12, yellow_cards=1, minutes_played=1980), "m.girard@metropolisunited.com"),
-            (dict(first_name="Roberto",   last_name="Diaz",      shirt_number=12, position="Milieu Central",    position_short="MIL", nationality="Argentin",   nationality_flag="🇦🇷", date_of_birth="1999-11-30", height_cm=181, weight_kg=77,  preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=18, goals=2, assists=5, yellow_cards=3, minutes_played=1620), "r.diaz@metropolisunited.com"),
-            (dict(first_name="Lucas",     last_name="Bernard",   shirt_number=13, position="Attaquant Centre",  position_short="ATT", nationality="Français",   nationality_flag="🇫🇷", date_of_birth="2000-02-17", height_cm=185, weight_kg=81,  preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=16, goals=8, assists=2, minutes_played=1440), "l.bernard@metropolisunited.com"),
-            (dict(first_name="Romain",    last_name="Laurent",   shirt_number=14, position="Arrière Gauche",    position_short="DEF", nationality="Français",   nationality_flag="🇫🇷", date_of_birth="2001-07-09", height_cm=179, weight_kg=74,  preferred_foot="Gauche", status="Disponible", contract_end_date="2028-06-30", matches=20, assists=3, yellow_cards=2, minutes_played=1800), "r.laurent@metropolisunited.com"),
-            (dict(first_name="Nicolas",   last_name="Petit",     shirt_number=15, position="Milieu Box-to-Box", position_short="MIL", nationality="Français",   nationality_flag="🇫🇷", date_of_birth="1998-09-22", height_cm=184, weight_kg=80,  preferred_foot="Droit",  status="Disponible", contract_end_date="2026-06-30", matches=21, goals=4, assists=7, yellow_cards=3, minutes_played=1890), "n.petit@metropolisunited.com"),
-            (dict(first_name="Paul",      last_name="Renard",    shirt_number=16, position="Défenseur Central", position_short="DEF", nationality="Français",   nationality_flag="🇫🇷", date_of_birth="2000-05-03", height_cm=189, weight_kg=85,  preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=15, goals=1, assists=2, yellow_cards=1, minutes_played=1350), "p.renard@metropolisunited.com"),
-            (dict(first_name="Karim",     last_name="Bensaid",   shirt_number=17, position="Ailier Droit",      position_short="ATT", nationality="Algérien",   nationality_flag="🇩🇿", date_of_birth="2001-01-18", height_cm=175, weight_kg=70,  preferred_foot="Gauche", status="Disponible", contract_end_date="2028-06-30", matches=14, goals=3, assists=6, minutes_played=1260), "k.bensaid@metropolisunited.com"),
-            (dict(first_name="Yusuf",     last_name="Ibrahim",   shirt_number=18, position="Milieu Défensif",   position_short="MIL", nationality="Nigérian",   nationality_flag="🇳🇬", date_of_birth="1999-04-25", height_cm=186, weight_kg=82,  preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=20, goals=1, assists=4, yellow_cards=5, minutes_played=1800), "y.ibrahim@metropolisunited.com"),
-            (dict(first_name="Hamza",     last_name="Rashid",    shirt_number=19, position="Arrière Droit",     position_short="DEF", nationality="Marocain",   nationality_flag="🇲🇦", date_of_birth="2002-08-14", height_cm=178, weight_kg=73,  preferred_foot="Droit",  status="Disponible", contract_end_date="2029-06-30", matches=12, assists=3, minutes_played=1080), "h.rashid@metropolisunited.com"),
-            (dict(first_name="Carlos",    last_name="Mendoza",   shirt_number=20, position="Attaquant Centre",  position_short="ATT", nationality="Colombien",  nationality_flag="🇨🇴", date_of_birth="1997-10-07", height_cm=183, weight_kg=79,  preferred_foot="Droit",  status="Blessé",     contract_end_date="2026-06-30", matches=10, goals=6, assists=2, minutes_played=900, injury_description="Cheville droite", return_date_estimate="6 semaines"), "c.mendoza@metropolisunited.com"),
-            (dict(first_name="Luca",      last_name="Ferrari",   shirt_number=21, position="Milieu Central",    position_short="MIL", nationality="Italien",    nationality_flag="🇮🇹", date_of_birth="2000-12-30", height_cm=180, weight_kg=76,  preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=18, goals=3, assists=8, yellow_cards=2, minutes_played=1620), "l.ferrari@metropolisunited.com"),
-            (dict(first_name="Diego",     last_name="Santos",    shirt_number=22, position="Défenseur Central", position_short="DEF", nationality="Portugais",  nationality_flag="🇵🇹", date_of_birth="1998-03-21", height_cm=191, weight_kg=87,  preferred_foot="Gauche", status="Disponible", contract_end_date="2027-06-30", matches=21, goals=1, assists=1, yellow_cards=3, minutes_played=1890), "d.santos@metropolisunited.com"),
-            (dict(first_name="Chen",      last_name="Wei",       shirt_number=23, position="Gardien de but",    position_short="GK",  nationality="Chinois",    nationality_flag="🇨🇳", date_of_birth="1996-06-11", height_cm=188, weight_kg=84,  preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=0, minutes_played=0), "c.wei@metropolisunited.com"),
-            (dict(first_name="James",     last_name="Cooper",    shirt_number=24, position="Arrière Droit",     position_short="DEF", nationality="Anglais",    date_of_birth="2001-11-05", height_cm=181, weight_kg=77,  preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", matches=19, assists=5, yellow_cards=1, minutes_played=1710), "j.cooper@metropolisunited.com"),
-            (dict(first_name="Pierre",    last_name="Dupont",    shirt_number=25, position="Attaquant Centre",  position_short="ATT", nationality="Français",   nationality_flag="🇫🇷", date_of_birth="2003-02-28", height_cm=184, weight_kg=78,  preferred_foot="Droit",  status="Disponible", contract_end_date="2029-06-30", matches=8,  goals=2, minutes_played=720), "p.dupont@metropolisunited.com"),
-            (dict(first_name="Liam",      last_name="Walsh",     shirt_number=26, position="Milieu Central",    position_short="MIL", nationality="Irlandais",  nationality_flag="🇮🇪", date_of_birth="2000-09-16", height_cm=179, weight_kg=75,  preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=16, goals=2, assists=4, yellow_cards=2, minutes_played=1440), "l.walsh@metropolisunited.com"),
-            (dict(first_name="Fabian",    last_name="Muller",    shirt_number=27, position="Défenseur Central", position_short="DEF", nationality="Allemand",   nationality_flag="🇩🇪", date_of_birth="1999-07-03", height_cm=192, weight_kg=89,  preferred_foot="Droit",  status="Disponible", contract_end_date="2026-06-30", matches=17, goals=1, assists=1, yellow_cards=4, minutes_played=1530), "f.muller@metropolisunited.com"),
-            (dict(first_name="Thomas",    last_name="Leblanc",   shirt_number=28, position="Ailier Gauche",     position_short="ATT", nationality="Français",   nationality_flag="🇫🇷", date_of_birth="2002-05-19", height_cm=174, weight_kg=70,  preferred_foot="Gauche", status="Disponible", contract_end_date="2029-06-30", matches=11, goals=2, assists=3, minutes_played=990), "t.leblanc@metropolisunited.com"),
-            (dict(first_name="Adrien",    last_name="Leclerc",   shirt_number=29, position="Gardien de but",    position_short="GK",  nationality="Français",   nationality_flag="🇫🇷", date_of_birth="2003-10-08", height_cm=187, weight_kg=83,  preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", matches=0, minutes_played=0), "a.leclerc@metropolisunited.com"),
-            (dict(first_name="Baptiste",  last_name="Moreau",    shirt_number=30, position="Milieu Défensif",   position_short="MIL", nationality="Français",   nationality_flag="🇫🇷", date_of_birth="2001-03-14", height_cm=182, weight_kg=78,  preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=13, goals=1, assists=2, yellow_cards=2, minutes_played=1170), "b.moreau@metropolisunited.com"),
+            (dict(first_name="Marcus",  last_name="Valentin", shirt_number=8,  position="Milieu Central",    position_short="MIL", nationality="Anglais",   date_of_birth="1998-03-15", height_cm=182, weight_kg=78, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", academy="Manchester Academy", matches=22, goals=4,  assists=9,  yellow_cards=3, minutes_played=1850, notes="Excellent visionnaire du jeu."),  "m.valentin@metropolisunited.com"),
+            (dict(first_name="Julian",  last_name="Romero",   shirt_number=3,  position="Arrière Gauche",    position_short="DEF", nationality="Espagnol",  nationality_flag="🇪🇸", date_of_birth="2000-07-22", height_cm=175, weight_kg=72, preferred_foot="Gauche", status="Blessé",     contract_end_date="2025-06-30", academy="Atletico Madrid B", matches=14, assists=3, yellow_cards=2, minutes_played=1170, injury_description="Ischio-jambiers", return_date_estimate="Dans 3 semaines"), "j.romero@metropolisunited.com"),
+            (dict(first_name="Kevin",   last_name="Larson",   shirt_number=9,  position="Attaquant Centre",  position_short="ATT", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="1996-11-08", height_cm=186, weight_kg=82, preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", academy="OL Academy", matches=22, goals=11, assists=4, yellow_cards=1, minutes_played=1940, notes="Meilleur buteur."), "k.larson@metropolisunited.com"),
+            (dict(first_name="Stefan",  last_name="Koch",     shirt_number=1,  position="Gardien de but",    position_short="GK",  nationality="Allemand",  nationality_flag="🇩🇪", date_of_birth="1995-05-14", height_cm=192, weight_kg=88, preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", academy="Bayern Youth", matches=22, clean_sheets=9, goals_conceded=18, minutes_played=1980), "s.koch@metropolisunited.com"),
+            (dict(first_name="Alex",    last_name="Mendez",   shirt_number=5,  position="Défenseur Central", position_short="DEF", nationality="Brésilien", nationality_flag="🇧🇷", date_of_birth="1997-01-30", height_cm=188, weight_kg=84, preferred_foot="Droit",  status="Suspendu",   contract_end_date="2026-06-30", academy="Flamengo Youth", matches=19, goals=2, assists=1, yellow_cards=5, red_cards=1, minutes_played=1710, injury_description="2 matchs de suspension"), "a.mendez@metropolisunited.com"),
+            (dict(first_name="Tom",     last_name="Owen",     shirt_number=11, position="Ailier Droit",      position_short="ATT", nationality="Anglais",   date_of_birth="2001-09-19", height_cm=178, weight_kg=74, preferred_foot="Gauche", status="Incertain",  contract_end_date="2027-06-30", academy="Chelsea Academy", matches=18, goals=6, assists=7, yellow_cards=1, minutes_played=1420, injury_description="Gêne musculaire cuisse", return_date_estimate="Décision avant le match"), "t.owen@metropolisunited.com"),
+            (dict(first_name="Antoine", last_name="Moreau",   shirt_number=2,  position="Arrière Droit",     position_short="DEF", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="2001-04-12", height_cm=180, weight_kg=76, preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", matches=20, goals=1, assists=4, minutes_played=1800), "a.moreau@metropolisunited.com"),
+            (dict(first_name="Samuel",  last_name="Blanc",    shirt_number=4,  position="Défenseur Central", position_short="DEF", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="1999-08-20", height_cm=190, weight_kg=86, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=21, goals=2, assists=1, yellow_cards=2, minutes_played=1890), "s.blanc@metropolisunited.com"),
+            (dict(first_name="Eric",    last_name="Dubois",   shirt_number=6,  position="Milieu Défensif",   position_short="MIL", nationality="Belge",     nationality_flag="🇧🇪", date_of_birth="1998-12-05", height_cm=183, weight_kg=79, preferred_foot="Droit",  status="Disponible", contract_end_date="2026-06-30", matches=19, goals=3, assists=6, yellow_cards=4, minutes_played=1710), "e.dubois@metropolisunited.com"),
+            (dict(first_name="Theo",    last_name="Durand",   shirt_number=7,  position="Ailier Gauche",     position_short="ATT", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="2002-03-28", height_cm=176, weight_kg=71, preferred_foot="Gauche", status="Disponible", contract_end_date="2029-06-30", matches=17, goals=5, assists=8, minutes_played=1530), "t.durand@metropolisunited.com"),
+            (dict(first_name="Maxime",  last_name="Girard",   shirt_number=10, position="Meneur de jeu",     position_short="MIL", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="1997-06-14", height_cm=177, weight_kg=73, preferred_foot="Gauche", status="Disponible", contract_end_date="2028-06-30", matches=22, goals=7, assists=12, yellow_cards=1, minutes_played=1980), "m.girard@metropolisunited.com"),
+            (dict(first_name="Roberto", last_name="Diaz",     shirt_number=12, position="Milieu Central",    position_short="MIL", nationality="Argentin",  nationality_flag="🇦🇷", date_of_birth="1999-11-30", height_cm=181, weight_kg=77, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=18, goals=2, assists=5, yellow_cards=3, minutes_played=1620), "r.diaz@metropolisunited.com"),
+            (dict(first_name="Lucas",   last_name="Bernard",  shirt_number=13, position="Attaquant Centre",  position_short="ATT", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="2000-02-17", height_cm=185, weight_kg=81, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=16, goals=8, assists=2, minutes_played=1440), "l.bernard@metropolisunited.com"),
+            (dict(first_name="Romain",  last_name="Laurent",  shirt_number=14, position="Arrière Gauche",    position_short="DEF", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="2001-07-09", height_cm=179, weight_kg=74, preferred_foot="Gauche", status="Disponible", contract_end_date="2028-06-30", matches=20, assists=3, yellow_cards=2, minutes_played=1800), "r.laurent@metropolisunited.com"),
+            (dict(first_name="Nicolas", last_name="Petit",    shirt_number=15, position="Milieu Box-to-Box", position_short="MIL", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="1998-09-22", height_cm=184, weight_kg=80, preferred_foot="Droit",  status="Disponible", contract_end_date="2026-06-30", matches=21, goals=4, assists=7, yellow_cards=3, minutes_played=1890), "n.petit@metropolisunited.com"),
         ]:
             await ensure_player(pd, email)
+        c, s = stats["players"]
+        print(f"  ✅ Joueurs  —  {c} créé(s), {s} existant(s)")
 
         # ── Événements ─────────────────────────────────────────────────────────
-        print(f"\n{DIV}\n  📅  ÉVÉNEMENTS\n{DIV}")
         admin_r = await db.execute(select(User).where(User.email == "admin@teampilot.com"))
         admin_user = admin_r.scalar_one_or_none()
         if admin_user:
@@ -305,15 +240,17 @@ async def seed():
                     db.add(Event(title=title, tag=tag, event_date=edate, event_time=etime,
                                  location=loc, notes=notes, created_by=admin_user.id))
                     stats["events"][0] += 1
-                    print(f"  ✅ {title}  ({edate})")
                 else:
                     stats["events"][1] += 1
-                    print(f"  ℹ️  {title}")
+        c, s = stats["events"]
+        print(f"  ✅ Événements  —  {c} créé(s), {s} existant(s)")
 
-        # ── Notifications ──────────────────────────────────────────────────────
-        print(f"\n{DIV}\n  🔔  NOTIFICATIONS\n{DIV}")
+        # ── Notifications (comptes tests uniquement) ───────────────────────────
         all_events = (await db.execute(select(Event))).scalars().all()
-        all_users  = (await db.execute(select(User).where(User.is_active == True))).scalars().all()
+        TEST_EMAILS = ["admin@teampilot.com", "staff@teampilot.com", "joueur@teampilot.com"]
+        test_users = (await db.execute(
+            select(User).where(User.email.in_(TEST_EMAILS), User.is_active == True)
+        )).scalars().all()
         notif_titles = {
             "Pre-Match Training":   "Pre-Match Training ajouté",
             "Match Away":           "Match Away ajouté",
@@ -328,7 +265,7 @@ async def seed():
         }
         for evt in all_events:
             notif_title = notif_titles.get(evt.title, f"{evt.title} ajouté")
-            for u in all_users:
+            for u in test_users:
                 ex = await db.execute(
                     select(Notification).where(
                         Notification.event_id == evt.id,
@@ -348,13 +285,13 @@ async def seed():
                         existing.tag = evt.tag
                     stats["notifs"][1] += 1
         await db.flush()
-        print(f"  ✅ {stats['notifs'][0]} notification(s) créée(s)  |  {stats['notifs'][1]} existante(s)")
+        c, s = stats["notifs"]
+        print(f"  ✅ Notifications  —  {c} créée(s), {s} existante(s)")
 
         # ── Messagerie ─────────────────────────────────────────────────────────
-        print(f"\n{DIV}\n  💬  MESSAGERIE\n{DIV}")
         existing_conv = await db.execute(select(Conversation).limit(1))
         if existing_conv.scalar_one_or_none():
-            print("  ℹ️  Conversations déjà existantes, ignorées.")
+            print("  ℹ️  Messagerie déjà existante, ignorée.")
         else:
             def _u(em): return select(User).where(User.email == em)
             adm = (await db.execute(_u("admin@teampilot.com"))).scalar_one_or_none()
@@ -396,7 +333,7 @@ async def seed():
                 _msg(ai.id, adm.id,  "Parfait. Prépare aussi un point sur les absences.", 8, 10),
                 _msg(ai.id, None,    "Julian R. absent 2 séances (blessure). Alex M. absent 1 séance (suspension préventive). Tous les autres présents.", 8, 11),
             ])
-            convs_n += 1; print("  ✅ Tactical AI  (IA)")
+            convs_n += 1
 
             # 2. Thomas Laurent
             if thl:
@@ -412,7 +349,7 @@ async def seed():
                     _msg(c2.id, adm.id,  "C'est noté. Salle de projection disponible à 13h.", 9, 40),
                     _msg(c2.id, thl.id,  "Merci. Rappelle-moi aussi de contacter le kiné pour Stefan.", 10, 45),
                 ])
-                convs_n += 1; print(f"  ✅ {thl.first_name} {thl.last_name}  (coach principal)")
+                convs_n += 1
 
             # 3. Claire Dupuis
             if cdp:
@@ -428,7 +365,7 @@ async def seed():
                     _msg(c3.id, cdp.id,  "Rapport_Medical.pdf", 8, 53),
                     _msg(c3.id, adm.id,  "Bien reçu. Gardez-moi informé.", 9, 12),
                 ])
-                convs_n += 1; print(f"  ✅ {cdp.first_name} {cdp.last_name}  (médecin)")
+                convs_n += 1
 
             # 4. Groupe Staff Tactique
             c4 = Conversation(name="Staff Tactique", category="staff", role_type="group", is_group=True,
@@ -444,7 +381,7 @@ async def seed():
                 _msg(c4.id, pmo.id if pmo else None,  "Présent. J'apporterai les statistiques de la semaine.", 18, 32, 5),
                 _msg(c4.id, adm.id,                   "Salle de réunion A. À demain.", 18, 35, 5),
             ])
-            convs_n += 1; print("  ✅ Staff Tactique  (groupe · 7 membres)")
+            convs_n += 1
 
             # 5. Marcus Valentin
             if mkv:
@@ -459,7 +396,7 @@ async def seed():
                     _msg(c5.id, adm.id,  "8h30, avant la séance collective.", 10, 52),
                     _msg(c5.id, mkv.id,  "Présent à 8h30 demain Coach.", 11, 20),
                 ])
-                convs_n += 1; print(f"  ✅ {mkv.first_name} {mkv.last_name}  (milieu #8)")
+                convs_n += 1
 
             # 6. Kevin Larson
             if kvl:
@@ -474,7 +411,7 @@ async def seed():
                     _msg(c6.id, adm.id,  "Parfait. Récupère bien jeudi et vendredi.", 9, 25),
                     _msg(c6.id, kvl.id,  "D'accord, je ferai attention.", 9, 30),
                 ])
-                convs_n += 1; print(f"  ✅ {kvl.first_name} {kvl.last_name}  (attaquant #9)")
+                convs_n += 1
 
             # 7. Groupe Équipe Première
             c7 = Conversation(name="Équipe Première", category="team", role_type="group", is_group=True,
@@ -491,7 +428,7 @@ async def seed():
                 _msg(c7.id, kvl.id if kvl else None,  "On va gagner samedi !", 17, 20, 5),
                 _msg(c7.id, mgi.id if mgi else None,  "Motivés ! On compte sur toi Kevin.", 17, 25, 5),
             ])
-            convs_n += 1; print("  ✅ Équipe Première  (groupe · 18 membres)")
+            convs_n += 1
 
             # 8. Stefan Koch
             if stk:
@@ -506,7 +443,7 @@ async def seed():
                     _msg(c8.id, adm.id,  "On travaille ça vendredi avec Jean en séance spécifique gardiens.", 14, 20, 5),
                     _msg(c8.id, stk.id,  "Merci pour le retour, je travaille dessus.", 14, 25, 5),
                 ])
-                convs_n += 1; print(f"  ✅ {stk.first_name} {stk.last_name}  (gardien #1)")
+                convs_n += 1
 
             # 9. Florent Garnier
             if fga:
@@ -521,21 +458,13 @@ async def seed():
                     _msg(c9.id, fga.id,  "Oui, séance de 45 min après l'échauffement collectif.", 16, 20, 4),
                     _msg(c9.id, adm.id,  "Parfait, je valide. Prépare les plots pour mardi.", 16, 30, 4),
                 ])
-                convs_n += 1; print(f"  ✅ {fga.first_name} {fga.last_name}  (coach attaque)")
+                convs_n += 1
 
-            print(f"\n  → {convs_n} conversation(s) créée(s)")
+            print(f"  ✅ Messagerie  —  {convs_n} conversation(s) créée(s)")
 
         await db.commit()
 
-        # ── Résumé ─────────────────────────────────────────────────────────────
         print(f"\n{DIV}")
-        print("  📊  RÉSUMÉ FINAL")
-        print(DIV)
-        for label, key in [("Coachs", "coaches"), ("Staff", "staff"), ("Joueurs", "players"), ("Événements", "events"), ("Notifications", "notifs")]:
-            c, s = stats[key]
-            flag = "✅" if c > 0 else "ℹ️ "
-            print(f"  {flag}  {label:<14}  {c:>3} créé(s)   {s:>3} existant(s)   total → {c + s}")
-        print(DIV)
         print("  🎉  Seed terminé !")
         print(f"{DIV}\n")
 

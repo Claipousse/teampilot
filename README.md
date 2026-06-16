@@ -8,21 +8,31 @@ Application de gestion d'équipe sportive — Next.js (frontend) + FastAPI (back
 
 ### Backend (FastAPI)
 
+**Windows**
 ```bash
 cd backend
 
-# Installer les dépendances (première fois)
 python -m venv venv
-venv\Scripts\activate        # Windows
+venv\Scripts\activate
 pip install -r requirements.txt
 
-# Appliquer les migrations
 python -m alembic upgrade head
-
-# Peupler la base de données (première fois)
 python seed.py
 
-# Démarrer le serveur (port 8000)
+uvicorn app.main:app --reload
+```
+
+**Linux / macOS**
+```bash
+cd backend
+
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+python -m alembic upgrade head
+python seed.py
+
 uvicorn app.main:app --reload
 ```
 

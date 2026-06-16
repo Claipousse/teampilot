@@ -106,9 +106,11 @@ async def seed():
                         is_admin=True, type="staff", must_change_password=False))
             await db.flush()
         else:
-            if not admin_user_obj.username:
-                admin_user_obj.username = "admin.test"
-                admin_user_obj.must_change_password = False
+            admin_user_obj.username = "admin.test"
+            admin_user_obj.first_name = "Admin"
+            admin_user_obj.last_name = "Test"
+            admin_user_obj.hashed_password = hash_password("admin123")
+            admin_user_obj.must_change_password = False
 
         # ── Comptes de test ────────────────────────────────────────────────────
         staff_ex = await db.execute(select(User).where(User.email == "staff@teampilot.com"))
@@ -125,9 +127,11 @@ async def seed():
                         is_admin=False, type="staff", staff_id=sm_test.id,
                         must_change_password=False))
         else:
-            if not staff_user_obj.username:
-                staff_user_obj.username = "staff.test"
-                staff_user_obj.must_change_password = False
+            staff_user_obj.username = "staff.test"
+            staff_user_obj.first_name = "Staff"
+            staff_user_obj.last_name = "Test"
+            staff_user_obj.hashed_password = hash_password("staff123")
+            staff_user_obj.must_change_password = False
 
         joueur_ex = await db.execute(select(User).where(User.email == "joueur@teampilot.com"))
         joueur_user_obj = joueur_ex.scalar_one_or_none()
@@ -144,9 +148,11 @@ async def seed():
                         is_admin=False, type="player", player_id=tp.id,
                         must_change_password=False))
         else:
-            if not joueur_user_obj.username:
-                joueur_user_obj.username = "joueur.test"
-                joueur_user_obj.must_change_password = False
+            joueur_user_obj.username = "joueur.test"
+            joueur_user_obj.first_name = "Joueur"
+            joueur_user_obj.last_name = "Test"
+            joueur_user_obj.hashed_password = hash_password("joueur123")
+            joueur_user_obj.must_change_password = False
 
         print("  ✅ Comptes tests créés  (admin.test / staff.test / joueur.test)")
 
@@ -272,7 +278,7 @@ async def seed():
                         Notification.user_id == u.id,
                     )
                 )
-                existing = ex.scalar_one_or_none()
+                existing = ex.scalars().first()
                 if not existing:
                     db.add(Notification(
                         user_id=u.id, kind="added",

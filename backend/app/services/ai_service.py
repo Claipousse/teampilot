@@ -18,6 +18,8 @@ Compétitions : {competitions}
 Objectif : {objective}
 
 === EFFECTIF ({players_total} joueurs) ===
+Format stats : mj=matchs joués | b=buts | pd=passes décisives | min=minutes jouées | ratio=buts/matchs×100 | j/r=cartons jaunes/rouges | cln=clean sheets | enc=buts encaissés (GK)
+
 Disponibles ({available_count}) : {available_list}
 Blessés ({injured_count}) : {injured_list}
 Suspendus ({suspended_count}) : {suspended_list}
@@ -59,7 +61,17 @@ async def build_context(db: AsyncSession) -> str:
     uncertain = [p for p in players if p.status == "Incertain"]
 
     def fmt(p: Player) -> str:
-        return f"{p.first_name} {p.last_name} (#{p.shirt_number}, {p.position_short})"
+        ratio = round(p.goals / p.matches * 100) if p.matches > 0 else 0
+        parts = [
+            f"{p.first_name} {p.last_name} (#{p.shirt_number}, {p.position_short})",
+            f"{p.matches}mj",
+            f"{p.goals}b" if p.position_short != "GK" else f"{p.clean_sheets}cln/{p.goals_conceded}enc",
+            f"{p.assists}pd" if p.position_short != "GK" else None,
+            f"{p.minutes_played}min",
+            f"ratio {ratio}%" if p.position_short != "GK" and p.matches > 0 else None,
+            f"{p.yellow_cards}j/{p.red_cards}r" if (p.yellow_cards or p.red_cards) else None,
+        ]
+        return " | ".join(p for p in parts if p is not None)
 
     today_str = date.today().strftime("%Y-%m-%d")
     next_event = (await db.execute(

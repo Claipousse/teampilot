@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, Send, Download, FileText, Users, X, Plus, MessageSquare, ChevronRight, Check } from 'lucide-react';
 import { useT } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import ReactMarkdown from 'react-markdown';
 
 type RoleType = 'player' | 'coach' | 'staff' | 'ai';
 type Tab = 'Tous' | 'Team' | 'Staff';
@@ -663,7 +664,22 @@ export default function MessagerieDesktop() {
                                 <p className={`text-sm font-bold mb-1 ml-1 ${nameColor(msg.senderRoleType)}`}>{msg.senderName}</p>
                               )}
                               <div className="bg-surface-container rounded-2xl rounded-tl-sm px-5 py-4">
-                                <p className="text-base text-on-surface leading-relaxed">{msg.text}</p>
+                                {activeConv.isAI ? (
+                                  <ReactMarkdown
+                                    components={{
+                                      p:      ({ children }) => <p className="text-base text-on-surface leading-relaxed mb-2 last:mb-0">{children}</p>,
+                                      ul:     ({ children }) => <ul className="list-disc pl-5 mb-2 space-y-1">{children}</ul>,
+                                      ol:     ({ children }) => <ol className="list-decimal pl-5 mb-2 space-y-1">{children}</ol>,
+                                      li:     ({ children }) => <li className="text-base text-on-surface">{children}</li>,
+                                      strong: ({ children }) => <strong className="font-bold text-on-surface">{children}</strong>,
+                                      h3:     ({ children }) => <h3 className="font-bold text-on-surface mt-3 mb-1">{children}</h3>,
+                                    }}
+                                  >
+                                    {msg.text ?? ''}
+                                  </ReactMarkdown>
+                                ) : (
+                                  <p className="text-base text-on-surface leading-relaxed">{msg.text}</p>
+                                )}
                               </div>
                               {msg.time && <p className="text-xs text-on-surface-variant mt-1 ml-1">{msg.time}</p>}
                             </div>

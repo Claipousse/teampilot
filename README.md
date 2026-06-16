@@ -23,16 +23,20 @@ uvicorn app.main:app --reload
 ```
 
 **Linux / macOS**
+
+> **Python 3.12 ou 3.13 requis.** Python 3.14 n'est pas encore supporté par certaines dépendances (`pydantic-core`, `pillow`).
+
 ```bash
 cd backend
 
-# Prérequis système (Fedora/RHEL)
-sudo dnf install gcc python3-devel zlib-devel
+# Vérifier la version Python (doit être 3.12 ou 3.13)
+python3 --version
 
-# Ubuntu/Debian
-# sudo apt install build-essential python3-dev zlib1g-dev
+# Si besoin, installer Python 3.12 (Fedora/RHEL)
+sudo dnf install python3.12
+# Ubuntu/Debian : sudo apt install python3.12
 
-python3 -m venv venv
+python3.12 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 

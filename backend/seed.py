@@ -139,7 +139,8 @@ async def seed():
             tp = Player(first_name="Joueur", last_name="Test", shirt_number=77,
                         position="Milieu Offensif", position_short="MIL",
                         nationality="Français", status="Disponible",
-                        contract_end_date="2027-06-30")
+                        contract_end_date="2027-06-30",
+                        matches=18, goals=5, assists=7, yellow_cards=2, minutes_played=1530)
             db.add(tp)
             await db.flush()
             db.add(User(email="joueur@teampilot.com", username="joueur.test",
@@ -153,6 +154,15 @@ async def seed():
             joueur_user_obj.last_name = "Test"
             joueur_user_obj.hashed_password = hash_password("joueur123")
             joueur_user_obj.must_change_password = False
+            if joueur_user_obj.player_id:
+                tp_ex = await db.execute(select(Player).where(Player.id == joueur_user_obj.player_id))
+                tp_existing = tp_ex.scalar_one_or_none()
+                if tp_existing:
+                    tp_existing.matches = 18
+                    tp_existing.goals = 5
+                    tp_existing.assists = 7
+                    tp_existing.yellow_cards = 2
+                    tp_existing.minutes_played = 1530
 
         print("  ✅ Comptes tests créés  (admin.test / staff.test / joueur.test)")
 

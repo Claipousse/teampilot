@@ -16,7 +16,7 @@ python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 
-python -m alembic upgrade head
+alembic upgrade head
 python seed.py
 
 uvicorn app.main:app --reload
@@ -40,7 +40,7 @@ python3.12 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-python -m alembic upgrade head
+alembic upgrade head
 python seed.py
 
 uvicorn app.main:app --reload

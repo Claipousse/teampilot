@@ -26,6 +26,12 @@ uvicorn app.main:app --reload
 ```bash
 cd backend
 
+# Prérequis système (Fedora/RHEL)
+sudo dnf install gcc python3-devel zlib-devel
+
+# Ubuntu/Debian
+# sudo apt install build-essential python3-dev zlib1g-dev
+
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt

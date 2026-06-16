@@ -55,6 +55,12 @@ type ApiUsersGrouped = {
   coaches: ApiUserCard[]; staff: ApiUserCard[]; players: ApiUserCard[];
 };
 
+type ApiAIChatResponse = {
+  conversation_id: number;
+  user_message: ApiMessage;
+  ai_message: ApiMessage;
+};
+
 // ── Conversions (API brut → types internes) ───────────────────────────────────
 
 function toMessage(m: ApiMessage, userId: number): Message {
@@ -130,6 +136,20 @@ function userRoleType(u: ApiUserCard): RoleType {
   return 'staff';
 }
 
+// ── Conversation IA virtuelle (avant que l'utilisateur envoie un premier message) ──
+const VIRTUAL_AI_CONV: Conversation = {
+  id: -1,
+  name: 'Tactical AI',
+  time: '',
+  preview: 'Votre assistant football IA',
+  initials: '✦',
+  avatarBg: 'bg-primary',
+  category: 'staff',
+  roleType: 'ai',
+  isAI: true,
+  isGroup: false,
+};
+
 // ── Composant ─────────────────────────────────────────────────────────────────
 
 export default function MessagerieDesktop() {
@@ -145,6 +165,7 @@ export default function MessagerieDesktop() {
   const [showMembers,    setShowMembers]    = useState(false);
   const [membersVisible, setMembersVisible] = useState(false);
   const [sending,        setSending]        = useState(false);
+  const [aiTyping,       setAiTyping]       = useState(false);
 
   // Create modal
   const [createMode,     setCreateMode]     = useState<CreateMode>(null);
@@ -163,8 +184,9 @@ export default function MessagerieDesktop() {
   // Si l'utilisateur repart sans écrire, elle est supprimée automatiquement (cleanupEmptyConv).
   const newEmptyConvRef = useRef<number | null>(null);
 
-  const aiConv    = useMemo(() => conversations.find(c => c.isAI),    [conversations]);
-  const otherConvs = useMemo(() => conversations.filter(c => !c.isAI), [conversations]);
+  const aiConv      = useMemo(() => conversations.find(c => c.isAI),    [conversations]);
+  const displayAiConv = aiConv ?? VIRTUAL_AI_CONV;
+  const otherConvs  = useMemo(() => conversations.filter(c => !c.isAI), [conversations]);
 
   const filtered = useMemo(() => otherConvs.filter(conv => {
     const matchTab    = activeTab === 'Tous' || conv.category === activeTab.toLowerCase();
@@ -197,6 +219,7 @@ export default function MessagerieDesktop() {
   // Chargement des messages quand la conversation change
   useEffect(() => {
     if (!activeConv || !user) return;
+    if (activeConv.id === -1) { setMessages([]); return; }
     fetch(`/api/backend/messages/conversations/${activeConv.id}/messages`)
       .then(r => r.ok ? r.json() : [])
       .then((data: ApiMessage[]) => setMessages(data.map(m => toMessage(m, user.id))));
@@ -224,7 +247,7 @@ export default function MessagerieDesktop() {
   // On compare le dernier ID reçu avec le dernier ID connu : on ne met à jour que si de nouveaux messages sont arrivés
   // (évite un re-render inutile à chaque tick)
   useEffect(() => {
-    if (!activeConv || !user) return;
+    if (!activeConv || !user || activeConv.id === -1) return;
     const convId = activeConv.id;
     const userId = user.id;
     const id = setInterval(() => {
@@ -360,23 +383,75 @@ export default function MessagerieDesktop() {
     const text = input.trim();
     setInput('');
     try {
-      const r = await fetch(`/api/backend/messages/conversations/${activeConv.id}/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      if (r.ok) {
-        const msg: ApiMessage = await r.json();
-        setMessages(prev => [...prev, toMessage(msg, user.id)]);
-        newEmptyConvRef.current = null;
+      if (activeConv.isAI) {
+        const optimisticId = Date.now();
         const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-        setConversations(prev => {
-          const updated = prev.map(c => c.id === activeConv.id ? { ...c, preview: `Vous : ${text}`, time: now } : c);
-          return [...updated.filter(c => c.id === activeConv.id), ...updated.filter(c => c.id !== activeConv.id)];
+        setMessages(prev => [...prev, { id: optimisticId, type: 'sent' as const, text, time: now }]);
+        setAiTyping(true);
+
+        const r = await fetch('/api/backend/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
         });
+
+        setAiTyping(false);
+
+        if (r.status === 429 || r.status === 503) {
+          setMessages(prev => [...prev, {
+            id: Date.now(),
+            type: 'received' as const,
+            text: "Je suis temporairement indisponible. Réessaie dans un instant.",
+          }]);
+          return;
+        }
+
+        if (r.ok) {
+          const data: ApiAIChatResponse = await r.json();
+          setMessages(prev => [
+            ...prev.filter(m => m.id !== optimisticId),
+            toMessage(data.user_message, user.id),
+            toMessage(data.ai_message, user.id),
+          ]);
+
+          if (activeConv.id === -1) {
+            // Première utilisation : récupérer la vraie conversation créée
+            const convRes = await fetch('/api/backend/messages/conversations');
+            if (convRes.ok) {
+              const convData: ApiConversation[] = await convRes.json();
+              const convs = convData.map(toConversation);
+              setConversations(convs);
+              const realAiConv = convs.find(c => c.isAI);
+              if (realAiConv) setActiveConv(realAiConv);
+            }
+          } else {
+            const preview = data.ai_message.text?.slice(0, 60) ?? '';
+            setConversations(prev => {
+              const updated = prev.map(c => c.id === activeConv.id ? { ...c, preview, time: now } : c);
+              return [...updated.filter(c => c.id === activeConv.id), ...updated.filter(c => c.id !== activeConv.id)];
+            });
+          }
+        }
+      } else {
+        const r = await fetch(`/api/backend/messages/conversations/${activeConv.id}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
+        });
+        if (r.ok) {
+          const msg: ApiMessage = await r.json();
+          setMessages(prev => [...prev, toMessage(msg, user.id)]);
+          newEmptyConvRef.current = null;
+          const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          setConversations(prev => {
+            const updated = prev.map(c => c.id === activeConv.id ? { ...c, preview: `Vous : ${text}`, time: now } : c);
+            return [...updated.filter(c => c.id === activeConv.id), ...updated.filter(c => c.id !== activeConv.id)];
+          });
+        }
       }
     } finally {
       setSending(false);
+      setAiTyping(false);
     }
   };
 
@@ -444,24 +519,22 @@ export default function MessagerieDesktop() {
         </div>
 
         {/* IA — toujours en tête */}
-        {aiConv && (
-          <div onClick={() => selectConv(aiConv)}
-            className={`flex items-center gap-3 px-4 py-4 cursor-pointer transition-all border-l-4 shrink-0 ${
-              activeConv?.id === aiConv.id ? 'border-primary bg-primary/5' : 'border-primary/50 bg-primary/5 hover:bg-primary/10'
-            }`}
-          >
-            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0">
-              <span className="text-white text-lg font-bold">✦</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-base font-bold text-primary">{aiConv.name}</p>
-                {aiConv.unread && <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 ml-2" />}
-              </div>
-              <p className="text-sm truncate text-on-surface-variant">{aiConv.preview}</p>
-            </div>
+        <div onClick={() => selectConv(displayAiConv)}
+          className={`flex items-center gap-3 px-4 py-4 cursor-pointer transition-all border-l-4 shrink-0 ${
+            activeConv?.id === displayAiConv.id ? 'border-primary bg-primary/5' : 'border-primary/50 bg-primary/5 hover:bg-primary/10'
+          }`}
+        >
+          <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shrink-0">
+            <span className="text-white text-lg font-bold">✦</span>
           </div>
-        )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-base font-bold text-primary">{displayAiConv.name}</p>
+              {displayAiConv.unread && <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 ml-2" />}
+            </div>
+            <p className="text-sm truncate text-on-surface-variant">{displayAiConv.preview}</p>
+          </div>
+        </div>
 
         <div className="flex items-center gap-3 px-4 py-2 shrink-0">
           <div className="flex-1 h-px bg-outline-variant" />
@@ -628,6 +701,20 @@ export default function MessagerieDesktop() {
 
                       </div>
                     ))}
+                    {aiTyping && (
+                      <div className="flex items-start gap-3 max-w-3xl">
+                        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shrink-0 mt-1">
+                          <span className="font-bold text-sm text-white">✦</span>
+                        </div>
+                        <div className="bg-surface-container rounded-2xl rounded-tl-sm px-5 py-4">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-2 h-2 rounded-full bg-on-surface-variant animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <div className="w-2 h-2 rounded-full bg-on-surface-variant animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <div className="w-2 h-2 rounded-full bg-on-surface-variant animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <div ref={messagesEndRef} />
                   </div>
                 </div>

@@ -55,6 +55,12 @@ type ApiUsersGrouped = {
   coaches: ApiUserCard[]; staff: ApiUserCard[]; players: ApiUserCard[];
 };
 
+type ApiAIChatResponse = {
+  conversation_id: number;
+  user_message: ApiMessage;
+  ai_message: ApiMessage;
+};
+
 // ── Conversions ──────────────────────────────────────────────────────────────
 
 function toMessage(m: ApiMessage, userId: number): Message {
@@ -127,6 +133,20 @@ function userRoleType(u: ApiUserCard): RoleType {
   return 'staff';
 }
 
+// ── Conversation IA virtuelle ────────────────────────────────────────────────
+const VIRTUAL_AI_CONV: Conversation = {
+  id: -1,
+  name: 'Tactical AI',
+  time: '',
+  preview: 'Votre assistant football IA',
+  initials: '✦',
+  avatarBg: 'bg-primary',
+  category: 'staff',
+  roleType: 'ai',
+  isAI: true,
+  isGroup: false,
+};
+
 // ── Composant ─────────────────────────────────────────────────────────────────
 
 export default function MessagerieMobile() {
@@ -142,6 +162,7 @@ export default function MessagerieMobile() {
   const [showMembers,    setShowMembers]    = useState(false);
   const [membersVisible, setMembersVisible] = useState(false);
   const [sending,        setSending]        = useState(false);
+  const [aiTyping,       setAiTyping]       = useState(false);
 
   // Create modal
   const [createMode,    setCreateMode]    = useState<CreateMode>(null);
@@ -157,8 +178,9 @@ export default function MessagerieMobile() {
   const messagesEndRef  = useRef<HTMLDivElement>(null);
   const newEmptyConvRef = useRef<number | null>(null);
 
-  const aiConv    = useMemo(() => conversations.find(c => c.isAI),    [conversations]);
-  const otherConvs = useMemo(() => conversations.filter(c => !c.isAI), [conversations]);
+  const aiConv      = useMemo(() => conversations.find(c => c.isAI),    [conversations]);
+  const displayAiConv = aiConv ?? VIRTUAL_AI_CONV;
+  const otherConvs  = useMemo(() => conversations.filter(c => !c.isAI), [conversations]);
 
   const filtered = useMemo(() => otherConvs.filter(conv => {
     const matchTab    = activeTab === 'Tous' || conv.category === activeTab.toLowerCase();
@@ -178,6 +200,7 @@ export default function MessagerieMobile() {
   // Chargement messages
   useEffect(() => {
     if (!activeConv || !user) return;
+    if (activeConv.id === -1) { setMessages([]); return; }
     fetch(`/api/backend/messages/conversations/${activeConv.id}/messages`)
       .then(r => r.ok ? r.json() : [])
       .then((data: ApiMessage[]) => setMessages(data.map(m => toMessage(m, user.id))));
@@ -201,7 +224,7 @@ export default function MessagerieMobile() {
 
   // Polling messages actifs (5s)
   useEffect(() => {
-    if (!activeConv || !user) return;
+    if (!activeConv || !user || activeConv.id === -1) return;
     const convId = activeConv.id;
     const userId = user.id;
     const id = setInterval(() => {
@@ -340,23 +363,74 @@ export default function MessagerieMobile() {
     const text = input.trim();
     setInput('');
     try {
-      const r = await fetch(`/api/backend/messages/conversations/${activeConv.id}/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      if (r.ok) {
-        const msg: ApiMessage = await r.json();
-        setMessages(prev => [...prev, toMessage(msg, user.id)]);
-        newEmptyConvRef.current = null;
+      if (activeConv.isAI) {
+        const optimisticId = Date.now();
         const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-        setConversations(prev => {
-          const updated = prev.map(c => c.id === activeConv.id ? { ...c, preview: `Vous : ${text}`, time: now } : c);
-          return [...updated.filter(c => c.id === activeConv.id), ...updated.filter(c => c.id !== activeConv.id)];
+        setMessages(prev => [...prev, { id: optimisticId, type: 'sent' as const, text, time: now }]);
+        setAiTyping(true);
+
+        const r = await fetch('/api/backend/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
         });
+
+        setAiTyping(false);
+
+        if (r.status === 429 || r.status === 503) {
+          setMessages(prev => [...prev, {
+            id: Date.now(),
+            type: 'received' as const,
+            text: "Je suis temporairement indisponible. Réessaie dans un instant.",
+          }]);
+          return;
+        }
+
+        if (r.ok) {
+          const data: ApiAIChatResponse = await r.json();
+          setMessages(prev => [
+            ...prev.filter(m => m.id !== optimisticId),
+            toMessage(data.user_message, user.id),
+            toMessage(data.ai_message, user.id),
+          ]);
+
+          if (activeConv.id === -1) {
+            const convRes = await fetch('/api/backend/messages/conversations');
+            if (convRes.ok) {
+              const convData: ApiConversation[] = await convRes.json();
+              const convs = convData.map(toConversation);
+              setConversations(convs);
+              const realAiConv = convs.find(c => c.isAI);
+              if (realAiConv) setActiveConv(realAiConv);
+            }
+          } else {
+            const preview = data.ai_message.text?.slice(0, 60) ?? '';
+            setConversations(prev => {
+              const updated = prev.map(c => c.id === activeConv.id ? { ...c, preview, time: now } : c);
+              return [...updated.filter(c => c.id === activeConv.id), ...updated.filter(c => c.id !== activeConv.id)];
+            });
+          }
+        }
+      } else {
+        const r = await fetch(`/api/backend/messages/conversations/${activeConv.id}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
+        });
+        if (r.ok) {
+          const msg: ApiMessage = await r.json();
+          setMessages(prev => [...prev, toMessage(msg, user.id)]);
+          newEmptyConvRef.current = null;
+          const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          setConversations(prev => {
+            const updated = prev.map(c => c.id === activeConv.id ? { ...c, preview: `Vous : ${text}`, time: now } : c);
+            return [...updated.filter(c => c.id === activeConv.id), ...updated.filter(c => c.id !== activeConv.id)];
+          });
+        }
       }
     } finally {
       setSending(false);
+      setAiTyping(false);
     }
   };
 
@@ -462,6 +536,21 @@ export default function MessagerieMobile() {
                   )}
                 </div>
               ))}
+
+              {aiTyping && (
+                <div className="flex items-end gap-2 max-w-[85%]">
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+                    <span className="font-bold text-xs text-white">✦</span>
+                  </div>
+                  <div className="bg-surface-container rounded-2xl rounded-tl-sm px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-on-surface-variant animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 rounded-full bg-on-surface-variant animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 rounded-full bg-on-surface-variant animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="h-4" />
               <div ref={messagesEndRef} />
@@ -723,21 +812,19 @@ export default function MessagerieMobile() {
         ))}
       </div>
 
-      {aiConv && (
-        <div onClick={() => openConv(aiConv)}
-          className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer active:scale-[0.99] transition-all bg-primary/5 border border-primary/20 border-l-4 border-l-primary">
-          <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shrink-0">
-            <span className="text-white text-xl font-bold">✦</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-base font-bold text-primary">{aiConv.name}</p>
-            </div>
-            <p className={`text-sm truncate ${aiConv.unread ? 'text-on-surface font-medium' : 'text-on-surface-variant'}`}>{aiConv.preview}</p>
-          </div>
-          {aiConv.unread && <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0" />}
+      <div onClick={() => openConv(displayAiConv)}
+        className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer active:scale-[0.99] transition-all bg-primary/5 border border-primary/20 border-l-4 border-l-primary">
+        <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shrink-0">
+          <span className="text-white text-xl font-bold">✦</span>
         </div>
-      )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-base font-bold text-primary">{displayAiConv.name}</p>
+          </div>
+          <p className={`text-sm truncate ${displayAiConv.unread ? 'text-on-surface font-medium' : 'text-on-surface-variant'}`}>{displayAiConv.preview}</p>
+        </div>
+        {displayAiConv.unread && <div className="w-2.5 h-2.5 rounded-full bg-primary shrink-0" />}
+      </div>
 
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-outline-variant" />

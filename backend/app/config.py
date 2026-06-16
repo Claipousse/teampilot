@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_HOURS: int = 24
     UPLOAD_DIR: str = "./uploads"
     MAX_UPLOAD_SIZE_MB: int = 5
+    GROQ_API_KEY: str = ""
+    OLLAMA_URL: str = "http://localhost:11434"
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

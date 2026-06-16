@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, club, seasons, staff, players, events, dashboard, messages, notifications
+from app.routers import auth, club, seasons, staff, players, events, dashboard, messages, notifications, ai
 
 app = FastAPI(title="TeampilotAI API", version="1.0.0", redirect_slashes=False)
 
@@ -21,3 +21,4 @@ app.include_router(events.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(messages.router, prefix="/api/v1")
 app.include_router(notifications.router, prefix="/api/v1")
+app.include_router(ai.router, prefix="/api/v1")

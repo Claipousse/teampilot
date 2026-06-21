@@ -84,6 +84,8 @@ teampilot/
 │   │
 │   ├── alembic.ini                  ← Fichier de configuration d'Alembic (chemin des scripts)
 │   ├── requirements.txt             ← Liste de toutes les librairies Python à installer
+│   ├── seed.py                      ← Peuple la BDD avec des données de test (club, joueurs, staff, events, messages)
+│   ├── reset_db.py                  ← Remet la BDD à zéro et recrée le schéma (option --seed pour repeupler)
 │   ├── .env                         ← Variables secrètes (clé API, etc.) — jamais committé sur git
 │   └── teampilot.db                 ← La base de données SQLite (créée automatiquement, pas sur git)
 │
@@ -189,6 +191,22 @@ Dans chaque dossier Python (`models/`, `schemas/`, `routers/`, `services/`, `dep
 ## Les `page.tsx`
 
 Dans Next.js, chaque dossier de page contient un `page.tsx`. Ce fichier fait généralement une seule chose : choisir entre la version Desktop et la version Mobile du composant selon la taille de l'écran. La vraie logique est dans les fichiers `*Desktop.tsx` et `*Mobile.tsx`.
+
+## Scripts utiles
+
+Tous ces scripts se lancent depuis le dossier `backend/` avec le venv activé.
+
+| Commande | Ce que ça fait |
+|---|---|
+| `python reset_db.py` | Supprime `teampilot.db`, recrée toutes les tables via Alembic → base vierge |
+| `python reset_db.py --seed` | Idem + peuple avec des données de test (joueurs, staff, événements, messages) |
+| `python seed.py` | Peuple la BDD existante sans la supprimer (idempotent : ne crée pas en double) |
+| `alembic upgrade head` | Applique les migrations manquantes sans toucher aux données |
+| `alembic revision --autogenerate -m "description"` | Génère un nouveau fichier de migration après modification d'un modèle |
+
+> **Cas d'usage typique** : tu veux repartir de zéro avec des données fraîches → `python reset_db.py --seed`
+
+---
 
 ## Ce qui n'est pas sur git
 

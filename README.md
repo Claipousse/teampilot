@@ -6,15 +6,22 @@ Application de gestion d'équipe sportive — Next.js (frontend) + FastAPI (back
 
 ## Démarrage rapide (recommandé)
 
+**Linux / macOS**
 ```bash
 bash start.sh
-```
-
-Installe automatiquement les dépendances, applique les migrations, seed les données de test si la base est vide, puis démarre les deux serveurs.
-
-```bash
 bash start.sh --reset   # remet la BDD à zéro avant de démarrer
 ```
+
+**Windows (PowerShell)**
+```powershell
+.\start.ps1
+.\start.ps1 -reset      # remet la BDD à zéro avant de démarrer
+```
+
+> Si PowerShell bloque l'exécution du script, lancer une fois en admin :
+> `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+
+Les deux scripts font la même chose : installer les dépendances si besoin, appliquer les migrations, seed les données de test si la base est vide, puis démarrer le backend (port 8000) et le frontend (port 3000).
 
 ---
 

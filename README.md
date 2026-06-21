@@ -4,7 +4,21 @@ Application de gestion d'équipe sportive — Next.js (frontend) + FastAPI (back
 
 ---
 
-## Lancer le projet
+## Démarrage rapide (recommandé)
+
+```bash
+bash start.sh
+```
+
+Installe automatiquement les dépendances, applique les migrations, seed les données de test si la base est vide, puis démarre les deux serveurs.
+
+```bash
+bash start.sh --reset   # remet la BDD à zéro avant de démarrer
+```
+
+---
+
+## Lancer le projet manuellement
 
 ### Backend (FastAPI)
 

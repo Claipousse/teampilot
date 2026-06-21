@@ -17,7 +17,7 @@ venv\Scripts\activate
 pip install -r requirements.txt
 
 alembic upgrade head
-python seed.py
+python seed.py       # données de test
 
 uvicorn app.main:app --reload
 ```
@@ -41,7 +41,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 alembic upgrade head
-python seed.py
+python seed.py       # données de test
 
 uvicorn app.main:app --reload
 ```
@@ -57,6 +57,22 @@ npm run dev
 ```
 
 Ouvrir [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Réinitialiser la base de données
+
+```bash
+cd backend
+
+# Base vierge (schéma seul, sans données)
+python reset_db.py
+
+# Base vierge + données de test complètes
+python reset_db.py --seed
+```
+
+---
 
 **Comptes de test**
 

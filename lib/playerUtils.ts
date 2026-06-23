@@ -42,6 +42,10 @@ export type PlayerForm = {
   injury: string; returnDate: string;
   contract: string; academy: string;
   notes: string; photoUrl: string;
+  // stats saison
+  matches: string; goals: string; assists: string;
+  yellowCards: string; redCards: string; minutes: string;
+  cleanSheets: string; goalsConceded: string;
 };
 
 export type FormErrors = Partial<Record<'prenom' | 'nom' | 'number' | 'position' | 'nationality' | 'status', string>>;
@@ -59,6 +63,9 @@ export const EMPTY_FORM: PlayerForm = {
   injury: '', returnDate: '',
   contract: '', academy: '',
   notes: '', photoUrl: '',
+  matches: '', goals: '', assists: '',
+  yellowCards: '', redCards: '', minutes: '',
+  cleanSheets: '', goalsConceded: '',
 };
 
 export const POSITION_OPTIONS: { label: string; short: 'GK' | 'DEF' | 'MIL' | 'ATT' }[] = [
@@ -135,6 +142,14 @@ export function playerFromApi(p: any): Player {
       minutes: p.minutes_played, cleanSheets: p.clean_sheets,
       goalsConceded: p.goals_conceded,
     },
+    matches:      p.matches      !== undefined ? String(p.matches)       : '',
+    goals:        p.goals        !== undefined ? String(p.goals)         : '',
+    assists:      p.assists      !== undefined ? String(p.assists)       : '',
+    yellowCards:  p.yellow_cards !== undefined ? String(p.yellow_cards)  : '',
+    redCards:     p.red_cards    !== undefined ? String(p.red_cards)     : '',
+    minutes:      p.minutes_played !== undefined ? String(p.minutes_played) : '',
+    cleanSheets:  p.clean_sheets !== undefined ? String(p.clean_sheets)  : '',
+    goalsConceded: p.goals_conceded !== undefined ? String(p.goals_conceded) : '',
   };
 }
 

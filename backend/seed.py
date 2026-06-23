@@ -100,45 +100,52 @@ async def seed():
         admin_ex = await db.execute(select(User).where(User.email == "admin@teampilot.com"))
         admin_user_obj = admin_ex.scalar_one_or_none()
         if not admin_user_obj:
-            db.add(User(email="admin@teampilot.com", username="admin.test",
-                        hashed_password=hash_password("admin123"),
-                        first_name="Admin", last_name="Test",
+            db.add(User(email="admin@teampilot.com", username="coach.test",
+                        hashed_password=hash_password("coach123"),
+                        first_name="Coach", last_name="Test",
                         is_admin=True, type="staff", must_change_password=False))
             await db.flush()
         else:
-            admin_user_obj.username = "admin.test"
-            admin_user_obj.first_name = "Admin"
+            admin_user_obj.username = "coach.test"
+            admin_user_obj.first_name = "Coach"
             admin_user_obj.last_name = "Test"
-            admin_user_obj.hashed_password = hash_password("admin123")
+            admin_user_obj.hashed_password = hash_password("coach123")
             admin_user_obj.must_change_password = False
 
         # ── Comptes de test ────────────────────────────────────────────────────
         staff_ex = await db.execute(select(User).where(User.email == "staff@teampilot.com"))
         staff_user_obj = staff_ex.scalar_one_or_none()
         if not staff_user_obj:
-            sm_test = StaffMember(first_name="Staff", last_name="Test", role="Logistique",
+            sm_test = StaffMember(first_name="Médecin", last_name="Test", role="Médecin",
                                   email="staff@teampilot.com", phone="+44 20 5678 9012",
                                   since_date="2025-01-01")
             db.add(sm_test)
             await db.flush()
-            db.add(User(email="staff@teampilot.com", username="staff.test",
-                        hashed_password=hash_password("staff123"),
-                        first_name="Staff", last_name="Test",
+            db.add(User(email="staff@teampilot.com", username="medecin.test",
+                        hashed_password=hash_password("medecin123"),
+                        first_name="Médecin", last_name="Test",
                         is_admin=False, type="staff", staff_id=sm_test.id,
                         must_change_password=False))
         else:
-            staff_user_obj.username = "staff.test"
-            staff_user_obj.first_name = "Staff"
+            staff_user_obj.username = "medecin.test"
+            staff_user_obj.first_name = "Médecin"
             staff_user_obj.last_name = "Test"
-            staff_user_obj.hashed_password = hash_password("staff123")
+            staff_user_obj.hashed_password = hash_password("medecin123")
             staff_user_obj.must_change_password = False
+            if staff_user_obj.staff_id:
+                sm_ex = await db.execute(select(StaffMember).where(StaffMember.id == staff_user_obj.staff_id))
+                sm_existing = sm_ex.scalar_one_or_none()
+                if sm_existing:
+                    sm_existing.first_name = "Médecin"
+                    sm_existing.last_name = "Test"
+                    sm_existing.role = "Médecin"
 
         joueur_ex = await db.execute(select(User).where(User.email == "joueur@teampilot.com"))
         joueur_user_obj = joueur_ex.scalar_one_or_none()
         if not joueur_user_obj:
             tp = Player(first_name="Joueur", last_name="Test", shirt_number=77,
                         position="Milieu Offensif", position_short="MIL",
-                        nationality="Français", status="Disponible",
+                        nationality="Français", nationality_flag="fr", status="Disponible",
                         contract_end_date="2027-06-30",
                         matches=18, goals=5, assists=7, yellow_cards=2, minutes_played=1530)
             db.add(tp)
@@ -164,7 +171,7 @@ async def seed():
                     tp_existing.yellow_cards = 2
                     tp_existing.minutes_played = 1530
 
-        print("  ✅ Comptes tests créés  (admin.test / staff.test / joueur.test)")
+        print("  ✅ Comptes tests créés  (coach.test / medecin.test / joueur.test)")
 
         # ── Club & Saison ──────────────────────────────────────────────────────
         club_ex = await db.execute(select(Club).where(Club.id == 1))
@@ -215,12 +222,12 @@ async def seed():
 
         # ── Joueurs (15) ───────────────────────────────────────────────────────
         for pd, email in [
-            (dict(first_name="Marcus",  last_name="Valentin", shirt_number=8,  position="Milieu Central",    position_short="MIL", nationality="Anglais",   date_of_birth="1998-03-15", height_cm=182, weight_kg=78, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", academy="Manchester Academy", matches=22, goals=4,  assists=9,  yellow_cards=3, minutes_played=1850, notes="Excellent visionnaire du jeu."),  "m.valentin@metropolisunited.com"),
+            (dict(first_name="Marcus",  last_name="Valentin", shirt_number=8,  position="Milieu Central",    position_short="MIL", nationality="Anglais",   nationality_flag="gb", date_of_birth="1998-03-15", height_cm=182, weight_kg=78, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", academy="Manchester Academy", matches=22, goals=4,  assists=9,  yellow_cards=3, minutes_played=1850, notes="Excellent visionnaire du jeu."),  "m.valentin@metropolisunited.com"),
             (dict(first_name="Julian",  last_name="Romero",   shirt_number=3,  position="Arrière Gauche",    position_short="DEF", nationality="Espagnol",  nationality_flag="es", date_of_birth="2000-07-22", height_cm=175, weight_kg=72, preferred_foot="Gauche", status="Blessé",     contract_end_date="2025-06-30", academy="Atletico Madrid B", matches=14, assists=3, yellow_cards=2, minutes_played=1170, injury_description="Ischio-jambiers", return_date_estimate="2026-07-14"), "j.romero@metropolisunited.com"),
             (dict(first_name="Kevin",   last_name="Larson",   shirt_number=9,  position="Attaquant Centre",  position_short="ATT", nationality="Français",  nationality_flag="fr", date_of_birth="1996-11-08", height_cm=186, weight_kg=82, preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", academy="OL Academy", matches=22, goals=11, assists=4, yellow_cards=1, minutes_played=1940, notes="Meilleur buteur."), "k.larson@metropolisunited.com"),
             (dict(first_name="Stefan",  last_name="Koch",     shirt_number=1,  position="Gardien de but",    position_short="GK",  nationality="Allemand",  nationality_flag="de", date_of_birth="1995-05-14", height_cm=192, weight_kg=88, preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", academy="Bayern Youth", matches=22, clean_sheets=9, goals_conceded=18, minutes_played=1980), "s.koch@metropolisunited.com"),
             (dict(first_name="Alex",    last_name="Mendez",   shirt_number=5,  position="Défenseur Central", position_short="DEF", nationality="Brésilien", nationality_flag="br", date_of_birth="1997-01-30", height_cm=188, weight_kg=84, preferred_foot="Droit",  status="Suspendu",   contract_end_date="2026-06-30", academy="Flamengo Youth", matches=19, goals=2, assists=1, yellow_cards=5, red_cards=1, minutes_played=1710, injury_description="2 matchs de suspension"), "a.mendez@metropolisunited.com"),
-            (dict(first_name="Tom",     last_name="Owen",     shirt_number=11, position="Ailier Droit",      position_short="ATT", nationality="Anglais",   date_of_birth="2001-09-19", height_cm=178, weight_kg=74, preferred_foot="Gauche", status="Incertain",  contract_end_date="2027-06-30", academy="Chelsea Academy", matches=18, goals=6, assists=7, yellow_cards=1, minutes_played=1420, injury_description="Gêne musculaire cuisse", return_date_estimate="Décision avant le match"), "t.owen@metropolisunited.com"),
+            (dict(first_name="Tom",     last_name="Owen",     shirt_number=11, position="Ailier Droit",      position_short="ATT", nationality="Anglais",   nationality_flag="gb", date_of_birth="2001-09-19", height_cm=178, weight_kg=74, preferred_foot="Gauche", status="Incertain",  contract_end_date="2027-06-30", academy="Chelsea Academy", matches=18, goals=6, assists=7, yellow_cards=1, minutes_played=1420, injury_description="Gêne musculaire cuisse", return_date_estimate="Décision avant le match"), "t.owen@metropolisunited.com"),
             (dict(first_name="Antoine", last_name="Moreau",   shirt_number=2,  position="Arrière Droit",     position_short="DEF", nationality="Français",  nationality_flag="fr", date_of_birth="2001-04-12", height_cm=180, weight_kg=76, preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", matches=20, goals=1, assists=4, minutes_played=1800), "a.moreau@metropolisunited.com"),
             (dict(first_name="Samuel",  last_name="Blanc",    shirt_number=4,  position="Défenseur Central", position_short="DEF", nationality="Français",  nationality_flag="fr", date_of_birth="1999-08-20", height_cm=190, weight_kg=86, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=21, goals=2, assists=1, yellow_cards=2, minutes_played=1890), "s.blanc@metropolisunited.com"),
             (dict(first_name="Eric",    last_name="Dubois",   shirt_number=6,  position="Milieu Défensif",   position_short="MIL", nationality="Belge",     nationality_flag="be", date_of_birth="1998-12-05", height_cm=183, weight_kg=79, preferred_foot="Droit",  status="Disponible", contract_end_date="2026-06-30", matches=19, goals=3, assists=6, yellow_cards=4, minutes_played=1710), "e.dubois@metropolisunited.com"),
@@ -242,28 +249,40 @@ async def seed():
         if admin_user:
             for title, tag, edate, etime, loc, notes in [
                 # ── Passé récent ───────────────────────────────────────────────
+                # ── Mi-juin — fin de saison ───────────────────────────────────
                 ("Séance Récupération",      "Entraînement", "2026-06-16", "10:00", "Piscine · Spa",              "Récupération post-match. Présence obligatoire."),
                 ("Conférence de Presse",     "Réunion",      "2026-06-18", "14:00", "Salle de presse",            "Coach + capitaine. Point fin de phase aller."),
+                ("Débrief Vidéo",            "Réunion",      "2026-06-18", "10:00", "Salle vidéo · Bâtiment B",  "Analyse du dernier match. Tout le groupe."),
                 ("Match Amical — Lyon FC",   "Match",        "2026-06-20", "17:00", "Stade principal (domicile)", "Match de préparation. Échauffement 16h."),
                 ("Bilan de fin de saison",   "Réunion",      "2026-06-23", "10:00", "Salle de réunion A",         "Présence staff complet. Bilan individuel joueurs."),
                 # ── Cette semaine / transition ─────────────────────────────────
                 ("Entretiens Individuels",   "Réunion",      "2026-06-25", "09:00", "Bureau coach principal",     "Planning : 30 min par joueur. Liste affichée vestiaire."),
+                ("Gym Libre",                "Entraînement", "2026-06-25", "14:00", "Salle de musculation",       "Accès libre salle muscu. Programme individuel."),
                 ("Séance Technique Libre",   "Entraînement", "2026-06-27", "10:30", "Terrain 2",                  "Participation volontaire. Travail technique individuel."),
                 # ── Juillet — pré-saison ───────────────────────────────────────
                 ("Reprise Pré-saison",       "Entraînement", "2026-07-07", "09:00", "Terrain principal",          "Reprise officielle. Présence obligatoire. Tenue : rouge."),
                 ("Tests Médicaux",           "Réunion",      "2026-07-08", "08:00", "Centre médical",             "Bilans cardio + physio pour tous les joueurs."),
-                ("Entraînement Tactique",    "Entraînement", "2026-07-10", "10:00", "Terrain principal",          "Mise en place du système 4-3-3. Vidéo à 09h00."),
+                ("Séance Cardio Matinale",   "Entraînement", "2026-07-08", "15:00", "Terrain 2",                  "Après visites médicales. Groupe allégé, intensité modérée."),
+                ("Entraînement Tactique",    "Entraînement", "2026-07-10", "09:00", "Terrain principal",          "Mise en place du système 4-3-3. Vidéo à 09h00."),
+                ("Analyse Adversaire",       "Réunion",      "2026-07-10", "14:30", "Salle vidéo · Bâtiment B",  "Préparation Ajax B. Visionnage vidéo + plan de jeu."),
                 ("Séance Pressing Haut",     "Entraînement", "2026-07-12", "10:00", "Terrain 2",                  "Exercices spécifiques pressing. Florent Garnier dirige."),
                 ("Match Amical — Ajax B",    "Match",        "2026-07-14", "15:00", "Terrain principal",          "Premier test pré-saison. Bus départ 13h30."),
+                ("Récupération Post-Match",  "Récupération", "2026-07-15", "10:00", "Piscine · Spa",              "Bains froids + étirements. Présence obligatoire."),
                 ("Séance Attaquants",        "Entraînement", "2026-07-17", "10:00", "Terrain principal",          "Travail finition + jeu dans le dos. Coach attaque."),
                 ("Tournoi Pré-saison J1",    "Match",        "2026-07-19", "14:00", "Stade de Metz",              "Tournoi 4 équipes. Départ bus 11h00. Nuit à l'hôtel."),
                 ("Tournoi Pré-saison J2",    "Match",        "2026-07-20", "11:00", "Stade de Metz",              "Match de classement. Retour bus après match."),
+                ("Récupération Tournoi",     "Récupération", "2026-07-21", "10:00", "Centre médical",             "Bilan physio post-tournoi. Massages + cryothérapie."),
                 ("Point Recrutement",        "Réunion",      "2026-07-22", "11:00", "Bureau directeur sportif",   "Transferts entrants / sortants. Staff direction uniquement."),
                 ("Séance Corners & Phases",  "Entraînement", "2026-07-24", "10:00", "Terrain principal",          "Phases arrêtées offensives et défensives."),
+                ("Réunion Tactique Défense", "Réunion",      "2026-07-24", "15:00", "Salle vidéo · Bâtiment B",  "Bloc défensif + transitions. Défenseurs + milieux déf."),
                 ("Match Amical — Bordeaux",  "Match",        "2026-07-26", "16:00", "Stade Chaban-Delmas",        "Déplacement. Bus 12h00. Nuit sur place."),
+                ("Récupération Bordeaux",    "Récupération", "2026-07-27", "10:00", "Piscine · Spa",              "Retour de déplacement. Récupération active obligatoire."),
                 ("Conférence Pré-saison",    "Réunion",      "2026-07-29", "14:00", "Salle de presse",            "Présentation objectifs saison 2026/2027."),
                 # ── Août — lancement de saison ─────────────────────────────────
                 ("Activation Pré-ouverture", "Entraînement", "2026-08-01", "10:00", "Terrain principal",          "Dernière séance avant la saison. Léger + tactique."),
+                ("Revue Effectif",           "Réunion",      "2026-08-01", "15:00", "Bureau coach principal",     "Point final sur le groupe retenu pour J1."),
+                ("Reconnaissance Stade",     "Entraînement", "2026-08-08", "11:00", "Stade principal (domicile)", "Séance sur la pelouse J-1. Légère, 45 min."),
+                ("Réunion Pré-match",        "Réunion",      "2026-08-08", "15:00", "Salle de réunion A",         "Consignes tactiques J1. Plan de jeu final. Obligatoire."),
                 ("Ouverture Elite Pro",      "Match",        "2026-08-09", "17:00", "Stade principal (domicile)", "Journée 1 Elite Pro League. Échauffement 16h. Tenue domicile."),
             ]:
                 ex = await db.execute(select(Event).where(Event.title == title, Event.event_date == edate))

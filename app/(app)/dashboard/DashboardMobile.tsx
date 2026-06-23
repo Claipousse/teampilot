@@ -82,7 +82,7 @@ export default function DashboardMobile() {
               {([
                 { v: myPlayer?.matches,        label: t.players.matches },
                 { v: myPlayer?.goals,          label: t.players.goals },
-                { v: myPlayer?.assists,        label: 'Passes décisives' },
+                { v: myPlayer?.assists,        label: t.players.assists },
               ] as const).map(({ v, label }) => (
                 <div key={label} className="py-4 text-center">
                   <p className="text-2xl font-extrabold text-on-surface leading-none">{v ?? 0}</p>
@@ -92,7 +92,7 @@ export default function DashboardMobile() {
             </div>
             <div className="grid grid-cols-3 divide-x divide-outline-variant">
               {([
-                { v: myPlayer?.minutes_played, label: 'Minutes jouées' },
+                { v: myPlayer?.minutes_played, label: t.players.minutes },
                 { v: myPlayer?.yellow_cards,   label: t.players.yellowCards },
                 { v: myPlayer?.red_cards,      label: t.players.redCards },
               ] as const).map(({ v, label }) => (
@@ -204,7 +204,7 @@ export default function DashboardMobile() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-on-surface truncate">{s.first_name} {s.last_name}</p>
-                          <p className="text-xs text-on-surface-variant truncate">{s.role}</p>
+                          <p className="text-xs text-on-surface-variant truncate">{t.admin.roles[s.role as keyof typeof t.admin.roles] ?? s.role}</p>
                         </div>
                       </div>
                     ))}

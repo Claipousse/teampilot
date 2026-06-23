@@ -87,8 +87,8 @@ export default function DashboardDesktop() {
               {([
                 { v: myPlayer?.matches,        label: t.players.matches },
                 { v: myPlayer?.goals,          label: t.players.goals },
-                { v: myPlayer?.assists,        label: 'Passes décisives' },
-                { v: myPlayer?.minutes_played, label: 'Minutes jouées' },
+                { v: myPlayer?.assists,        label: t.players.assists },
+                { v: myPlayer?.minutes_played, label: t.players.minutes },
                 { v: myPlayer?.yellow_cards,   label: t.players.yellowCards },
                 { v: myPlayer?.red_cards,      label: t.players.redCards },
               ] as const).map(({ v, label }) => (
@@ -259,7 +259,7 @@ export default function DashboardDesktop() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-on-surface truncate">{s.first_name} {s.last_name}</p>
-                          <p className="text-xs text-on-surface-variant truncate">{s.role}</p>
+                          <p className="text-xs text-on-surface-variant truncate">{t.admin.roles[s.role as keyof typeof t.admin.roles] ?? s.role}</p>
                         </div>
                       </div>
                     ))}

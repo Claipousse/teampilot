@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, X, Pencil, Send, Trash2, Upload, AlertTriangle, Copy, Check, KeyRound } from 'lucide-react';
 import NationalitySelect from '@/components/NationalitySelect';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useT } from '@/contexts/LanguageContext';
+import { useT, useLanguage } from '@/contexts/LanguageContext';
 import {
   type Player, type PlayerForm, type FormErrors, type Credentials,
   EMPTY_FORM, POSITION_OPTIONS, STATUSES_FORM, FOOT_OPTIONS, POSITIONS, STATUSES,
@@ -17,7 +17,19 @@ type PositionFilter = 'Tous' | 'GK' | 'DEF' | 'MIL' | 'ATT';
 
 export default function JoueursDesktop({ openCreate = false }: { openCreate?: boolean }) {
   const t = useT();
+  const { lang } = useLanguage();
   const { isAdmin } = useCurrentUser();
+
+  const [natMap, setNatMap] = useState<Record<string, string>>({});
+  useEffect(() => {
+    fetch(`/api/nationalities?lang=${lang}`)
+      .then(r => r.ok ? r.json() : [])
+      .then((data: { label: string; iso: string }[]) => {
+        const map: Record<string, string> = {};
+        for (const { label, iso } of data) map[iso] = label;
+        setNatMap(map);
+      });
+  }, [lang]);
 
   // ─── État de la liste ─────────────────────────────────────────────────────
   const [players,       setPlayers]       = useState<Player[]>([]);
@@ -127,6 +139,14 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
       injury: player.injury ?? '', returnDate: player.returnDate ?? '',
       contract: player.contract ?? '', academy: player.academy ?? '',
       notes: player.notes ?? '', photoUrl: player.photoUrl ?? '',
+      matches:      player.stats?.matches      !== undefined ? String(player.stats.matches)      : '',
+      goals:        player.stats?.goals        !== undefined ? String(player.stats.goals)        : '',
+      assists:      player.stats?.assists      !== undefined ? String(player.stats.assists)      : '',
+      yellowCards:  player.stats?.yellowCards  !== undefined ? String(player.stats.yellowCards)  : '',
+      redCards:     player.stats?.redCards     !== undefined ? String(player.stats.redCards)     : '',
+      minutes:      player.stats?.minutes      !== undefined ? String(player.stats.minutes)      : '',
+      cleanSheets:  player.stats?.cleanSheets  !== undefined ? String(player.stats.cleanSheets)  : '',
+      goalsConceded: player.stats?.goalsConceded !== undefined ? String(player.stats.goalsConceded) : '',
     });
     setEditErrors({});
     setEditOpen(true);
@@ -180,6 +200,14 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
       return_date_estimate: editForm.returnDate || null,
       contract_end_date: editForm.contract || null,
       academy: editForm.academy || null, notes: editForm.notes || null,
+      matches:        editForm.matches       !== '' ? parseInt(editForm.matches)       : null,
+      goals:          editForm.goals         !== '' ? parseInt(editForm.goals)         : null,
+      assists:        editForm.assists        !== '' ? parseInt(editForm.assists)        : null,
+      yellow_cards:   editForm.yellowCards   !== '' ? parseInt(editForm.yellowCards)   : null,
+      red_cards:      editForm.redCards      !== '' ? parseInt(editForm.redCards)      : null,
+      minutes_played: editForm.minutes       !== '' ? parseInt(editForm.minutes)       : null,
+      clean_sheets:   editForm.cleanSheets   !== '' ? parseInt(editForm.cleanSheets)   : null,
+      goals_conceded: editForm.goalsConceded !== '' ? parseInt(editForm.goalsConceded) : null,
     };
     const res = await fetch(`/api/backend/players/${editingPlayerId}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
@@ -429,6 +457,40 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
           </div>
         )}
 
+        {/* Statistiques saison (édition uniquement) */}
+        {isEdit && (
+          <div className="space-y-4 pt-2 border-t border-outline-variant">
+            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.players.stats} <span className="font-normal normal-case opacity-60">({t.common.optional})</span></p>
+            {form.positionShort === 'GK' ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className={labelCls}>{t.players.matches}</label>
+                  <input type="number" min="0" value={form.matches} onChange={e => setForm(f => ({ ...f, matches: e.target.value }))} className={inputCls()} placeholder="0" /></div>
+                <div><label className={labelCls}>{t.players.cleanSheets}</label>
+                  <input type="number" min="0" value={form.cleanSheets} onChange={e => setForm(f => ({ ...f, cleanSheets: e.target.value }))} className={inputCls()} placeholder="0" /></div>
+                <div><label className={labelCls}>{t.players.goalsConceded}</label>
+                  <input type="number" min="0" value={form.goalsConceded} onChange={e => setForm(f => ({ ...f, goalsConceded: e.target.value }))} className={inputCls()} placeholder="0" /></div>
+                <div><label className={labelCls}>{t.players.minutes}</label>
+                  <input type="number" min="0" value={form.minutes} onChange={e => setForm(f => ({ ...f, minutes: e.target.value }))} className={inputCls()} placeholder="0" /></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <div><label className={labelCls}>{t.players.matches}</label>
+                  <input type="number" min="0" value={form.matches} onChange={e => setForm(f => ({ ...f, matches: e.target.value }))} className={inputCls()} placeholder="0" /></div>
+                <div><label className={labelCls}>{t.players.goals}</label>
+                  <input type="number" min="0" value={form.goals} onChange={e => setForm(f => ({ ...f, goals: e.target.value }))} className={inputCls()} placeholder="0" /></div>
+                <div><label className={labelCls}>{t.players.assists}</label>
+                  <input type="number" min="0" value={form.assists} onChange={e => setForm(f => ({ ...f, assists: e.target.value }))} className={inputCls()} placeholder="0" /></div>
+                <div><label className={labelCls}>{t.players.yellowCards}</label>
+                  <input type="number" min="0" value={form.yellowCards} onChange={e => setForm(f => ({ ...f, yellowCards: e.target.value }))} className={inputCls()} placeholder="0" /></div>
+                <div><label className={labelCls}>{t.players.redCards}</label>
+                  <input type="number" min="0" value={form.redCards} onChange={e => setForm(f => ({ ...f, redCards: e.target.value }))} className={inputCls()} placeholder="0" /></div>
+                <div><label className={labelCls}>{t.players.minutes}</label>
+                  <input type="number" min="0" value={form.minutes} onChange={e => setForm(f => ({ ...f, minutes: e.target.value }))} className={inputCls()} placeholder="0" /></div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Notes du coach (optionnel) */}
         <div className="space-y-2 pt-2 border-t border-outline-variant">
           <label className={labelCls}>{t.players.coachNotes} <span className="font-normal normal-case opacity-60">({t.common.optional})</span></label>
@@ -528,7 +590,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={`https://flagcdn.com/w20/${player.flag}.png`} alt="" width={20} height={15} className="rounded-sm object-cover shrink-0" />
                       ) : (player.flag ? <span>{player.flag}</span> : null)}
-                      <span>{player.nationality}</span>
+                      <span>{(player.flag && natMap[player.flag]) || player.nationality}</span>
                     </div>
                   </div>
                   <span className={`px-4 py-2.5 rounded-xl text-base font-extrabold shrink-0 ${s.badge}`}>{t.players.statuses[player.status]}</span>
@@ -666,10 +728,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   {/* Notes */}
                   <div>
                     <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.players.coachNotes}</p>
-                    <textarea value={notes[displayed.id] ?? (displayed.notes ?? '')}
-                      onChange={e => setNotes(prev => ({ ...prev, [displayed.id]: e.target.value }))}
-                      rows={4} placeholder={t.players.addNote}
-                      className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-2xl text-base text-on-surface placeholder:text-outline resize-none outline-none focus:ring-2 focus:ring-primary transition-all" />
+                    <div className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-2xl text-base text-on-surface min-h-[96px]">
+                      {displayed.notes
+                        ? <p className="leading-relaxed whitespace-pre-wrap">{displayed.notes}</p>
+                        : <p className="text-outline">{t.players.addNote}</p>}
+                    </div>
                   </div>
                 </div>
               </div>

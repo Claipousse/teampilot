@@ -342,7 +342,7 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
                     <div className="flex-1 min-w-0">
                       {event.time && <p className="text-sm font-bold mb-1">{event.time}</p>}
                       <p className="text-base font-bold">{event.title}</p>
-                      <span className={`inline-block mt-1.5 px-2 py-0.5 text-xs font-bold rounded-md ${TAG_BADGE[event.tag]}`}>{event.tag}</span>
+                      <span className={`inline-block mt-1.5 px-2 py-0.5 text-xs font-bold rounded-md ${TAG_BADGE[event.tag]}`}>{t.calendar.tags[event.tag]}</span>
                     </div>
                   </div>
                 ))}
@@ -361,7 +361,7 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
 
               <div className="flex items-start justify-between px-7 pt-7 pb-4">
                 <span className={`px-3 py-1.5 rounded-xl text-sm font-bold border ${TAG_ACTIVE[detailInfo.event.tag]}`}>
-                  {detailInfo.event.tag}
+                  {t.calendar.tags[detailInfo.event.tag]}
                 </span>
                 <button onClick={closeDetail} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
@@ -395,7 +395,7 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
                   <div className="bg-surface-container rounded-2xl p-5">
                     <div className="flex items-center gap-2 mb-2.5">
                       <FileText size={14} className="text-on-surface-variant" />
-                      <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Remarques</p>
+                      <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.calendar.fieldNotes}</p>
                     </div>
                     <p className="text-base text-on-surface leading-relaxed">{detailInfo.event.remarques}</p>
                   </div>

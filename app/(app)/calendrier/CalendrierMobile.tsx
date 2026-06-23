@@ -379,7 +379,7 @@ export default function CalendrierMobile({ openCreate = false, openEventId }: { 
             <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto transition-all duration-200 ${detailVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
 
               <div className="flex items-start justify-between px-7 pt-7 pb-4">
-                <span className={`px-3 py-1.5 rounded-xl text-sm font-bold border ${TAG_ACTIVE[detailInfo.event.tag]}`}>{detailInfo.event.tag}</span>
+                <span className={`px-3 py-1.5 rounded-xl text-sm font-bold border ${TAG_ACTIVE[detailInfo.event.tag]}`}>{t.calendar.tags[detailInfo.event.tag]}</span>
                 <button onClick={closeDetail} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
                 </button>

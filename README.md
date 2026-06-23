@@ -99,8 +99,8 @@ python reset_db.py --seed
 
 | Rôle | Username | Email | Mot de passe |
 |------|----------|-------|-------------|
-| Admin | `admin.test` | `admin@teampilot.com` | `admin123` |
-| Staff | `staff.test` | `staff@teampilot.com` | `staff123` |
+| Coach (admin) | `coach.test` | `admin@teampilot.com` | `coach123` |
+| Médecin | `medecin.test` | `staff@teampilot.com` | `medecin123` |
 | Joueur | `joueur.test` | `joueur@teampilot.com` | `joueur123` |
 
 ---

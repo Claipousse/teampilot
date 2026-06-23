@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Calendar, Users, MessageSquare, MapPin, ChevronRight, Shield, AlertTriangle } from 'lucide-react';
 import { useDashboard } from '@/hooks/useDashboard';
-import { useT } from '@/contexts/LanguageContext';
+import { useT, useLanguage } from '@/contexts/LanguageContext';
 import { TAG_STYLE, STATUS_BADGE, PLAYER_STATUS, SS_SEASON, fmtEventDate, type EventTag } from '@/lib/dashboardUtils';
 
 export default function DashboardMobile() {
   const t = useT();
+  const { lang } = useLanguage();
   const router = useRouter();
   const { upcoming, unavailable, summary, recentConvs, myPlayer, teammates, auth, authLoading, isAdmin } = useDashboard();
 
@@ -24,7 +25,7 @@ export default function DashboardMobile() {
         <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">{t.dashboard.pageTitle}</p>
         <h1 className="text-2xl font-extrabold text-on-surface tracking-tight">{t.dashboard.greeting}{firstName ? `, ${firstName}` : ''}</h1>
         <p className="text-sm text-on-surface-variant mt-1">
-          {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })}
+          {new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { weekday: 'long', day: '2-digit', month: 'long' })}
         </p>
       </div>
 

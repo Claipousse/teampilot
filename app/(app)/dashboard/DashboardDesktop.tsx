@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Calendar, Users, MessageSquare, MapPin, ChevronRight, Shield, AlertTriangle } from 'lucide-react';
 import { useDashboard } from '@/hooks/useDashboard';
-import { useT } from '@/contexts/LanguageContext';
+import { useT, useLanguage } from '@/contexts/LanguageContext';
 import { TAG_STYLE, STATUS_BADGE, PLAYER_STATUS, SS_SEASON, fmtDate, fmtEventDate, type EventTag } from '@/lib/dashboardUtils';
 
 export default function DashboardDesktop() {
   const t = useT();
+  const { lang } = useLanguage();
   const router = useRouter();
   const { kpis, upcoming, unavailable, summary, recentConvs, myPlayer, teammates, auth, authLoading, isAdmin } = useDashboard();
 
@@ -29,7 +30,7 @@ export default function DashboardDesktop() {
         <div className="flex items-center gap-2 px-4 py-2.5 bg-surface-container-lowest border border-outline-variant rounded-xl shrink-0">
           <Calendar size={18} className="text-on-surface-variant" />
           <span className="text-base font-semibold text-on-surface">
-            {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+            {new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
           </span>
         </div>
       </div>

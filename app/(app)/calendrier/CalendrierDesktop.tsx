@@ -406,7 +406,7 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
                 <div className="px-7 py-4 border-t border-outline-variant shrink-0 flex items-center justify-between">
                   {deleteConfirm ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-on-surface-variant">Confirmer ?</span>
+                      <span className="text-sm text-on-surface-variant">{t.common.confirm} ?</span>
                       <button
                         onClick={async () => {
                           if (!detailInfo.event.id) return;
@@ -415,13 +415,13 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
                         }}
                         className="px-4 py-2 rounded-xl bg-error text-white font-semibold text-sm transition-colors"
                       >
-                        Supprimer
+                        {t.common.delete}
                       </button>
                       <button
                         onClick={() => setDeleteConfirm(false)}
                         className="px-4 py-2 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold text-sm"
                       >
-                        Annuler
+                        {t.common.cancel}
                       </button>
                     </div>
                   ) : (
@@ -436,7 +436,7 @@ export default function CalendrierDesktop({ openCreate = false, openEventId }: {
                     onClick={() => { closeDetail(); setTimeout(() => openEdit(detailInfo.event, detailInfo.day), 200); }}
                     className="flex items-center gap-2 px-5 py-2.5 bg-error hover:bg-error/90 text-white rounded-xl font-semibold transition-colors"
                   >
-                    <Pencil size={15} /> Modifier
+                    <Pencil size={15} /> {t.common.edit}
                   </button>
                 </div>
               )}

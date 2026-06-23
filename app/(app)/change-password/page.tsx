@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, Eye, EyeOff, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useT } from '@/contexts/LanguageContext';
 
 export default function ChangePasswordPage() {
   const { user, logout } = useAuth();
+  const t = useT();
   const router = useRouter();
   // Par défaut true pendant le chargement de l'auth : évite d'afficher brièvement le mode "volontaire"
   // avant que user soit hydraté, puis de basculer — le mode forcé est le plus restrictif.
@@ -23,8 +25,8 @@ export default function ChangePasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (next.length < 8) { setError('Le mot de passe doit contenir au moins 8 caractères.'); return; }
-    if (next !== confirm) { setError('Les mots de passe ne correspondent pas.'); return; }
+    if (next.length < 8) { setError(t.password.minCharsError); return; }
+    if (next !== confirm) { setError(t.password.mismatch); return; }
 
     setLoading(true);
     const body: Record<string, string> = { new_password: next };
@@ -41,7 +43,7 @@ export default function ChangePasswordPage() {
       router.push('/dashboard');
     } else {
       const data = await res.json().catch(() => ({}));
-      setError(data.detail ?? 'Une erreur est survenue.');
+      setError(data.detail ?? t.password.genericError);
     }
     setLoading(false);
   };
@@ -59,7 +61,7 @@ export default function ChangePasswordPage() {
             className="flex items-center gap-2 text-on-surface-variant hover:text-on-surface transition-colors mb-5 group"
           >
             <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
-            <span className="text-sm font-semibold">Retour</span>
+            <span className="text-sm font-semibold">{t.password.back}</span>
           </button>
         )}
 
@@ -69,16 +71,16 @@ export default function ChangePasswordPage() {
           </div>
           {isForced ? (
             <>
-              <h1 className="text-2xl font-extrabold text-on-surface text-center">Première connexion</h1>
+              <h1 className="text-2xl font-extrabold text-on-surface text-center">{t.password.firstLogin}</h1>
               <p className="text-on-surface-variant text-sm text-center mt-2 max-w-xs">
-                Définissez votre mot de passe personnel pour sécuriser votre compte.
+                {t.password.firstLoginDesc}
               </p>
             </>
           ) : (
             <>
-              <h1 className="text-2xl font-extrabold text-on-surface text-center">Changer le mot de passe</h1>
+              <h1 className="text-2xl font-extrabold text-on-surface text-center">{t.password.changeTitle}</h1>
               <p className="text-on-surface-variant text-sm text-center mt-2 max-w-xs">
-                Entrez votre mot de passe actuel puis choisissez-en un nouveau.
+                {t.password.changeDesc}
               </p>
             </>
           )}
@@ -90,7 +92,7 @@ export default function ChangePasswordPage() {
             {!isForced && (
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest block">
-                  Mot de passe actuel
+                  {t.password.currentLabel}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" size={18} />
@@ -113,7 +115,7 @@ export default function ChangePasswordPage() {
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest block">
-                Nouveau mot de passe
+                {t.password.newLabel}
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" size={18} />
@@ -122,7 +124,7 @@ export default function ChangePasswordPage() {
                   value={next}
                   onChange={e => setNext(e.target.value)}
                   required
-                  placeholder="Minimum 8 caractères"
+                  placeholder={t.password.minCharsPlaceholder}
                   autoComplete="new-password"
                   className={inputCls()}
                 />
@@ -135,7 +137,7 @@ export default function ChangePasswordPage() {
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-on-surface-variant uppercase tracking-widest block">
-                Confirmer le mot de passe
+                {t.password.confirmLabel}
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-outline" size={18} />
@@ -150,7 +152,7 @@ export default function ChangePasswordPage() {
                 />
               </div>
               {confirm.length > 0 && next !== confirm && (
-                <p className="text-xs text-error">Les mots de passe ne correspondent pas</p>
+                <p className="text-xs text-error">{t.password.mismatch}</p>
               )}
             </div>
 
@@ -161,7 +163,7 @@ export default function ChangePasswordPage() {
               disabled={loading}
               className="w-full py-4 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
-              {loading ? 'Enregistrement...' : 'Enregistrer le mot de passe'}
+              {loading ? t.password.saving : t.password.save}
             </button>
 
           </form>
@@ -169,7 +171,7 @@ export default function ChangePasswordPage() {
           {isForced && (
             <button onClick={logout}
               className="w-full mt-4 py-3 text-sm text-on-surface-variant hover:text-on-surface transition-colors">
-              Se déconnecter
+              {t.password.logout}
             </button>
           )}
         </div>

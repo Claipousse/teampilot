@@ -167,13 +167,13 @@ export default function AdministrationMobile() {
   const closeClub = () => { setClubVisible(false); setTimeout(() => setClubOpen(false), 200); };
   const submitClub = async () => {
     const e: ClubErrors = {};
-    if (!clubForm.nom.trim())     e.nom     = 'Champ obligatoire';
-    if (!clubForm.annee.trim())   e.annee   = 'Champ obligatoire';
-    if (!clubForm.ligue.trim())   e.ligue   = 'Champ obligatoire';
-    if (!clubForm.email.trim())   e.email   = 'Champ obligatoire';
-    if (!clubForm.phone.trim())   e.phone   = 'Champ obligatoire';
-    if (!clubForm.adresse.trim()) e.adresse = 'Champ obligatoire';
-    if (!clubForm.ville.trim())   e.ville   = 'Champ obligatoire';
+    if (!clubForm.nom.trim())     e.nom     = t.common.required;
+    if (!clubForm.annee.trim())   e.annee   = t.common.required;
+    if (!clubForm.ligue.trim())   e.ligue   = t.common.required;
+    if (!clubForm.email.trim())   e.email   = t.common.required;
+    if (!clubForm.phone.trim())   e.phone   = t.common.required;
+    if (!clubForm.adresse.trim()) e.adresse = t.common.required;
+    if (!clubForm.ville.trim())   e.ville   = t.common.required;
     if (Object.keys(e).length) { setClubErrors(e); return; }
     const res = await fetch('/api/backend/club', {
       method: 'PATCH',
@@ -189,10 +189,10 @@ export default function AdministrationMobile() {
   const closeSaison = () => { setSaisonVisible(false); setTimeout(() => setSaisonOpen(false), 200); };
   const submitSaison = async () => {
     const e: SaisonErrors = {};
-    if (!saisonForm.debut)               e.debut        = 'Champ obligatoire';
-    if (!saisonForm.fin)                 e.fin          = 'Champ obligatoire';
-    if (!saisonForm.competitions.trim()) e.competitions = 'Champ obligatoire';
-    if (!saisonForm.objectif.trim())     e.objectif     = 'Champ obligatoire';
+    if (!saisonForm.debut)               e.debut        = t.common.required;
+    if (!saisonForm.fin)                 e.fin          = t.common.required;
+    if (!saisonForm.competitions.trim()) e.competitions = t.common.required;
+    if (!saisonForm.objectif.trim())     e.objectif     = t.common.required;
     if (Object.keys(e).length) { setSaisonErrors(e); return; }
     const body = { start_date: saisonForm.debut, end_date: saisonForm.fin, competitions: saisonForm.competitions, objective: saisonForm.objectif, status: saisonForm.statut };
     let res: Response;
@@ -273,7 +273,7 @@ export default function AdministrationMobile() {
       openCreds({ username: created.username, temp_password: created.temp_password });
     } else {
       const err = await res.json().catch(() => ({}));
-      setAddErrors({ email: err.detail ?? 'Erreur lors de la création.' });
+      setAddErrors({ email: err.detail ?? t.players.errorCreation });
     }
   };
 
@@ -333,9 +333,9 @@ export default function AdministrationMobile() {
 
   function validateStaff(f: StaffForm, isEdit: boolean): StaffErrors {
     const e: StaffErrors = {};
-    if (!f.prenom.trim()) e.prenom = 'Champ obligatoire';
-    if (!f.nom.trim())    e.nom    = 'Champ obligatoire';
-    if (!f.role)          e.role   = 'Champ obligatoire';
+    if (!f.prenom.trim()) e.prenom = t.common.required;
+    if (!f.nom.trim())    e.nom    = t.common.required;
+    if (!f.role)          e.role   = t.common.required;
     void isEdit;
     return e;
   }
@@ -373,12 +373,12 @@ export default function AdministrationMobile() {
             <button onClick={() => photoRef.current?.click()} className="flex items-center gap-2 px-3 py-2 border border-outline-variant rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors">
               <Upload size={14} className="text-on-surface-variant" /> Choisir une photo
             </button>
-            {form.photoUrl && <button onClick={() => setForm(f => ({ ...f, photoUrl: '' }))} className="text-xs text-error hover:underline block">Retirer</button>}
+            {form.photoUrl && <button onClick={() => setForm(f => ({ ...f, photoUrl: '' }))} className="text-xs text-error hover:underline block">{t.admin.removePhoto}</button>}
           </div>
         </div>
         {/* Identité */}
         <div className="space-y-4">
-          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Identité</p>
+          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.admin.sectionIdentity}</p>
           <div>
             <label className={labelCls}>{t.admin.fieldFirstName} <span className="text-error">*</span></label>
             <input type="text" value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} className={inputCls(errors.prenom)} placeholder="Ex : Thomas" />
@@ -392,18 +392,18 @@ export default function AdministrationMobile() {
           <div>
             <label className={labelCls}>{t.admin.fieldRole} <span className="text-error">*</span></label>
             <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className={`${inputCls(errors.role)} cursor-pointer`}>
-              <option value="">Sélectionner un rôle…</option>
+              <option value="">{t.admin.selectRolePlaceholder}</option>
               {STAFF_ROLES.map(r => <option key={r} value={r}>{t.admin.roles[r as keyof typeof t.admin.roles] ?? r}</option>)}
             </select>
             {errors.role && <p className="text-xs text-error mt-1">{errors.role}</p>}
           </div>
           <div>
-            <label className={labelCls}>Email <span className="font-normal normal-case opacity-60">(optionnel)</span></label>
+            <label className={labelCls}>{t.admin.fieldEmail} <span className="font-normal normal-case opacity-60">({t.common.optional})</span></label>
             <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className={inputCls(errors.email)} placeholder="nom@club.com" />
             {errors.email && <p className="text-xs text-error mt-1">{errors.email}</p>}
           </div>
           <div>
-            <label className={labelCls}>Téléphone <span className="font-normal normal-case opacity-60">(optionnel)</span></label>
+            <label className={labelCls}>{t.admin.fieldPhone} <span className="font-normal normal-case opacity-60">({t.common.optional})</span></label>
             <input type="text" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className={inputCls()} placeholder="+33 6 …" />
           </div>
           <div>
@@ -413,7 +413,7 @@ export default function AdministrationMobile() {
         </div>
         {/* Accès & Sécurité */}
         <div className="space-y-4 pt-2 border-t border-outline-variant">
-          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Accès &amp; Sécurité</p>
+          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.admin.sectionAccess}</p>
           {!isEdit && (
             <div className="flex items-center gap-3 p-3 bg-surface-container rounded-xl border border-outline-variant">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -425,7 +425,7 @@ export default function AdministrationMobile() {
                     ? `${form.prenom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}.${form.nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}`
                     : 'prenom.nom'}
                 </p>
-                <p className="text-xs text-on-surface-variant">Mot de passe temporaire affiché après création</p>
+                <p className="text-xs text-on-surface-variant">{t.admin.autoCredentials}</p>
               </div>
             </div>
           )}
@@ -436,16 +436,16 @@ export default function AdministrationMobile() {
             <div>
               <p className="text-sm font-semibold text-on-surface flex items-center gap-1.5">
                 <ShieldCheck size={14} className={form.isAdmin ? 'text-[#B45309]' : 'text-outline'} />
-                Droits administrateur
+                {t.admin.adminRights}
               </p>
-              <p className="text-xs text-on-surface-variant/60">CRUD complet, accès admin</p>
+              <p className="text-xs text-on-surface-variant/60">{t.admin.adminRightsDesc}</p>
             </div>
           </label>
         </div>
         {/* Notes */}
         <div className="space-y-2 pt-2 border-t border-outline-variant">
-          <label className={labelCls}>Notes <span className="font-normal normal-case opacity-60">(optionnel)</span></label>
-          <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} placeholder="Informations complémentaires…"
+          <label className={labelCls}>{t.admin.fieldNotes} <span className="font-normal normal-case opacity-60">({t.common.optional})</span></label>
+          <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} placeholder={t.admin.notesPlaceholder}
             className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base text-on-surface placeholder:text-outline resize-none outline-none focus:ring-2 focus:ring-primary transition-all" />
         </div>
       </div>
@@ -478,12 +478,12 @@ export default function AdministrationMobile() {
         </div>
         <div className="space-y-3 pt-4 border-t border-outline-variant">
           <div>
-            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Contact principal</p>
+            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">{t.admin.mainContact}</p>
             <p className="text-base font-semibold text-on-surface">{club.email || '—'}</p>
             <p className="text-sm text-on-surface-variant">{club.phone}</p>
           </div>
           <div>
-            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Siège social</p>
+            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">{t.admin.headquarters}</p>
             <p className="text-base font-semibold text-on-surface">{club.adresse || '—'}</p>
             <p className="text-sm text-on-surface-variant">{club.ville}</p>
           </div>
@@ -525,14 +525,14 @@ export default function AdministrationMobile() {
 
       {/* ── Actions ── */}
       <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl p-5">
-        <h2 className="text-xl font-bold text-on-surface mb-4">Actions</h2>
+        <h2 className="text-xl font-bold text-on-surface mb-4">{t.admin.actions}</h2>
         <div className="space-y-3">
           <a href="/joueurs?new=true" className="flex items-center justify-between p-4 bg-surface-container rounded-xl hover:bg-surface-container-high transition-colors">
             <div className="flex items-center gap-4">
               <div className="w-11 h-11 bg-primary/10 rounded-xl flex items-center justify-center shrink-0"><UserPlus size={20} className="text-primary" /></div>
               <div>
-                <p className="text-base font-bold text-on-surface">Ajouter un joueur</p>
-                <p className="text-sm text-on-surface-variant">Créer un nouveau profil joueur</p>
+                <p className="text-base font-bold text-on-surface">{t.admin.addPlayerAction}</p>
+                <p className="text-sm text-on-surface-variant">{t.admin.addPlayerDesc}</p>
               </div>
             </div>
             <ChevronRight size={18} className="text-on-surface-variant shrink-0" />
@@ -541,8 +541,8 @@ export default function AdministrationMobile() {
             <div className="flex items-center gap-4">
               <div className="w-11 h-11 bg-secondary/10 rounded-xl flex items-center justify-center shrink-0"><CalendarPlus size={20} className="text-secondary" /></div>
               <div>
-                <p className="text-base font-bold text-on-surface">Planifier un événement</p>
-                <p className="text-sm text-on-surface-variant">Ajouter au calendrier</p>
+                <p className="text-base font-bold text-on-surface">{t.admin.scheduleEvent}</p>
+                <p className="text-sm text-on-surface-variant">{t.admin.scheduleEventDesc}</p>
               </div>
             </div>
             <ChevronRight size={18} className="text-on-surface-variant shrink-0" />
@@ -551,8 +551,8 @@ export default function AdministrationMobile() {
             <div className="flex items-center gap-4">
               <div className="w-11 h-11 bg-[#F97316]/10 rounded-xl flex items-center justify-center shrink-0"><KeyRound size={20} className="text-[#F97316]" /></div>
               <div>
-                <p className="text-base font-bold text-on-surface">Réinitialiser un mot de passe</p>
-                <p className="text-sm text-on-surface-variant">Générer de nouveaux identifiants</p>
+                <p className="text-base font-bold text-on-surface">{t.admin.resetPassword}</p>
+                <p className="text-sm text-on-surface-variant">{t.admin.resetPasswordDesc}</p>
               </div>
             </div>
             <ChevronRight size={18} className="text-on-surface-variant shrink-0" />
@@ -587,8 +587,8 @@ export default function AdministrationMobile() {
             {roleFilterOpen && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-xl z-50 overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-outline-variant">
-                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Rôles</p>
-                  {roleFilters.length > 0 && <button onClick={() => setRoleFilters([])} className="text-xs text-primary font-semibold">Effacer</button>}
+                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.admin.roleFilter}</p>
+                  {roleFilters.length > 0 && <button onClick={() => setRoleFilters([])} className="text-xs text-primary font-semibold">{t.admin.clearFilter}</button>}
                 </div>
                 <div className="max-h-52 overflow-y-auto py-1">
                   {STAFF_ROLES.map(role => (
@@ -656,47 +656,47 @@ export default function AdministrationMobile() {
                       reader.readAsDataURL(file);
                     }} />
                     <button onClick={() => clubLogoRef.current?.click()} className="flex items-center gap-2 px-3 py-2 border border-outline-variant rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors">
-                      <Upload size={14} /> Changer le logo
+                      <Upload size={14} /> {t.admin.uploadLogo}
                     </button>
-                    {clubForm.logoUrl && <button onClick={() => setClubForm(f => ({ ...f, logoUrl: '' }))} className="text-xs text-error hover:underline block">Retirer</button>}
+                    {clubForm.logoUrl && <button onClick={() => setClubForm(f => ({ ...f, logoUrl: '' }))} className="text-xs text-error hover:underline block">{t.admin.removeLogo}</button>}
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Identité du club</p>
+                  <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.admin.clubIdentity}</p>
                   <div>
-                    <label className={labelCls}>Nom du club <span className="text-error">*</span></label>
+                    <label className={labelCls}>{t.admin.fieldClubName} <span className="text-error">*</span></label>
                     <input type="text" value={clubForm.nom} onChange={e => setClubForm(f => ({ ...f, nom: e.target.value }))} className={inputCls(clubErrors.nom)} placeholder="Ex : Metropolis United FC" />
                     {clubErrors.nom && <p className="text-xs text-error mt-1">{clubErrors.nom}</p>}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className={labelCls}>Fondé en <span className="text-error">*</span></label>
+                      <label className={labelCls}>{t.admin.fieldYear} <span className="text-error">*</span></label>
                       <input type="text" value={clubForm.annee} onChange={e => setClubForm(f => ({ ...f, annee: e.target.value }))} className={inputCls(clubErrors.annee)} placeholder="1924" />
                       {clubErrors.annee && <p className="text-xs text-error mt-1">{clubErrors.annee}</p>}
                     </div>
                     <div>
-                      <label className={labelCls}>Ligue <span className="text-error">*</span></label>
+                      <label className={labelCls}>{t.admin.fieldLeague} <span className="text-error">*</span></label>
                       <input type="text" value={clubForm.ligue} onChange={e => setClubForm(f => ({ ...f, ligue: e.target.value }))} className={inputCls(clubErrors.ligue)} placeholder="Elite Pro…" />
                       {clubErrors.ligue && <p className="text-xs text-error mt-1">{clubErrors.ligue}</p>}
                     </div>
                   </div>
                   <div>
-                    <label className={labelCls}>Email <span className="font-normal normal-case opacity-60">(optionnel)</span></label>
+                    <label className={labelCls}>{t.admin.fieldEmail} <span className="font-normal normal-case opacity-60">({t.common.optional})</span></label>
                     <input type="email" value={clubForm.email} onChange={e => setClubForm(f => ({ ...f, email: e.target.value }))} className={inputCls(clubErrors.email)} placeholder="admin@club.com" />
                     {clubErrors.email && <p className="text-xs text-error mt-1">{clubErrors.email}</p>}
                   </div>
                   <div>
-                    <label className={labelCls}>Téléphone <span className="text-error">*</span></label>
+                    <label className={labelCls}>{t.admin.fieldPhone} <span className="text-error">*</span></label>
                     <input type="text" value={clubForm.phone} onChange={e => setClubForm(f => ({ ...f, phone: e.target.value }))} className={inputCls(clubErrors.phone)} placeholder="+44 20 7946 0012" />
                     {clubErrors.phone && <p className="text-xs text-error mt-1">{clubErrors.phone}</p>}
                   </div>
                   <div>
-                    <label className={labelCls}>Adresse <span className="text-error">*</span></label>
+                    <label className={labelCls}>{t.admin.fieldAddress} <span className="text-error">*</span></label>
                     <input type="text" value={clubForm.adresse} onChange={e => setClubForm(f => ({ ...f, adresse: e.target.value }))} className={inputCls(clubErrors.adresse)} placeholder="Ex : United Training Complex" />
                     {clubErrors.adresse && <p className="text-xs text-error mt-1">{clubErrors.adresse}</p>}
                   </div>
                   <div>
-                    <label className={labelCls}>Ville <span className="text-error">*</span></label>
+                    <label className={labelCls}>{t.admin.fieldCityPostcode} <span className="text-error">*</span></label>
                     <input type="text" value={clubForm.ville} onChange={e => setClubForm(f => ({ ...f, ville: e.target.value }))} className={inputCls(clubErrors.ville)} placeholder="London, SE1 7PB, UK" />
                     {clubErrors.ville && <p className="text-xs text-error mt-1">{clubErrors.ville}</p>}
                   </div>
@@ -718,36 +718,36 @@ export default function AdministrationMobile() {
           <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 pt-4 pb-24 pointer-events-none">
             <div className={`bg-surface-container-lowest rounded-2xl shadow-2xl w-full max-w-md max-h-full flex flex-col pointer-events-auto transition-all duration-200 ${saisonVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
               <div className="flex items-center justify-between px-5 py-4 border-b border-outline-variant shrink-0">
-                <p className="text-lg font-bold text-on-surface">Modifier la saison</p>
+                <p className="text-lg font-bold text-on-surface">{t.admin.editActiveSeason}</p>
                 <button onClick={closeSaison} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors"><X size={18} className="text-on-surface-variant" /></button>
               </div>
               <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
-                <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Saison</p>
+                <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.admin.seasonLabel}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className={labelCls}>Début <span className="text-error">*</span></label>
+                    <label className={labelCls}>{t.admin.fieldSeasonStart} <span className="text-error">*</span></label>
                     <input type="date" value={saisonForm.debut} onChange={e => setSaisonForm(f => ({ ...f, debut: e.target.value }))} className={inputCls(saisonErrors.debut)} />
                     {saisonErrors.debut && <p className="text-xs text-error mt-1">{saisonErrors.debut}</p>}
                   </div>
                   <div>
-                    <label className={labelCls}>Fin <span className="text-error">*</span></label>
+                    <label className={labelCls}>{t.admin.fieldSeasonEnd} <span className="text-error">*</span></label>
                     <input type="date" value={saisonForm.fin} onChange={e => setSaisonForm(f => ({ ...f, fin: e.target.value }))} className={inputCls(saisonErrors.fin)} />
                     {saisonErrors.fin && <p className="text-xs text-error mt-1">{saisonErrors.fin}</p>}
                   </div>
                 </div>
-                <p className="text-xs text-on-surface-variant/60">L&apos;intitulé de saison est calculé automatiquement.</p>
+                <p className="text-xs text-on-surface-variant/60">{t.admin.seasonAuto}</p>
                 <div>
-                  <label className={labelCls}>Compétitions <span className="text-error">*</span></label>
+                  <label className={labelCls}>{t.admin.fieldCompetitions} <span className="text-error">*</span></label>
                   <input type="text" value={saisonForm.competitions} onChange={e => setSaisonForm(f => ({ ...f, competitions: e.target.value }))} className={inputCls(saisonErrors.competitions)} placeholder="Premier League · FA Cup" />
                   {saisonErrors.competitions && <p className="text-xs text-error mt-1">{saisonErrors.competitions}</p>}
                 </div>
                 <div>
-                  <label className={labelCls}>Objectif <span className="text-error">*</span></label>
+                  <label className={labelCls}>{t.admin.fieldObjective} <span className="text-error">*</span></label>
                   <input type="text" value={saisonForm.objectif} onChange={e => setSaisonForm(f => ({ ...f, objectif: e.target.value }))} className={inputCls(saisonErrors.objectif)} placeholder="Top 4 · Quart FA Cup" />
                   {saisonErrors.objectif && <p className="text-xs text-error mt-1">{saisonErrors.objectif}</p>}
                 </div>
                 <div>
-                  <label className={labelCls}>Statut <span className="text-error">*</span></label>
+                  <label className={labelCls}>{t.admin.fieldStatus} <span className="text-error">*</span></label>
                   <div className="grid grid-cols-3 gap-2">
                     {SAISON_STATUTS.map(st => {
                       const style = SS[st];
@@ -833,7 +833,7 @@ export default function AdministrationMobile() {
                   <div className="w-9 h-9 rounded-xl bg-[#F97316]/10 flex items-center justify-center shrink-0">
                     <KeyRound size={18} className="text-[#F97316]" />
                   </div>
-                  <p className="text-base font-bold text-on-surface">Réinitialiser un mot de passe</p>
+                  <p className="text-base font-bold text-on-surface">{t.admin.resetPassword}</p>
                 </div>
                 <button onClick={closeResetPwd} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={16} className="text-on-surface-variant" />
@@ -846,7 +846,7 @@ export default function AdministrationMobile() {
                     type="text"
                     value={resetQuery}
                     onChange={e => setResetQuery(e.target.value)}
-                    placeholder="Rechercher un membre..."
+                    placeholder={t.admin.searchMember}
                     className="w-full pl-9 pr-4 py-2.5 bg-surface-container border border-outline-variant rounded-xl text-sm text-on-surface outline-none focus:ring-2 focus:ring-primary transition-all"
                   />
                 </div>
@@ -862,7 +862,13 @@ export default function AdministrationMobile() {
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-on-surface">{u.firstName} {u.lastName}</p>
-                          <p className="text-xs text-on-surface-variant">{u.detail} · {u.type === 'player' ? 'Joueur' : 'Staff'}</p>
+                          <p className="text-xs text-on-surface-variant">
+                            {u.type === 'player'
+                              ? (t.players.positions[u.detail as keyof typeof t.players.positions] ?? u.detail)
+                              : (t.admin.roles[u.detail as keyof typeof t.admin.roles] ?? u.detail)}
+                            {' · '}
+                            {u.type === 'player' ? t.profile.rolePlayer : 'Staff'}
+                          </p>
                         </div>
                       </div>
                       <button
@@ -871,7 +877,7 @@ export default function AdministrationMobile() {
                         className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#F97316] hover:bg-[#F97316]/10 transition-colors disabled:opacity-50 shrink-0"
                       >
                         <KeyRound size={12} />
-                        {resetingId === u.id ? '...' : 'Réinit.'}
+                        {resetingId === u.id ? '...' : t.admin.resetAction}
                       </button>
                     </div>
                   ))}
@@ -891,14 +897,14 @@ export default function AdministrationMobile() {
                   <KeyRound size={20} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-base font-bold text-on-surface">Identifiants du membre</p>
-                  <p className="text-xs text-on-surface-variant">À communiquer en main propre</p>
+                  <p className="text-base font-bold text-on-surface">{t.admin.accountCreated}</p>
+                  <p className="text-xs text-on-surface-variant">{t.admin.shareCredentials}</p>
                 </div>
               </div>
               <div className="px-5 py-5 space-y-4">
                 {([
-                  { label: 'Identifiant', key: 'username', value: creds.username },
-                  { label: 'Mot de passe temporaire', key: 'password', value: creds.temp_password },
+                  { label: t.admin.credentialUsername, key: 'username', value: creds.username },
+                  { label: t.admin.credentialTempPassword, key: 'password', value: creds.temp_password },
                 ] as const).map(item => (
                   <div key={item.key} className="space-y-1.5">
                     <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{item.label}</p>
@@ -911,11 +917,11 @@ export default function AdministrationMobile() {
                     </div>
                   </div>
                 ))}
-                <p className="text-xs text-on-surface-variant">Le membre devra changer son mot de passe à la première connexion.</p>
+                <p className="text-xs text-on-surface-variant">{t.admin.memberFirstLoginHint}</p>
               </div>
               <div className="flex justify-end px-5 pb-5">
                 <button onClick={closeCreds} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">
-                  Fermer
+                  {t.admin.understood}
                 </button>
               </div>
             </div>
@@ -932,8 +938,8 @@ export default function AdministrationMobile() {
               <div className="bg-error/5 border-b border-error/20 px-5 py-4 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center shrink-0"><AlertTriangle size={20} className="text-error" /></div>
                 <div>
-                  <p className="text-base font-bold text-error">Suppression irréversible</p>
-                  <p className="text-xs text-on-surface-variant">Cette action ne peut pas être annulée</p>
+                  <p className="text-base font-bold text-error">{t.players.deleteIrreversible}</p>
+                  <p className="text-xs text-on-surface-variant">{t.players.deleteCannotUndo}</p>
                 </div>
               </div>
               <div className="px-5 py-5 space-y-3">
@@ -945,7 +951,7 @@ export default function AdministrationMobile() {
                 <button onClick={confirmDel} disabled={delTimer > 0}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all text-sm ${delTimer > 0 ? 'bg-error/30 text-error/50 cursor-not-allowed' : 'bg-error hover:bg-error/90 text-white'}`}>
                   <Trash2 size={14} />
-                  {delTimer > 0 ? `Confirmer (${delTimer}s)` : 'Confirmer'}
+                  {delTimer > 0 ? `${t.common.confirm} (${delTimer}s)` : t.common.confirm}
                 </button>
               </div>
             </div>

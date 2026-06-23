@@ -45,6 +45,7 @@ Frontend affiche la réponse avec rendu Markdown (react-markdown)
 
 ---
 
+
 ## Comment le chatbot "connaît" le club — `build_context(db)`
 
 À chaque message, `build_context()` interroge la base de données en temps réel et injecte les données dans le system prompt. Le modèle n'a aucune connaissance du club en dehors de ce contexte.
@@ -173,14 +174,6 @@ Dès le premier message envoyé :
 - **Messages IA** : stockés avec `sender_id = null` — il n'y a pas de compte utilisateur pour l'IA
 
 Côté frontend, un `sender_id = null` est reconnu comme un message reçu (pas envoyé), et les initiales de la conversation (`✦`) sont utilisées comme avatar à la place d'initiales d'utilisateur.
-
----
-
-## Affichage des réponses (react-markdown)
-
-Groq retourne ses réponses en Markdown : titres (`##`), listes (`-`), texte **en gras**, etc. Pour afficher ce formatage correctement dans l'interface, le composant `react-markdown` est utilisé avec des styles Tailwind explicites sur chaque élément (`ul`, `li`, `strong`, `h3`, etc.).
-
-Seuls les messages IA (ceux dont `sender_id = null`) sont rendus via `react-markdown`. Les messages normaux entre utilisateurs restent en texte brut.
 
 ---
 

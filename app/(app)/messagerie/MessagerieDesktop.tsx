@@ -224,8 +224,6 @@ export default function MessagerieDesktop() {
     fetch(`/api/backend/messages/conversations/${activeConv.id}/messages`)
       .then(r => r.ok ? r.json() : [])
       .then((data: ApiMessage[]) => setMessages(data.map(m => toMessage(m, user.id))));
-    // Prévient le hook useNotifications (Header/MobileHeader) d'effacer les notifications
-    // de message de cette conversation — évite un re-fetch inutile
     window.dispatchEvent(new CustomEvent('dismiss-message-notifs', { detail: { convName: activeConv.name } }));
   }, [activeConv?.id, user?.id]);
 
@@ -485,7 +483,7 @@ export default function MessagerieDesktop() {
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container transition-colors text-left"
                 >
                   <Users size={16} className="text-secondary shrink-0" />
-                  Groupe
+                  {t.messaging.group}
                 </button>
               </div>
             )}
@@ -579,7 +577,7 @@ export default function MessagerieDesktop() {
                       <button
                         onClick={e => hideConversation(conv.id, e)}
                         className="hidden group-hover:flex w-6 h-6 items-center justify-center rounded-full hover:bg-error/10 transition-colors"
-                        title="Supprimer la conversation"
+                        title={t.messaging.deleteConversation}
                       >
                         <X size={13} className="text-on-surface-variant hover:text-error" />
                       </button>
@@ -598,7 +596,7 @@ export default function MessagerieDesktop() {
 
         {!activeConv ? (
           <div className="flex-1 flex items-center justify-center text-on-surface-variant text-sm">
-            Sélectionnez une conversation
+            {t.messaging.selectConversation}
           </div>
         ) : (
           <>
@@ -796,7 +794,7 @@ export default function MessagerieDesktop() {
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant shrink-0">
                 <p className="text-xl font-bold text-on-surface">
-                  {createMode === 'group' ? 'Nouveau groupe' : 'Nouvelle conversation'}
+                  {createMode === 'group' ? t.messaging.newGroup : t.messaging.newConversation}
                 </p>
                 <button onClick={closeCreate} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-surface-container transition-colors">
                   <X size={18} className="text-on-surface-variant" />
@@ -808,7 +806,7 @@ export default function MessagerieDesktop() {
                 <div className="px-6 py-4 border-b border-outline-variant shrink-0">
                   <input
                     type="text"
-                    placeholder="Nom du groupe (optionnel)"
+                    placeholder={t.messaging.groupNamePlaceholder}
                     value={groupName}
                     onChange={e => setGroupName(e.target.value)}
                     className="w-full px-4 py-2.5 bg-surface-container rounded-xl text-sm text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none"
@@ -841,7 +839,7 @@ export default function MessagerieDesktop() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={15} />
                   <input
                     type="text"
-                    placeholder="Rechercher…"
+                    placeholder={t.messaging.searchMembersPlaceholder}
                     value={createSearch}
                     onChange={e => setCreateSearch(e.target.value)}
                     className="w-full pl-9 pr-8 py-2 bg-surface-container rounded-xl text-sm text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none transition-all"
@@ -860,7 +858,7 @@ export default function MessagerieDesktop() {
               {/* Liste */}
               <div className="flex-1 overflow-y-auto px-3 py-2">
                 {!usersGrouped ? (
-                  <div className="p-6 text-center text-sm text-on-surface-variant">Chargement…</div>
+                  <div className="p-6 text-center text-sm text-on-surface-variant">{t.header.searching}</div>
                 ) : (() => {
                   const raw = createTab === 'joueurs' ? usersGrouped.players
                     : createTab === 'staff'   ? usersGrouped.staff
@@ -869,7 +867,7 @@ export default function MessagerieDesktop() {
                     ? raw.filter(u => `${u.first_name} ${u.last_name}`.toLowerCase().includes(createSearch.toLowerCase()) || (u.role ?? '').toLowerCase().includes(createSearch.toLowerCase()))
                     : raw;
                   if (list.length === 0)
-                    return <div className="p-6 text-center text-sm text-on-surface-variant">{createSearch ? 'Aucun résultat' : 'Aucun membre dans cette catégorie'}</div>;
+                    return <div className="p-6 text-center text-sm text-on-surface-variant">{createSearch ? t.messaging.noResultsSearch : t.messaging.noMembersCategory}</div>;
                   return list.map(u => {
                     const rt = userRoleType(u);
                     const initials = `${u.first_name[0]}${u.last_name[0]}`;
@@ -908,7 +906,7 @@ export default function MessagerieDesktop() {
                     disabled={groupSelected.size < 2 || creatingConv}
                     className="w-full py-3 bg-primary text-white rounded-xl text-sm font-semibold disabled:opacity-40 transition-opacity"
                   >
-                    Créer le groupe{groupSelected.size >= 2 ? ` (${groupSelected.size} membres)` : ''}
+                    {t.messaging.createGroup}{groupSelected.size >= 2 ? ` (${groupSelected.size} ${t.messaging.members})` : ''}
                   </button>
                 </div>
               )}

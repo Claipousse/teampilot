@@ -216,40 +216,55 @@ async def seed():
         # ── Joueurs (15) ───────────────────────────────────────────────────────
         for pd, email in [
             (dict(first_name="Marcus",  last_name="Valentin", shirt_number=8,  position="Milieu Central",    position_short="MIL", nationality="Anglais",   date_of_birth="1998-03-15", height_cm=182, weight_kg=78, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", academy="Manchester Academy", matches=22, goals=4,  assists=9,  yellow_cards=3, minutes_played=1850, notes="Excellent visionnaire du jeu."),  "m.valentin@metropolisunited.com"),
-            (dict(first_name="Julian",  last_name="Romero",   shirt_number=3,  position="Arrière Gauche",    position_short="DEF", nationality="Espagnol",  nationality_flag="🇪🇸", date_of_birth="2000-07-22", height_cm=175, weight_kg=72, preferred_foot="Gauche", status="Blessé",     contract_end_date="2025-06-30", academy="Atletico Madrid B", matches=14, assists=3, yellow_cards=2, minutes_played=1170, injury_description="Ischio-jambiers", return_date_estimate="Dans 3 semaines"), "j.romero@metropolisunited.com"),
-            (dict(first_name="Kevin",   last_name="Larson",   shirt_number=9,  position="Attaquant Centre",  position_short="ATT", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="1996-11-08", height_cm=186, weight_kg=82, preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", academy="OL Academy", matches=22, goals=11, assists=4, yellow_cards=1, minutes_played=1940, notes="Meilleur buteur."), "k.larson@metropolisunited.com"),
-            (dict(first_name="Stefan",  last_name="Koch",     shirt_number=1,  position="Gardien de but",    position_short="GK",  nationality="Allemand",  nationality_flag="🇩🇪", date_of_birth="1995-05-14", height_cm=192, weight_kg=88, preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", academy="Bayern Youth", matches=22, clean_sheets=9, goals_conceded=18, minutes_played=1980), "s.koch@metropolisunited.com"),
-            (dict(first_name="Alex",    last_name="Mendez",   shirt_number=5,  position="Défenseur Central", position_short="DEF", nationality="Brésilien", nationality_flag="🇧🇷", date_of_birth="1997-01-30", height_cm=188, weight_kg=84, preferred_foot="Droit",  status="Suspendu",   contract_end_date="2026-06-30", academy="Flamengo Youth", matches=19, goals=2, assists=1, yellow_cards=5, red_cards=1, minutes_played=1710, injury_description="2 matchs de suspension"), "a.mendez@metropolisunited.com"),
+            (dict(first_name="Julian",  last_name="Romero",   shirt_number=3,  position="Arrière Gauche",    position_short="DEF", nationality="Espagnol",  nationality_flag="es", date_of_birth="2000-07-22", height_cm=175, weight_kg=72, preferred_foot="Gauche", status="Blessé",     contract_end_date="2025-06-30", academy="Atletico Madrid B", matches=14, assists=3, yellow_cards=2, minutes_played=1170, injury_description="Ischio-jambiers", return_date_estimate="2026-07-14"), "j.romero@metropolisunited.com"),
+            (dict(first_name="Kevin",   last_name="Larson",   shirt_number=9,  position="Attaquant Centre",  position_short="ATT", nationality="Français",  nationality_flag="fr", date_of_birth="1996-11-08", height_cm=186, weight_kg=82, preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", academy="OL Academy", matches=22, goals=11, assists=4, yellow_cards=1, minutes_played=1940, notes="Meilleur buteur."), "k.larson@metropolisunited.com"),
+            (dict(first_name="Stefan",  last_name="Koch",     shirt_number=1,  position="Gardien de but",    position_short="GK",  nationality="Allemand",  nationality_flag="de", date_of_birth="1995-05-14", height_cm=192, weight_kg=88, preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", academy="Bayern Youth", matches=22, clean_sheets=9, goals_conceded=18, minutes_played=1980), "s.koch@metropolisunited.com"),
+            (dict(first_name="Alex",    last_name="Mendez",   shirt_number=5,  position="Défenseur Central", position_short="DEF", nationality="Brésilien", nationality_flag="br", date_of_birth="1997-01-30", height_cm=188, weight_kg=84, preferred_foot="Droit",  status="Suspendu",   contract_end_date="2026-06-30", academy="Flamengo Youth", matches=19, goals=2, assists=1, yellow_cards=5, red_cards=1, minutes_played=1710, injury_description="2 matchs de suspension"), "a.mendez@metropolisunited.com"),
             (dict(first_name="Tom",     last_name="Owen",     shirt_number=11, position="Ailier Droit",      position_short="ATT", nationality="Anglais",   date_of_birth="2001-09-19", height_cm=178, weight_kg=74, preferred_foot="Gauche", status="Incertain",  contract_end_date="2027-06-30", academy="Chelsea Academy", matches=18, goals=6, assists=7, yellow_cards=1, minutes_played=1420, injury_description="Gêne musculaire cuisse", return_date_estimate="Décision avant le match"), "t.owen@metropolisunited.com"),
-            (dict(first_name="Antoine", last_name="Moreau",   shirt_number=2,  position="Arrière Droit",     position_short="DEF", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="2001-04-12", height_cm=180, weight_kg=76, preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", matches=20, goals=1, assists=4, minutes_played=1800), "a.moreau@metropolisunited.com"),
-            (dict(first_name="Samuel",  last_name="Blanc",    shirt_number=4,  position="Défenseur Central", position_short="DEF", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="1999-08-20", height_cm=190, weight_kg=86, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=21, goals=2, assists=1, yellow_cards=2, minutes_played=1890), "s.blanc@metropolisunited.com"),
-            (dict(first_name="Eric",    last_name="Dubois",   shirt_number=6,  position="Milieu Défensif",   position_short="MIL", nationality="Belge",     nationality_flag="🇧🇪", date_of_birth="1998-12-05", height_cm=183, weight_kg=79, preferred_foot="Droit",  status="Disponible", contract_end_date="2026-06-30", matches=19, goals=3, assists=6, yellow_cards=4, minutes_played=1710), "e.dubois@metropolisunited.com"),
-            (dict(first_name="Theo",    last_name="Durand",   shirt_number=7,  position="Ailier Gauche",     position_short="ATT", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="2002-03-28", height_cm=176, weight_kg=71, preferred_foot="Gauche", status="Disponible", contract_end_date="2029-06-30", matches=17, goals=5, assists=8, minutes_played=1530), "t.durand@metropolisunited.com"),
-            (dict(first_name="Maxime",  last_name="Girard",   shirt_number=10, position="Meneur de jeu",     position_short="MIL", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="1997-06-14", height_cm=177, weight_kg=73, preferred_foot="Gauche", status="Disponible", contract_end_date="2028-06-30", matches=22, goals=7, assists=12, yellow_cards=1, minutes_played=1980), "m.girard@metropolisunited.com"),
-            (dict(first_name="Roberto", last_name="Diaz",     shirt_number=12, position="Milieu Central",    position_short="MIL", nationality="Argentin",  nationality_flag="🇦🇷", date_of_birth="1999-11-30", height_cm=181, weight_kg=77, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=18, goals=2, assists=5, yellow_cards=3, minutes_played=1620), "r.diaz@metropolisunited.com"),
-            (dict(first_name="Lucas",   last_name="Bernard",  shirt_number=13, position="Attaquant Centre",  position_short="ATT", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="2000-02-17", height_cm=185, weight_kg=81, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=16, goals=8, assists=2, minutes_played=1440), "l.bernard@metropolisunited.com"),
-            (dict(first_name="Romain",  last_name="Laurent",  shirt_number=14, position="Arrière Gauche",    position_short="DEF", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="2001-07-09", height_cm=179, weight_kg=74, preferred_foot="Gauche", status="Disponible", contract_end_date="2028-06-30", matches=20, assists=3, yellow_cards=2, minutes_played=1800), "r.laurent@metropolisunited.com"),
-            (dict(first_name="Nicolas", last_name="Petit",    shirt_number=15, position="Milieu Box-to-Box", position_short="MIL", nationality="Français",  nationality_flag="🇫🇷", date_of_birth="1998-09-22", height_cm=184, weight_kg=80, preferred_foot="Droit",  status="Disponible", contract_end_date="2026-06-30", matches=21, goals=4, assists=7, yellow_cards=3, minutes_played=1890), "n.petit@metropolisunited.com"),
+            (dict(first_name="Antoine", last_name="Moreau",   shirt_number=2,  position="Arrière Droit",     position_short="DEF", nationality="Français",  nationality_flag="fr", date_of_birth="2001-04-12", height_cm=180, weight_kg=76, preferred_foot="Droit",  status="Disponible", contract_end_date="2028-06-30", matches=20, goals=1, assists=4, minutes_played=1800), "a.moreau@metropolisunited.com"),
+            (dict(first_name="Samuel",  last_name="Blanc",    shirt_number=4,  position="Défenseur Central", position_short="DEF", nationality="Français",  nationality_flag="fr", date_of_birth="1999-08-20", height_cm=190, weight_kg=86, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=21, goals=2, assists=1, yellow_cards=2, minutes_played=1890), "s.blanc@metropolisunited.com"),
+            (dict(first_name="Eric",    last_name="Dubois",   shirt_number=6,  position="Milieu Défensif",   position_short="MIL", nationality="Belge",     nationality_flag="be", date_of_birth="1998-12-05", height_cm=183, weight_kg=79, preferred_foot="Droit",  status="Disponible", contract_end_date="2026-06-30", matches=19, goals=3, assists=6, yellow_cards=4, minutes_played=1710), "e.dubois@metropolisunited.com"),
+            (dict(first_name="Theo",    last_name="Durand",   shirt_number=7,  position="Ailier Gauche",     position_short="ATT", nationality="Français",  nationality_flag="fr", date_of_birth="2002-03-28", height_cm=176, weight_kg=71, preferred_foot="Gauche", status="Disponible", contract_end_date="2029-06-30", matches=17, goals=5, assists=8, minutes_played=1530), "t.durand@metropolisunited.com"),
+            (dict(first_name="Maxime",  last_name="Girard",   shirt_number=10, position="Milieu Offensif",   position_short="MIL", nationality="Français",  nationality_flag="fr", date_of_birth="1997-06-14", height_cm=177, weight_kg=73, preferred_foot="Gauche", status="Disponible", contract_end_date="2028-06-30", matches=22, goals=7, assists=12, yellow_cards=1, minutes_played=1980), "m.girard@metropolisunited.com"),
+            (dict(first_name="Roberto", last_name="Diaz",     shirt_number=12, position="Milieu Central",    position_short="MIL", nationality="Argentin",  nationality_flag="ar", date_of_birth="1999-11-30", height_cm=181, weight_kg=77, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=18, goals=2, assists=5, yellow_cards=3, minutes_played=1620), "r.diaz@metropolisunited.com"),
+            (dict(first_name="Lucas",   last_name="Bernard",  shirt_number=13, position="Attaquant Centre",  position_short="ATT", nationality="Français",  nationality_flag="fr", date_of_birth="2000-02-17", height_cm=185, weight_kg=81, preferred_foot="Droit",  status="Disponible", contract_end_date="2027-06-30", matches=16, goals=8, assists=2, minutes_played=1440), "l.bernard@metropolisunited.com"),
+            (dict(first_name="Romain",  last_name="Laurent",  shirt_number=14, position="Arrière Gauche",    position_short="DEF", nationality="Français",  nationality_flag="fr", date_of_birth="2001-07-09", height_cm=179, weight_kg=74, preferred_foot="Gauche", status="Disponible", contract_end_date="2028-06-30", matches=20, assists=3, yellow_cards=2, minutes_played=1800), "r.laurent@metropolisunited.com"),
+            (dict(first_name="Nicolas", last_name="Petit",    shirt_number=15, position="Milieu Défensif",   position_short="MIL", nationality="Français",  nationality_flag="fr", date_of_birth="1998-09-22", height_cm=184, weight_kg=80, preferred_foot="Droit",  status="Disponible", contract_end_date="2026-06-30", matches=21, goals=4, assists=7, yellow_cards=3, minutes_played=1890), "n.petit@metropolisunited.com"),
         ]:
             await ensure_player(pd, email)
         c, s = stats["players"]
         print(f"  ✅ Joueurs  —  {c} créé(s), {s} existant(s)")
 
         # ── Événements ─────────────────────────────────────────────────────────
+        # Passé récent (avant le 25 juin) + à venir (après le 25 juin)
         admin_r = await db.execute(select(User).where(User.email == "admin@teampilot.com"))
         admin_user = admin_r.scalar_one_or_none()
         if admin_user:
             for title, tag, edate, etime, loc, notes in [
-                ("Pre-Match Training",   "Entraînement", "2026-06-05", "10:00", "Terrain principal",         "Activation physique 60 min."),
-                ("Match Away",           "Match",        "2026-06-05", "15:00", "Etihad Stadium",            "Départ bus 12h00. Tenue : maillot extérieur."),
-                ("Tactical Analysis",    "Réunion",      "2026-06-07", "11:00", "Salle vidéo · Bâtiment B",  "Présence obligatoire."),
-                ("Gym Session",          "Entraînement", "2026-06-09", "09:30", "Salle de musculation",      None),
-                ("Bilan Médical",        "Réunion",      "2026-06-11", "09:00", "Centre médical",            "Bilans trimestriels obligatoires."),
-                ("Sprint Training",      "Entraînement", "2026-06-12", "10:30", "Terrain 2",                 None),
-                ("Conférence de Presse", "Réunion",      "2026-06-13", "14:00", "Salle de presse",           "Coach + 2 joueurs désignés."),
-                ("Recovery Session",     "Entraînement", "2026-06-15", "11:00", "Piscine · Spa",             None),
-                ("Pre-Match Activation", "Entraînement", "2026-06-19", "11:00", "Terrain principal",         None),
-                ("Home Match",           "Match",        "2026-06-19", "17:00", "Stade principal (domicile)","Échauffement 16h00."),
+                # ── Passé récent ───────────────────────────────────────────────
+                ("Séance Récupération",      "Entraînement", "2026-06-16", "10:00", "Piscine · Spa",              "Récupération post-match. Présence obligatoire."),
+                ("Conférence de Presse",     "Réunion",      "2026-06-18", "14:00", "Salle de presse",            "Coach + capitaine. Point fin de phase aller."),
+                ("Match Amical — Lyon FC",   "Match",        "2026-06-20", "17:00", "Stade principal (domicile)", "Match de préparation. Échauffement 16h."),
+                ("Bilan de fin de saison",   "Réunion",      "2026-06-23", "10:00", "Salle de réunion A",         "Présence staff complet. Bilan individuel joueurs."),
+                # ── Cette semaine / transition ─────────────────────────────────
+                ("Entretiens Individuels",   "Réunion",      "2026-06-25", "09:00", "Bureau coach principal",     "Planning : 30 min par joueur. Liste affichée vestiaire."),
+                ("Séance Technique Libre",   "Entraînement", "2026-06-27", "10:30", "Terrain 2",                  "Participation volontaire. Travail technique individuel."),
+                # ── Juillet — pré-saison ───────────────────────────────────────
+                ("Reprise Pré-saison",       "Entraînement", "2026-07-07", "09:00", "Terrain principal",          "Reprise officielle. Présence obligatoire. Tenue : rouge."),
+                ("Tests Médicaux",           "Réunion",      "2026-07-08", "08:00", "Centre médical",             "Bilans cardio + physio pour tous les joueurs."),
+                ("Entraînement Tactique",    "Entraînement", "2026-07-10", "10:00", "Terrain principal",          "Mise en place du système 4-3-3. Vidéo à 09h00."),
+                ("Séance Pressing Haut",     "Entraînement", "2026-07-12", "10:00", "Terrain 2",                  "Exercices spécifiques pressing. Florent Garnier dirige."),
+                ("Match Amical — Ajax B",    "Match",        "2026-07-14", "15:00", "Terrain principal",          "Premier test pré-saison. Bus départ 13h30."),
+                ("Séance Attaquants",        "Entraînement", "2026-07-17", "10:00", "Terrain principal",          "Travail finition + jeu dans le dos. Coach attaque."),
+                ("Tournoi Pré-saison J1",    "Match",        "2026-07-19", "14:00", "Stade de Metz",              "Tournoi 4 équipes. Départ bus 11h00. Nuit à l'hôtel."),
+                ("Tournoi Pré-saison J2",    "Match",        "2026-07-20", "11:00", "Stade de Metz",              "Match de classement. Retour bus après match."),
+                ("Point Recrutement",        "Réunion",      "2026-07-22", "11:00", "Bureau directeur sportif",   "Transferts entrants / sortants. Staff direction uniquement."),
+                ("Séance Corners & Phases",  "Entraînement", "2026-07-24", "10:00", "Terrain principal",          "Phases arrêtées offensives et défensives."),
+                ("Match Amical — Bordeaux",  "Match",        "2026-07-26", "16:00", "Stade Chaban-Delmas",        "Déplacement. Bus 12h00. Nuit sur place."),
+                ("Conférence Pré-saison",    "Réunion",      "2026-07-29", "14:00", "Salle de presse",            "Présentation objectifs saison 2026/2027."),
+                # ── Août — lancement de saison ─────────────────────────────────
+                ("Activation Pré-ouverture", "Entraînement", "2026-08-01", "10:00", "Terrain principal",          "Dernière séance avant la saison. Léger + tactique."),
+                ("Ouverture Elite Pro",      "Match",        "2026-08-09", "17:00", "Stade principal (domicile)", "Journée 1 Elite Pro League. Échauffement 16h. Tenue domicile."),
             ]:
                 ex = await db.execute(select(Event).where(Event.title == title, Event.event_date == edate))
                 if not ex.scalar_one_or_none():
@@ -267,20 +282,8 @@ async def seed():
         test_users = (await db.execute(
             select(User).where(User.email.in_(TEST_EMAILS), User.is_active == True)
         )).scalars().all()
-        notif_titles = {
-            "Pre-Match Training":   "Pre-Match Training ajouté",
-            "Match Away":           "Match Away ajouté",
-            "Tactical Analysis":    "Tactical Analysis ajouté",
-            "Gym Session":          "Gym Session ajouté",
-            "Bilan Médical":        "Bilan Médical ajouté",
-            "Sprint Training":      "Sprint Training ajouté",
-            "Conférence de Presse": "Conférence de Presse ajoutée",
-            "Recovery Session":     "Recovery Session ajouté",
-            "Pre-Match Activation": "Pre-Match Activation ajouté",
-            "Home Match":           "Home Match ajouté",
-        }
         for evt in all_events:
-            notif_title = notif_titles.get(evt.title, f"{evt.title} ajouté")
+            notif_title = f"{evt.title} ajouté"
             for u in test_users:
                 ex = await db.execute(
                     select(Notification).where(
@@ -324,13 +327,13 @@ async def seed():
 
             convs_n = 0
 
-            def _msg(conv_id, sender_id, text, h, m=0, day=6):
+            def _msg(conv_id, sender_id, text, h, m=0, day=20, month=6):
                 return Message(conversation_id=conv_id, sender_id=sender_id, msg_type="text",
-                               text=text, created_at=datetime(2026, 6, day, h, m, 0))
+                               text=text, created_at=datetime(2026, month, day, h, m, 0))
 
-            def _sys(conv_id, text, h=8, day=6):
+            def _sys(conv_id, text, h=8, day=20, month=6):
                 return Message(conversation_id=conv_id, sender_id=None, msg_type="system",
-                               text=text, created_at=datetime(2026, 6, day, h, 0, 0))
+                               text=text, created_at=datetime(2026, month, day, h, 0, 0))
 
             def _part(conv_id, *users):
                 return [ConversationParticipant(conversation_id=conv_id, user_id=u.id)
@@ -339,15 +342,15 @@ async def seed():
             # 1. Tactical AI
             ai = Conversation(name="Tactical AI", category="staff", role_type="ai", is_ai=True,
                               initials="✦", avatar_bg="bg-primary",
-                              created_at=datetime(2026, 6, 6, 8, 0))
+                              created_at=datetime(2026, 6, 21, 8, 0))
             db.add(ai); await db.flush()
             db.add_all(_part(ai.id, adm))
             db.add_all([
-                _msg(ai.id, None,    "Bonjour Coach. Le planning de la semaine prochaine est disponible. Entraînement intensif lundi, récupération mercredi avant le match de samedi.", 8, 0),
-                _msg(ai.id, adm.id,  "Merci. Prépare-moi un résumé des statistiques de la semaine passée.", 8, 5),
-                _msg(ai.id, None,    "3 entraînements effectués, 94% de présence, distance moyenne : 9.2 km par joueur.", 8, 6),
-                _msg(ai.id, adm.id,  "Parfait. Prépare aussi un point sur les absences.", 8, 10),
-                _msg(ai.id, None,    "Julian R. absent 2 séances (blessure). Alex M. absent 1 séance (suspension préventive). Tous les autres présents.", 8, 11),
+                _msg(ai.id, None,    "Bonjour Coach. La reprise pré-saison est fixée au 7 juillet. Voulez-vous que je prépare un planning de la semaine ?", 8, 0, 21),
+                _msg(ai.id, adm.id,  "Oui, fais-moi un point sur les charges d'entraînement prévues.", 8, 5, 21),
+                _msg(ai.id, None,    "Semaine 1 (7–11 juillet) : charge progressive. Lundi reprise physique, mardi tests médicaux, jeudi–vendredi tactique.", 8, 6, 21),
+                _msg(ai.id, adm.id,  "Ajoute une séance pressing haut vendredi avec Florent.", 8, 10, 21),
+                _msg(ai.id, None,    "C'est noté. Séance pressing haute ajoutée vendredi 10h, terrain 2. Florent Garnier désigné responsable.", 8, 11, 21),
             ])
             convs_n += 1
 
@@ -355,15 +358,15 @@ async def seed():
             if thl:
                 c2 = Conversation(name=f"{thl.first_name} {thl.last_name}", category="staff",
                                   role_type="coach", initials="TL", avatar_bg="bg-surface-container-high",
-                                  role="Coach Principal", created_at=datetime(2026, 6, 6, 9, 30))
+                                  role="Coach Principal", created_at=datetime(2026, 6, 22, 9, 0))
                 db.add(c2); await db.flush()
                 db.add_all(_part(c2.id, adm, thl))
                 db.add_all([
-                    _msg(c2.id, thl.id,  "La séance du matin est annulée suite aux conditions météo. On reprend à 14h sur le terrain 2.", 9, 30),
-                    _msg(c2.id, adm.id,  "Reçu. Je préviens les joueurs.", 9, 35),
-                    _msg(c2.id, thl.id,  "Prévois aussi une séance vidéo à 13h pour analyser le dernier match.", 9, 36),
-                    _msg(c2.id, adm.id,  "C'est noté. Salle de projection disponible à 13h.", 9, 40),
-                    _msg(c2.id, thl.id,  "Merci. Rappelle-moi aussi de contacter le kiné pour Stefan.", 10, 45),
+                    _msg(c2.id, thl.id,  "J'ai revu le calendrier de pré-saison. Je propose qu'on commence le 4-3-3 dès la deuxième semaine.", 9, 0, 22),
+                    _msg(c2.id, adm.id,  "D'accord. On a le tournoi de Metz le 19, c'est un bon test pour ça.", 9, 10, 22),
+                    _msg(c2.id, thl.id,  "Exactement. Il faudra aussi décider de la hiérarchie des gardiens avant la reprise.", 9, 15, 22),
+                    _msg(c2.id, adm.id,  "Stefan est titulaire indiscutable. On peut en reparler après les tests médicaux du 8.", 9, 20, 22),
+                    _msg(c2.id, thl.id,  "Reçu. Je prépare aussi un document sur les axes de progression individuels.", 9, 35, 22),
                 ])
                 convs_n += 1
 
@@ -371,31 +374,32 @@ async def seed():
             if cdp:
                 c3 = Conversation(name=f"{cdp.first_name} {cdp.last_name}", category="staff",
                                   role_type="staff", initials="CD", avatar_bg="bg-surface-container-high",
-                                  role="Médecin", created_at=datetime(2026, 6, 6, 8, 45))
+                                  role="Médecin", created_at=datetime(2026, 6, 20, 11, 0))
                 db.add(c3); await db.flush()
                 db.add_all(_part(c3.id, adm, cdp))
                 db.add_all([
-                    _msg(c3.id, cdp.id,  "Bonjour. Le scanner de Julian R. vient de revenir. Lésion grade 2 ischio-jambiers. Repos 3 semaines minimum.", 8, 45),
-                    _msg(c3.id, adm.id,  "Merci. Forfait pour les 2 prochains matchs ?", 8, 50),
-                    _msg(c3.id, cdp.id,  "Oui, au minimum. On réévalue dans 10 jours.", 8, 52),
-                    _msg(c3.id, cdp.id,  "Rapport_Medical.pdf", 8, 53),
-                    _msg(c3.id, adm.id,  "Bien reçu. Gardez-moi informé.", 9, 12),
+                    _msg(c3.id, cdp.id,  "Bilan fin de saison terminé. Julian R. : reprise progressive possible début juillet. Alex M. : suspendu jusqu'au 2 juillet.", 11, 0, 20),
+                    _msg(c3.id, adm.id,  "Julian peut faire les tests médicaux du 8 ?", 11, 10, 20),
+                    _msg(c3.id, cdp.id,  "Oui si la rééducation suit le planning actuel. Je confirme le 30 juin.", 11, 15, 20),
+                    _msg(c3.id, adm.id,  "Parfait. Tenez-moi informé. Et pour Tom Owen ?", 11, 20, 20),
+                    _msg(c3.id, cdp.id,  "Tom est quasi à 100%. Je valide sa reprise complète pour le 7 juillet.", 11, 25, 20),
                 ])
                 convs_n += 1
 
             # 4. Groupe Staff Tactique
             c4 = Conversation(name="Staff Tactique", category="staff", role_type="group", is_group=True,
                               initials="ST", avatar_bg="bg-inverse-surface",
-                              created_at=datetime(2026, 6, 5, 18, 0))
+                              created_at=datetime(2026, 6, 20, 9, 0))
             db.add(c4); await db.flush()
             db.add_all(_part(c4.id, adm, thl, cdp, smo, dpk, pmo, fga))
             db.add_all([
-                _sys(c4.id, "Groupe créé · 7 membres", 18, 5),
-                _msg(c4.id, thl.id if thl else None,  "Réunion de staff demain matin à 9h. Point blessés + préparation match samedi.", 18, 0, 5),
-                _msg(c4.id, cdp.id if cdp else None,  "Je serai présente. Je prépare un point sur Julian R. et Tom O.", 18, 15, 5),
-                _msg(c4.id, dpk.id if dpk else None,  "Ok pour moi. Tom O. a bien récupéré depuis hier.", 18, 30, 5),
-                _msg(c4.id, pmo.id if pmo else None,  "Présent. J'apporterai les statistiques de la semaine.", 18, 32, 5),
-                _msg(c4.id, adm.id,                   "Salle de réunion A. À demain.", 18, 35, 5),
+                _sys(c4.id, "Groupe créé · 7 membres", 9, 20),
+                _msg(c4.id, adm.id,                   "Bilan de saison demain 10h, salle A. Points à couvrir : bilan stats, blessures, objectifs pré-saison.", 9, 0, 20),
+                _msg(c4.id, thl.id if thl else None,  "Je prépare un slide sur les stats collectives et les axes d'amélioration.", 9, 15, 20),
+                _msg(c4.id, cdp.id if cdp else None,  "Je ferai un point médical : Julian R., Alex M. et Tom O.", 9, 20, 20),
+                _msg(c4.id, dpk.id if dpk else None,  "J'apporte les vidéos des 5 derniers matchs et les heatmaps.", 9, 22, 20),
+                _msg(c4.id, fga.id if fga else None,  "J'ai des pistes pour améliorer notre efficacité offensive. On en parle demain.", 9, 30, 20),
+                _msg(c4.id, adm.id,                   "Parfait. À demain 10h.", 9, 35, 20),
             ])
             convs_n += 1
 
@@ -403,14 +407,14 @@ async def seed():
             if mkv:
                 c5 = Conversation(name=f"{mkv.first_name} {mkv.last_name}", category="team",
                                   role_type="player", initials="MV", avatar_bg="bg-surface-container-high",
-                                  role="Milieu Central · #8", created_at=datetime(2026, 6, 6, 10, 45))
+                                  role="Milieu Central · #8", created_at=datetime(2026, 6, 23, 10, 0))
                 db.add(c5); await db.flush()
                 db.add_all(_part(c5.id, adm, mkv))
                 db.add_all([
-                    _msg(c5.id, adm.id,  "Marcus, peux-tu venir 30 min plus tôt demain pour un travail sur les transitions ?", 10, 45),
-                    _msg(c5.id, mkv.id,  "Bien sûr Coach. À quelle heure ?", 10, 50),
-                    _msg(c5.id, adm.id,  "8h30, avant la séance collective.", 10, 52),
-                    _msg(c5.id, mkv.id,  "Présent à 8h30 demain Coach.", 11, 20),
+                    _msg(c5.id, adm.id,  "Marcus, très bonne saison. Entretien individuel jeudi 25 à 9h30. Tu es disponible ?", 10, 0, 23),
+                    _msg(c5.id, mkv.id,  "Oui Coach, je serai là. J'ai des questions sur mon rôle la saison prochaine.", 10, 20, 23),
+                    _msg(c5.id, adm.id,  "On en parle justement. On envisage de te donner plus de liberté dans le 4-3-3.", 10, 25, 23),
+                    _msg(c5.id, mkv.id,  "Super nouvelle. Hâte d'en discuter !", 10, 30, 23),
                 ])
                 convs_n += 1
 
@@ -418,31 +422,30 @@ async def seed():
             if kvl:
                 c6 = Conversation(name=f"{kvl.first_name} {kvl.last_name}", category="team",
                                   role_type="player", initials="KL", avatar_bg="bg-surface-container-high",
-                                  role="Attaquant Centre · #9", created_at=datetime(2026, 6, 6, 9, 0))
+                                  role="Attaquant Centre · #9", created_at=datetime(2026, 6, 21, 14, 0))
                 db.add(c6); await db.flush()
                 db.add_all(_part(c6.id, adm, kvl))
                 db.add_all([
-                    _msg(c6.id, adm.id,  "Kevin, excellente semaine d'entraînement. Continue sur cette lancée pour samedi.", 9, 0),
-                    _msg(c6.id, kvl.id,  "Merci Coach ! Je me sens vraiment bien. Hâte d'être au match.", 9, 10),
-                    _msg(c6.id, adm.id,  "Parfait. Récupère bien jeudi et vendredi.", 9, 25),
-                    _msg(c6.id, kvl.id,  "D'accord, je ferai attention.", 9, 30),
+                    _msg(c6.id, adm.id,  "Kevin, 11 buts cette saison, chapeau. On compte sur toi pour faire encore mieux en 2026/2027.", 14, 0, 21),
+                    _msg(c6.id, kvl.id,  "Merci Coach ! Je travaille dur cet été. Objectif 15 buts minimum.", 14, 10, 21),
+                    _msg(c6.id, adm.id,  "Avec Theo et Maxime derrière toi, tu auras encore plus d'occasions.", 14, 15, 21),
+                    _msg(c6.id, kvl.id,  "On va faire une grande saison j'en suis convaincu.", 14, 20, 21),
                 ])
                 convs_n += 1
 
             # 7. Groupe Équipe Première
             c7 = Conversation(name="Équipe Première", category="team", role_type="group", is_group=True,
                               initials="EP", avatar_bg="bg-primary",
-                              created_at=datetime(2026, 6, 5, 17, 0))
+                              created_at=datetime(2026, 6, 20, 17, 0))
             db.add(c7); await db.flush()
             db.add_all(_part(c7.id, adm, mkv, kvl, stk, mgi))
             db.add_all([
-                _sys(c7.id, "Groupe Équipe Première · 18 membres", 17, 5),
-                _msg(c7.id, adm.id,                   "Rendez-vous samedi 13h au stade. Bus départ 12h30 depuis le centre.", 17, 0, 5),
-                _msg(c7.id, mkv.id if mkv else None,  "Reçu Coach. On sera là.", 17, 5, 5),
-                _msg(c7.id, stk.id if stk else None,  "Présent. Peut-on amener nos familles en tribune ?", 17, 10, 5),
-                _msg(c7.id, adm.id,                   "Oui, 2 places par joueur au guichet. Parlez à Marc pour les billets.", 17, 15, 5),
-                _msg(c7.id, kvl.id if kvl else None,  "On va gagner samedi !", 17, 20, 5),
-                _msg(c7.id, mgi.id if mgi else None,  "Motivés ! On compte sur toi Kevin.", 17, 25, 5),
+                _sys(c7.id, "Groupe Équipe Première · 18 membres", 17, 20),
+                _msg(c7.id, adm.id,                   "Bonne fin de saison à tous ! Reprise officielle le 7 juillet à 9h. Profitez bien de vos vacances.", 17, 0, 20),
+                _msg(c7.id, kvl.id if kvl else None,  "Merci Coach ! Reposez-vous aussi. On reviendra encore plus forts !", 17, 10, 20),
+                _msg(c7.id, stk.id if stk else None,  "À dans 2 semaines. Belle coupure à tout le monde.", 17, 15, 20),
+                _msg(c7.id, mkv.id if mkv else None,  "Hâte de reprendre. Bel été les gars 💪", 17, 20, 20),
+                _msg(c7.id, mgi.id if mgi else None,  "Top saison ! On va tout donner en 2026/2027.", 17, 25, 20),
             ])
             convs_n += 1
 
@@ -450,14 +453,14 @@ async def seed():
             if stk:
                 c8 = Conversation(name=f"{stk.first_name} {stk.last_name}", category="team",
                                   role_type="player", initials="SK", avatar_bg="bg-surface-container-high",
-                                  role="Gardien de but · #1", created_at=datetime(2026, 6, 5, 14, 0))
+                                  role="Gardien de but · #1", created_at=datetime(2026, 6, 22, 15, 0))
                 db.add(c8); await db.flush()
                 db.add_all(_part(c8.id, adm, stk))
                 db.add_all([
-                    _msg(c8.id, adm.id,  "Stefan, bon match la semaine dernière. Un point à travailler : tes sorties sur les centres.", 14, 0, 5),
-                    _msg(c8.id, stk.id,  "Oui j'ai revu les images. Je dois être plus décisif sur les ballons aériens.", 14, 15, 5),
-                    _msg(c8.id, adm.id,  "On travaille ça vendredi avec Jean en séance spécifique gardiens.", 14, 20, 5),
-                    _msg(c8.id, stk.id,  "Merci pour le retour, je travaille dessus.", 14, 25, 5),
+                    _msg(c8.id, adm.id,  "Stefan, 9 clean sheets cette saison, excellent. Jean va préparer un programme spécifique gardiens pour la pré-saison.", 15, 0, 22),
+                    _msg(c8.id, stk.id,  "Merci Coach. Je travaille aussi sur mes relances courtes cet été.", 15, 10, 22),
+                    _msg(c8.id, adm.id,  "Parfait, c'est un axe important avec notre pressing haut. On intègre ça dès la semaine 2.", 15, 15, 22),
+                    _msg(c8.id, stk.id,  "Je serai prêt. À le 7 juillet !", 15, 20, 22),
                 ])
                 convs_n += 1
 
@@ -465,14 +468,15 @@ async def seed():
             if fga:
                 c9 = Conversation(name=f"{fga.first_name} {fga.last_name}", category="staff",
                                   role_type="coach", initials="FG", avatar_bg="bg-surface-container-high",
-                                  role="Coach Attaque", created_at=datetime(2026, 6, 4, 16, 0))
+                                  role="Coach Attaque", created_at=datetime(2026, 6, 19, 16, 0))
                 db.add(c9); await db.flush()
                 db.add_all(_part(c9.id, adm, fga))
                 db.add_all([
-                    _msg(c9.id, fga.id,  "J'ai préparé un plan d'exercices pour améliorer le pressing haut.", 16, 0, 4),
-                    _msg(c9.id, adm.id,  "Excellent. On peut l'intégrer dès mardi ?", 16, 15, 4),
-                    _msg(c9.id, fga.id,  "Oui, séance de 45 min après l'échauffement collectif.", 16, 20, 4),
-                    _msg(c9.id, adm.id,  "Parfait, je valide. Prépare les plots pour mardi.", 16, 30, 4),
+                    _msg(c9.id, fga.id,  "J'ai analysé nos 5 derniers matchs. Notre pressing haut manque de synchronisation entre attaquants et milieux.", 16, 0, 19),
+                    _msg(c9.id, adm.id,  "C'est exactement ce qu'on veut corriger en pré-saison. Tu avais un plan d'exercices ?", 16, 15, 19),
+                    _msg(c9.id, fga.id,  "Oui, 3 exercices progressifs. Je les intègre dans la séance du 12 juillet.", 16, 20, 19),
+                    _msg(c9.id, adm.id,  "Parfait. Envoie-moi le document avant le 7. On valide ensemble.", 16, 30, 19),
+                    _msg(c9.id, fga.id,  "Je te l'envoie vendredi. Bel été Coach.", 16, 35, 19),
                 ])
                 convs_n += 1
 

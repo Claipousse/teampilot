@@ -8,13 +8,19 @@ type LangCtx = { lang: Lang; setLang: (l: Lang) => void };
 const LangCtx = createContext<LangCtx>({ lang: 'fr', setLang: () => {} });
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLang] = useState<Lang>('fr');
+  const [lang, setLangState] = useState<Lang>(() => {
+    if (typeof window === 'undefined') return 'fr';
+    const saved = localStorage.getItem('lang');
+    return (saved === 'fr' || saved === 'en') ? saved : 'fr';
+  });
+
+  const setLang = (l: Lang) => {
+    setLangState(l);
+    localStorage.setItem('lang', l);
+  };
+
   return <LangCtx.Provider value={{ lang, setLang }}>{children}</LangCtx.Provider>;
 }
 
-// Hook pour accéder à la langue actuelle et la changer
 export function useLanguage() { return useContext(LangCtx); }
-
-// Raccourci : retourne directement l'objet de traductions pour la langue courante
-// Usage : const t = useT();  puis  t.nav.dashboard
 export function useT() { return T[useContext(LangCtx).lang]; }

@@ -46,7 +46,7 @@ export default function Header() {
 
   const fullName  = user ? `${user.firstName} ${user.lastName}` : '—';
   const initials  = user ? `${user.firstName[0]}${user.lastName[0]}` : '?';
-  const roleLabel = user?.isAdmin ? 'Admin' : user?.type === 'staff' ? 'Staff' : 'Joueur';
+  const roleLabel = user?.isAdmin ? 'Admin' : user?.type === 'staff' ? 'Staff' : t.profile.rolePlayer;
 
   // Recherche avec debounce de 300 ms
   useEffect(() => {
@@ -118,7 +118,7 @@ export default function Header() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-outline z-10 pointer-events-none" size={20} />
         <input
           type="text"
-          placeholder="Rechercher joueurs, événements, messages…"
+          placeholder={t.header.searchGlobalPlaceholder}
           value={query}
           onChange={e => setQuery(e.target.value)}
           onFocus={() => setSearchOpen(true)}
@@ -127,16 +127,16 @@ export default function Header() {
         {searchOpen && (
           <div className="absolute top-full left-0 right-0 bg-surface-container-lowest border border-outline-variant border-t-0 rounded-b-xl shadow-xl z-50 overflow-hidden max-h-[480px] overflow-y-auto">
             {query.length < 2 ? (
-              <p className="px-4 py-4 text-sm text-center text-on-surface-variant/60">Tapez au moins 2 caractères pour rechercher</p>
+              <p className="px-4 py-4 text-sm text-center text-on-surface-variant/60">{t.header.searchMinChars}</p>
             ) : searchLoading ? (
-              <p className="px-4 py-4 text-sm text-center text-on-surface-variant/60">Recherche…</p>
+              <p className="px-4 py-4 text-sm text-center text-on-surface-variant/60">{t.header.searching}</p>
             ) : !hasSearchResults ? (
-              <p className="px-4 py-4 text-sm text-center text-on-surface-variant">Aucun résultat pour &ldquo;{query}&rdquo;</p>
+              <p className="px-4 py-4 text-sm text-center text-on-surface-variant">{t.header.noResultsFor} &ldquo;{query}&rdquo;</p>
             ) : (
               <>
                 {searchPlayers.length > 0 && (
                   <>
-                    <div className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container/60 border-b border-outline-variant/50">Joueurs</div>
+                    <div className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container/60 border-b border-outline-variant/50">{t.header.tabPlayers}</div>
                     {searchPlayers.map(p => (
                       <button key={p.id} onClick={() => { router.push('/joueurs'); setSearchOpen(false); setQuery(''); }}
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-container transition-colors text-left">
@@ -149,20 +149,20 @@ export default function Header() {
                 )}
                 {searchEvents.length > 0 && (
                   <>
-                    <div className={`px-4 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container/60 border-b border-outline-variant/50 ${searchPlayers.length > 0 ? 'border-t border-outline-variant/50' : ''}`}>Événements</div>
+                    <div className={`px-4 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container/60 border-b border-outline-variant/50 ${searchPlayers.length > 0 ? 'border-t border-outline-variant/50' : ''}`}>{t.header.tabEvents}</div>
                     {searchEvents.map(e => (
                       <button key={e.id} onClick={() => { router.push(`/calendrier?eventId=${e.id}`); setSearchOpen(false); setQuery(''); }}
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-container transition-colors text-left">
                         <span className={`w-2 h-2 rounded-full shrink-0 ${evtTagColor(e.tag)}`} />
                         <span className="text-sm font-semibold text-on-surface">{e.title}</span>
-                        <span className="text-xs text-on-surface-variant ml-auto shrink-0">{e.event_date ? new Date(e.event_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : ''}</span>
+                        <span className="text-xs text-on-surface-variant ml-auto shrink-0">{e.event_date ? new Date(e.event_date).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: '2-digit', month: 'short' }) : ''}</span>
                       </button>
                     ))}
                   </>
                 )}
                 {searchConvos.length > 0 && (
                   <>
-                    <div className={`px-4 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container/60 border-b border-outline-variant/50 ${(searchPlayers.length > 0 || searchEvents.length > 0) ? 'border-t border-outline-variant/50' : ''}`}>Messages</div>
+                    <div className={`px-4 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container/60 border-b border-outline-variant/50 ${(searchPlayers.length > 0 || searchEvents.length > 0) ? 'border-t border-outline-variant/50' : ''}`}>{t.header.tabMessages}</div>
                     {searchConvos.map(c => (
                       <button key={c.id} onClick={() => { router.push('/messagerie'); setSearchOpen(false); setQuery(''); }}
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-container transition-colors text-left">
@@ -316,13 +316,13 @@ export default function Header() {
               <button onClick={() => { setProfileOpen(false); router.push('/change-password'); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors whitespace-nowrap">
                 <KeyRound size={15} className="text-on-surface-variant shrink-0" />
-                Changer le mot de passe
+                {t.profile.changePassword}
               </button>
               <div className="border-t border-outline-variant" />
               <button onClick={() => { setProfileOpen(false); logout(); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-error hover:bg-error/5 transition-colors">
                 <LogOut size={15} />
-                Se déconnecter
+                {t.profile.logout}
               </button>
             </div>
           )}

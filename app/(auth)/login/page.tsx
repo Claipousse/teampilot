@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { User, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { useT } from '@/contexts/LanguageContext';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const t = useT();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +34,7 @@ export default function LoginPage() {
         router.push('/dashboard');
       }
     } else {
-      setError('Identifiant ou mot de passe incorrect.');
+      setError(t.auth.loginError);
     }
     setLoading(false);
   };
@@ -75,10 +77,10 @@ export default function LoginPage() {
 
             <div className="mb-10">
               <h2 className="text-5xl font-bold text-on-surface tracking-tight leading-tight mb-3">
-                Welcome Back
+                {t.auth.loginTitle}
               </h2>
               <p className="text-on-surface-variant text-lg">
-                Access your tactical dashboard and squad analytics.
+                {t.auth.loginSubtitle}
               </p>
             </div>
 
@@ -86,7 +88,7 @@ export default function LoginPage() {
 
               <div className="space-y-2">
                 <label htmlFor="username" className="text-xs font-semibold text-on-surface-variant uppercase tracking-widest block">
-                  Identifiant
+                  {t.auth.usernameLabel}
                 </label>
                 <div className="relative">
                   <User className="absolute left-5 top-1/2 -translate-y-1/2 text-outline" size={20} />
@@ -106,7 +108,7 @@ export default function LoginPage() {
 
               <div className="space-y-2">
                 <label htmlFor="password" className="text-xs font-semibold text-on-surface-variant uppercase tracking-widest block">
-                  Mot de passe
+                  {t.auth.passwordLabel}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-outline" size={20} />
@@ -140,15 +142,15 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full py-5 bg-primary hover:bg-primary/90 text-white text-lg font-semibold rounded-xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Connexion...' : 'Se connecter'}
+                {loading ? t.auth.signingIn : t.auth.signIn}
                 {!loading && <ArrowRight size={20} />}
               </button>
 
             </form>
 
             <p className="mt-8 text-sm text-on-surface-variant text-center">
-              Identifiant oublié ?{' '}
-              <span className="text-primary font-bold">Contactez votre administrateur.</span>
+              {t.auth.forgotId}{' '}
+              <span className="text-primary font-bold">{t.auth.contactAdmin}</span>
             </p>
 
           </div>

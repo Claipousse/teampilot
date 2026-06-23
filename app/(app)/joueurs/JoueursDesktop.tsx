@@ -223,7 +223,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
       openCreds({ username: created.username, temp_password: created.temp_password });
     } else {
       const err = await res.json().catch(() => ({}));
-      setCreateErrors({ prenom: err.detail ?? 'Erreur lors de la création.' });
+      setCreateErrors({ prenom: err.detail ?? t.players.errorCreation });
     }
   };
 
@@ -282,11 +282,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
             }} />
             <button onClick={() => photoRef.current?.click()}
               className="flex items-center gap-2 px-4 py-2.5 border border-outline-variant rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors">
-              <Upload size={15} className="text-on-surface-variant" /> Choisir une photo
+              <Upload size={15} className="text-on-surface-variant" /> {t.admin.choosePhoto}
             </button>
             {form.photoUrl && (
               <button onClick={() => setForm(f => ({ ...f, photoUrl: '' }))} className="text-xs text-error hover:underline block">
-                Retirer la photo
+                {t.admin.removePhoto}
               </button>
             )}
             <p className="text-xs text-on-surface-variant/60">JPG, PNG ou WebP</p>
@@ -295,7 +295,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
 
         {/* Identité (champs obligatoires) */}
         <div className="space-y-4">
-          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Identité <span className="text-error font-normal normal-case">— champs obligatoires</span></p>
+          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.players.sectionIdentity} <span className="text-error font-normal normal-case">— {t.common.required.toLowerCase()}</span></p>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>{t.players.formFirstName} <span className="text-error">*</span></label>
@@ -351,7 +351,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
 
         {/* Informations personnelles (optionnel) */}
         <div className="space-y-4 pt-2 border-t border-outline-variant">
-          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Informations personnelles <span className="font-normal normal-case opacity-60">(optionnel)</span></p>
+          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.players.sectionPersonalInfo} <span className="font-normal normal-case opacity-60">({t.common.optional})</span></p>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>{t.players.formDob}</label>
@@ -382,11 +382,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
           {(form.status === 'Blessé' || form.status === 'Suspendu') && (
             <div className="space-y-4">
               <div>
-                <label className={labelCls}>{form.status === 'Blessé' ? 'Blessure' : 'Motif de suspension'}</label>
+                <label className={labelCls}>{form.status === 'Blessé' ? t.players.injuryLabel : t.players.suspensionReason}</label>
                 <input type="text" value={form.injury} onChange={e => setForm(f => ({ ...f, injury: e.target.value }))} className={inputCls()} placeholder={form.status === 'Blessé' ? 'Ex : Ischio-jambiers' : 'Ex : 2 matchs'} />
               </div>
               <div>
-                <label className={labelCls}>Retour estimé</label>
+                <label className={labelCls}>{t.players.estimatedReturn}</label>
                 <input type="text" value={form.returnDate} onChange={e => setForm(f => ({ ...f, returnDate: e.target.value }))} className={inputCls()} placeholder="Ex : Dans 3 semaines" />
               </div>
             </div>
@@ -395,7 +395,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
 
         {/* Contrat (optionnel) */}
         <div className="space-y-4 pt-2 border-t border-outline-variant">
-          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Contrat <span className="font-normal normal-case opacity-60">(optionnel)</span></p>
+          <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.players.contract} <span className="font-normal normal-case opacity-60">({t.common.optional})</span></p>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>{t.players.formContract}</label>
@@ -411,7 +411,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
         {/* Aperçu du compte à créer (uniquement en mode création) */}
         {!isEdit && (
           <div className="space-y-3 pt-2 border-t border-outline-variant">
-            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Compte d&apos;accès</p>
+            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.players.sectionAccount}</p>
             <div className="flex items-center gap-3 p-4 bg-surface-container rounded-xl border border-outline-variant">
               <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <KeyRound size={18} className="text-primary" />
@@ -422,18 +422,18 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                     ? `${form.prenom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}.${form.nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}`
                     : 'prenom.nom'}
                 </p>
-                <p className="text-xs text-on-surface-variant">Identifiant généré automatiquement</p>
+                <p className="text-xs text-on-surface-variant">{t.players.autoUsername}</p>
               </div>
-              <p className="text-xs text-on-surface-variant/60 shrink-0">Mot de passe temporaire affiché après création</p>
+              <p className="text-xs text-on-surface-variant/60 shrink-0">{t.players.tempPasswordHint}</p>
             </div>
           </div>
         )}
 
         {/* Notes du coach (optionnel) */}
         <div className="space-y-2 pt-2 border-t border-outline-variant">
-          <label className={labelCls}>Notes du coach <span className="font-normal normal-case opacity-60">(optionnel)</span></label>
+          <label className={labelCls}>{t.players.coachNotes} <span className="font-normal normal-case opacity-60">({t.common.optional})</span></label>
           <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3}
-            placeholder="Observations, consignes particulières..."
+            placeholder={t.players.coachNotesPlaceholder}
             className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base text-on-surface placeholder:text-outline resize-none outline-none focus:ring-2 focus:ring-primary transition-all" />
         </div>
 
@@ -450,7 +450,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
       <div className="flex-1 min-w-0 flex flex-col gap-5 overflow-y-auto">
 
         <div className="flex items-center gap-4 flex-wrap">
-          <h1 className="text-3xl font-extrabold text-on-surface shrink-0">Effectif</h1>
+          <h1 className="text-3xl font-extrabold text-on-surface shrink-0">{t.players.squad}</h1>
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={18} />
             <input type="text" placeholder={t.players.searchPlaceholder} value={search} onChange={e => setSearch(e.target.value)}
@@ -466,11 +466,11 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
         {/* Compteurs par statut */}
         <div className="grid grid-cols-2 3xl:grid-cols-4 gap-3">
           {([
-            { label: 'Disponibles', count: counts.Disponible, s: S['Disponible'] },
-            { label: 'Blessés',     count: counts.Blessé,     s: S['Blessé'] },
-            { label: 'Suspendus',   count: counts.Suspendu,   s: S['Suspendu'] },
-            { label: 'Incertains',  count: counts.Incertain,  s: S['Incertain'] },
-          ] as const).map((item, i) => (
+            { label: t.players.statusAvailablePlural, count: counts.Disponible, s: S['Disponible'] },
+            { label: t.players.statusInjuredPlural,   count: counts.Blessé,     s: S['Blessé'] },
+            { label: t.players.statusSuspendedPlural, count: counts.Suspendu,   s: S['Suspendu'] },
+            { label: t.players.statusDoubtfulPlural,  count: counts.Incertain,  s: S['Incertain'] },
+          ] as { label: string; count: number; s: typeof S[keyof typeof S] }[]).map((item, i) => (
             <div key={i} className={`flex items-center gap-4 p-5 rounded-2xl border ${item.s.bg}`}>
               <div className={`w-3 h-3 rounded-full ${item.s.dot} shrink-0`} />
               <p className={`text-3xl font-extrabold ${item.s.text}`}>{item.count}</p>
@@ -522,7 +522,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xl font-bold text-on-surface">{player.name}</p>
-                    <p className="text-base text-on-surface-variant">{player.position}</p>
+                    <p className="text-base text-on-surface-variant">{t.players.positions[player.position as keyof typeof t.players.positions] ?? player.position}</p>
                     <div className="flex items-center gap-1.5 text-base text-on-surface-variant">
                       {player.flag && /^[a-z]{2}(-[a-z]{3})?$/.test(player.flag) ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -552,7 +552,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                 </button>
                 {isAdmin && (
                   <button onClick={() => openEdit(displayed)} className="flex items-center gap-2 px-5 py-2.5 bg-error hover:bg-error/90 text-white text-base font-semibold rounded-xl transition-colors">
-                    <Pencil size={16} /> Modifier
+                    <Pencil size={16} /> {t.common.edit}
                   </button>
                 )}
               </div>
@@ -573,7 +573,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                     </div>
                     <div className="flex-1">
                       <p className="text-2xl font-extrabold text-on-surface">{displayed.firstName} {displayed.lastName}</p>
-                      <p className="text-base text-on-surface-variant mb-3">{displayed.position}</p>
+                      <p className="text-base text-on-surface-variant mb-3">{t.players.positions[displayed.position as keyof typeof t.players.positions] ?? displayed.position}</p>
                       <span className={`px-4 py-2 rounded-xl text-base font-extrabold ${s.badge}`}>{t.players.statuses[displayed.status]}</span>
                     </div>
                     <a href="/messagerie" className="w-13 h-13 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary/10 transition-colors">
@@ -637,7 +637,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   </div>
                   {/* Statut médical */}
                   <div>
-                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Statut médical</p>
+                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.players.medicalStatus}</p>
                     <div className={`rounded-2xl p-4 border ${s.bg}`}>
                       <div className="flex items-center gap-3 mb-1">
                         <div className={`w-3 h-3 rounded-full ${s.dot} shrink-0`} />
@@ -665,10 +665,10 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   </div>
                   {/* Notes */}
                   <div>
-                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Notes du coach</p>
+                    <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.players.coachNotes}</p>
                     <textarea value={notes[displayed.id] ?? (displayed.notes ?? '')}
                       onChange={e => setNotes(prev => ({ ...prev, [displayed.id]: e.target.value }))}
-                      rows={4} placeholder="Ajouter une note..."
+                      rows={4} placeholder={t.players.addNote}
                       className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-2xl text-base text-on-surface placeholder:text-outline resize-none outline-none focus:ring-2 focus:ring-primary transition-all" />
                   </div>
                 </div>
@@ -695,7 +695,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   setPlayers(prev => prev.filter(p => p.id !== editingPlayerId));
                   closeEdit(); closeDetailPanel();
                 })} className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold">
-                  <Trash2 size={16} /> Supprimer le joueur
+                  <Trash2 size={16} /> {t.players.deletePlayer}
                 </button>
                 <div className="flex items-center gap-2">
                   <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
@@ -738,14 +738,14 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                   <KeyRound size={24} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-on-surface">Identifiants du joueur</p>
-                  <p className="text-sm text-on-surface-variant">À communiquer en main propre — affiché une seule fois</p>
+                  <p className="text-lg font-bold text-on-surface">{t.players.credentialsTitle}</p>
+                  <p className="text-sm text-on-surface-variant">{t.players.credentialsHint}</p>
                 </div>
               </div>
               <div className="px-7 py-6 space-y-4">
                 {([
-                  { label: 'Identifiant', key: 'username', value: creds.username },
-                  { label: 'Mot de passe temporaire', key: 'password', value: creds.temp_password },
+                  { label: t.players.credentialUsername, key: 'username', value: creds.username },
+                  { label: t.players.credentialTempPassword, key: 'password', value: creds.temp_password },
                 ] as const).map(item => (
                   <div key={item.key} className="space-y-1.5">
                     <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{item.label}</p>
@@ -758,10 +758,10 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                     </div>
                   </div>
                 ))}
-                <p className="text-xs text-on-surface-variant leading-relaxed">Le joueur devra changer son mot de passe dès la première connexion.</p>
+                <p className="text-xs text-on-surface-variant leading-relaxed">{t.players.firstLoginHint}</p>
               </div>
               <div className="flex justify-end px-7 pb-6">
-                <button onClick={closeCreds} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">Fermer</button>
+                <button onClick={closeCreds} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">{t.common.close}</button>
               </div>
             </div>
           </div>
@@ -777,8 +777,8 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
               <div className="bg-error/5 border-b border-error/20 px-7 py-5 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-error/10 flex items-center justify-center shrink-0"><AlertTriangle size={24} className="text-error" /></div>
                 <div>
-                  <p className="text-lg font-bold text-error">Suppression irréversible</p>
-                  <p className="text-sm text-on-surface-variant">Cette action ne peut pas être annulée</p>
+                  <p className="text-lg font-bold text-error">{t.players.deleteIrreversible}</p>
+                  <p className="text-sm text-on-surface-variant">{t.players.deleteCannotUndo}</p>
                 </div>
               </div>
               <div className="px-7 py-6 space-y-4">
@@ -790,7 +790,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                 <button onClick={confirmDel} disabled={delTimer > 0}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold transition-all ${delTimer > 0 ? 'bg-error/30 text-error/50 cursor-not-allowed' : 'bg-error hover:bg-error/90 text-white cursor-pointer'}`}>
                   <Trash2 size={16} />
-                  {delTimer > 0 ? `Confirmer (${delTimer}s)` : 'Confirmer'}
+                  {delTimer > 0 ? `${t.common.confirm} (${delTimer}s)` : t.common.confirm}
                 </button>
               </div>
             </div>

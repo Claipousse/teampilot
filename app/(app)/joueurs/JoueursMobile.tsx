@@ -186,7 +186,7 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
       openCreds({ username: created.username, temp_password: created.temp_password });
     } else {
       const err = await res.json().catch(() => ({}));
-      setCreateErrors({ prenom: err.detail ?? 'Erreur lors de la création.' });
+      setCreateErrors({ prenom: err.detail ?? t.players.errorCreation });
     }
   };
 
@@ -231,11 +231,11 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
             }} />
             <button onClick={() => photoRef.current?.click()}
               className="flex items-center gap-2 px-3 py-2 border border-outline-variant rounded-xl text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors">
-              <Upload size={14} className="text-on-surface-variant" /> Choisir une photo
+              <Upload size={14} className="text-on-surface-variant" /> {t.admin.choosePhoto}
             </button>
             {form.photoUrl && (
               <button onClick={() => setForm(f => ({ ...f, photoUrl: '' }))}
-                className="text-xs text-error hover:underline block">Retirer</button>
+                className="text-xs text-error hover:underline block">{t.admin.removePhoto}</button>
             )}
           </div>
         </div>
@@ -389,7 +389,7 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
         {/* Compte — aperçu à la création */}
         {!isEdit && (
           <div className="space-y-3 pt-2 border-t border-outline-variant">
-            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Compte d&apos;accès</p>
+            <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{t.players.sectionAccount}</p>
             <div className="flex items-center gap-3 p-3 bg-surface-container rounded-xl border border-outline-variant">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <KeyRound size={15} className="text-primary" />
@@ -400,7 +400,7 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                     ? `${form.prenom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}.${form.nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')}`
                     : 'prenom.nom'}
                 </p>
-                <p className="text-xs text-on-surface-variant">Mot de passe temporaire affiché après création</p>
+                <p className="text-xs text-on-surface-variant">{t.players.tempPasswordHint}</p>
               </div>
             </div>
           </div>
@@ -408,9 +408,9 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
 
         {/* Notes optionnel */}
         <div className="space-y-2 pt-2 border-t border-outline-variant">
-          <label className={labelCls}>Notes du coach <span className="font-normal normal-case opacity-60">(optionnel)</span></label>
+          <label className={labelCls}>{t.players.coachNotes} <span className="font-normal normal-case opacity-60">({t.common.optional})</span></label>
           <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-            rows={3} placeholder="Observations, consignes particulières..."
+            rows={3} placeholder={t.players.coachNotesPlaceholder}
             className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-xl text-base text-on-surface placeholder:text-outline resize-none outline-none focus:ring-2 focus:ring-primary transition-all" />
         </div>
 
@@ -422,7 +422,7 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
     <div className="space-y-5">
 
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-extrabold text-on-surface">Effectif</h1>
+        <h1 className="text-3xl font-extrabold text-on-surface">{t.players.squad}</h1>
         {isAdmin && (
           <button onClick={openCreateForm}
             className="px-4 py-2.5 bg-error rounded-xl text-white text-base font-bold active:scale-[0.98] transition-all">
@@ -474,7 +474,7 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xl font-bold text-on-surface">{player.name}</p>
-                  <p className="text-base text-on-surface-variant">{player.position}</p>
+                  <p className="text-base text-on-surface-variant">{t.players.positions[player.position as keyof typeof t.players.positions] ?? player.position}</p>
                   <div className="flex items-center gap-1.5 text-base text-on-surface-variant">
                     {player.flag && /^[a-z]{2}(-[a-z]{3})?$/.test(player.flag) ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -525,14 +525,14 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                 </div>
                 <div>
                   <p className="text-xl font-bold text-on-surface">{displayed.name}</p>
-                  <p className="text-base text-on-surface-variant">{displayed.position}</p>
+                  <p className="text-base text-on-surface-variant">{t.players.positions[displayed.position as keyof typeof t.players.positions] ?? displayed.position}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 {isAdmin && (
                   <button onClick={() => openEdit(displayed)}
                     className="flex items-center gap-1.5 px-4 py-2.5 bg-error text-white text-base font-semibold rounded-xl">
-                    <Pencil size={15} /> Modifier
+                    <Pencil size={15} /> {t.common.edit}
                   </button>
                 )}
                 <div className="relative group">
@@ -540,7 +540,7 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                     <Send size={19} className="text-on-surface-variant" />
                   </a>
                   <span className="absolute right-full top-1/2 -translate-y-1/2 mr-2 px-2.5 py-1.5 bg-inverse-surface text-inverse-on-surface text-xs font-semibold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10">
-                    Envoyer un message
+                    {t.messaging.sendMessage}
                   </span>
                 </div>
                 <button onClick={closeDetailModal} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-container">
@@ -586,7 +586,7 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                       { label: t.players.matches,       value: st.matches,       color: 'text-on-surface' },
                       { label: t.players.cleanSheets,   value: st.cleanSheets,   color: 'text-secondary' },
                       { label: t.players.goalsConceded, value: st.goalsConceded, color: 'text-error' },
-                      { label: 'Minutes',   value: st.minutes ? `${st.minutes}'` : undefined, color: 'text-on-surface-variant' },
+                      { label: t.players.minutes, value: st.minutes ? `${st.minutes}'` : undefined, color: 'text-on-surface-variant' },
                     ].map((stat, i) => (
                       <div key={i} className="bg-surface-container rounded-xl p-4 text-center">
                         <p className={`text-4xl font-extrabold ${stat.value !== undefined ? stat.color : 'text-outline'}`}>{ph(stat.value)}</p>
@@ -628,11 +628,11 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
               </div>
 
               <div>
-                <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest mb-3">Notes du coach</p>
+                <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest mb-3">{t.players.coachNotes}</p>
                 <textarea
                   value={notes[displayed.id] ?? (displayed.notes ?? '')}
                   onChange={e => setNotes(prev => ({ ...prev, [displayed.id]: e.target.value }))}
-                  rows={4} placeholder="Ajouter une note..."
+                  rows={4} placeholder={t.players.addNote}
                   className="w-full px-4 py-3 bg-surface-container border border-outline-variant rounded-2xl text-base text-on-surface placeholder:text-outline resize-none outline-none focus:ring-2 focus:ring-primary transition-all" />
               </div>
               <div className="h-14" />
@@ -666,7 +666,7 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                     closeDetailModal();
                   })}
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-error hover:bg-error/10 transition-colors font-semibold text-sm">
-                  <Trash2 size={15} /> Supprimer
+                  <Trash2 size={15} /> {t.players.deletePlayer}
                 </button>
                 <div className="flex items-center gap-2">
                   <button onClick={closeEdit} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
@@ -716,14 +716,14 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                   <KeyRound size={20} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-base font-bold text-on-surface">Identifiants du joueur</p>
-                  <p className="text-xs text-on-surface-variant">À communiquer en main propre</p>
+                  <p className="text-base font-bold text-on-surface">{t.players.credentialsTitle}</p>
+                  <p className="text-xs text-on-surface-variant">{t.players.credentialsHint}</p>
                 </div>
               </div>
               <div className="px-5 py-5 space-y-4">
                 {([
-                  { label: 'Identifiant', key: 'username', value: creds.username },
-                  { label: 'Mot de passe temporaire', key: 'password', value: creds.temp_password },
+                  { label: t.players.credentialUsername, key: 'username', value: creds.username },
+                  { label: t.players.credentialTempPassword, key: 'password', value: creds.temp_password },
                 ] as const).map(item => (
                   <div key={item.key} className="space-y-1.5">
                     <p className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">{item.label}</p>
@@ -736,11 +736,11 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                     </div>
                   </div>
                 ))}
-                <p className="text-xs text-on-surface-variant">Le joueur devra changer son mot de passe à la première connexion.</p>
+                <p className="text-xs text-on-surface-variant">{t.players.firstLoginHint}</p>
               </div>
               <div className="flex justify-end px-5 pb-5">
                 <button onClick={closeCreds} className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-semibold transition-colors">
-                  Fermer
+                  {t.common.close}
                 </button>
               </div>
             </div>
@@ -759,8 +759,8 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                   <AlertTriangle size={20} className="text-error" />
                 </div>
                 <div>
-                  <p className="text-base font-bold text-error">Suppression irréversible</p>
-                  <p className="text-xs text-on-surface-variant">Cette action ne peut pas être annulée</p>
+                  <p className="text-base font-bold text-error">{t.players.deleteIrreversible}</p>
+                  <p className="text-xs text-on-surface-variant">{t.players.deleteCannotUndo}</p>
                 </div>
               </div>
               <div className="px-5 py-5 space-y-3">
@@ -772,13 +772,13 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                 </p>
               </div>
               <div className="flex items-center justify-end gap-2 px-5 pb-5">
-                <button onClick={closeDel} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">Annuler</button>
+                <button onClick={closeDel} className="px-4 py-2.5 rounded-xl text-on-surface-variant hover:bg-surface-container transition-colors font-semibold">{t.common.cancel}</button>
                 <button onClick={confirmDel} disabled={delTimer > 0}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all text-sm ${
                     delTimer > 0 ? 'bg-error/30 text-error/50 cursor-not-allowed' : 'bg-error hover:bg-error/90 text-white'
                   }`}>
                   <Trash2 size={14} />
-                  {delTimer > 0 ? `Confirmer (${delTimer}s)` : 'Confirmer'}
+                  {delTimer > 0 ? `${t.common.confirm} (${delTimer}s)` : t.common.confirm}
                 </button>
               </div>
             </div>

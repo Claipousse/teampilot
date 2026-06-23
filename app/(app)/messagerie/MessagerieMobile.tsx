@@ -191,14 +191,18 @@ export default function MessagerieMobile() {
     return matchTab && matchSearch;
   }), [otherConvs, activeTab, search]);
 
-  // Chargement initial
+  // Chargement initial des conversations
   useEffect(() => {
     fetch('/api/backend/messages/conversations')
       .then(r => r.ok ? r.json() : [])
-      .then((data: ApiConversation[]) => setConversations(data.map(toConversation)));
+      .then((data: ApiConversation[]) => {
+        const convs = data.map(toConversation);
+        setConversations(convs);
+        if (convs.length > 0) setActiveConv(convs[0]);
+      });
   }, []);
 
-  // Chargement messages
+  // Chargement des messages quand la conversation change
   useEffect(() => {
     if (!activeConv || !user) return;
     if (activeConv.id === -1) { setMessages([]); return; }
@@ -656,7 +660,7 @@ export default function MessagerieMobile() {
                   <div className="px-5 py-3 border-b border-outline-variant shrink-0">
                     <input
                       type="text"
-                      placeholder="Nom du groupe (optionnel)"
+                      placeholder={t.messaging.groupNamePlaceholder}
                       value={groupName}
                       onChange={e => setGroupName(e.target.value)}
                       className="w-full px-4 py-2.5 bg-surface-container rounded-xl text-sm text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none"
@@ -689,7 +693,7 @@ export default function MessagerieMobile() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" size={15} />
                     <input
                       type="text"
-                      placeholder="Rechercher…"
+                      placeholder={t.messaging.searchMembersPlaceholder}
                       value={createSearch}
                       onChange={e => setCreateSearch(e.target.value)}
                       className="w-full pl-9 pr-8 py-2.5 bg-surface-container rounded-xl text-sm text-on-surface placeholder:text-outline border border-outline-variant focus:ring-2 focus:ring-primary outline-none transition-all"
@@ -708,7 +712,7 @@ export default function MessagerieMobile() {
                 {/* Liste */}
                 <div className="flex-1 overflow-y-auto px-3 py-2">
                   {!usersGrouped ? (
-                    <div className="p-6 text-center text-sm text-on-surface-variant">Chargement…</div>
+                    <div className="p-6 text-center text-sm text-on-surface-variant">{t.header.searching}</div>
                   ) : (() => {
                     const raw = createTab === 'joueurs' ? usersGrouped.players
                       : createTab === 'staff'   ? usersGrouped.staff
@@ -717,7 +721,7 @@ export default function MessagerieMobile() {
                       ? raw.filter(u => `${u.first_name} ${u.last_name}`.toLowerCase().includes(createSearch.toLowerCase()) || (u.role ?? '').toLowerCase().includes(createSearch.toLowerCase()))
                       : raw;
                     if (list.length === 0)
-                      return <div className="p-6 text-center text-sm text-on-surface-variant">{createSearch ? 'Aucun résultat' : 'Aucun membre dans cette catégorie'}</div>;
+                      return <div className="p-6 text-center text-sm text-on-surface-variant">{createSearch ? t.messaging.noResultsSearch : t.messaging.noMembersCategory}</div>;
                     return list.map(u => {
                       const rt = userRoleType(u);
                       const initials = `${u.first_name[0]}${u.last_name[0]}`;
@@ -756,7 +760,7 @@ export default function MessagerieMobile() {
                       disabled={groupSelected.size < 2 || creatingConv}
                       className="w-full py-3 bg-primary text-white rounded-xl text-sm font-semibold disabled:opacity-40 transition-opacity"
                     >
-                      Créer le groupe{groupSelected.size >= 2 ? ` (${groupSelected.size} membres)` : ''}
+                      {t.messaging.createGroup}{groupSelected.size >= 2 ? ` (${groupSelected.size} ${t.messaging.members})` : ''}
                     </button>
                   </div>
                 )}
@@ -774,7 +778,7 @@ export default function MessagerieMobile() {
     <div className="space-y-4">
 
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-extrabold text-on-surface">Messages</h1>
+        <h1 className="text-3xl font-extrabold text-on-surface">{t.messaging.title}</h1>
         <div className="relative">
           <button
             onClick={() => setPlusOpen(v => !v)}
@@ -879,7 +883,7 @@ export default function MessagerieMobile() {
                     <button
                       onClick={e => hideConversation(conv.id, e)}
                       className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-error/10 active:bg-error/20 transition-colors ml-1"
-                      title="Supprimer la conversation"
+                      title={t.messaging.deleteConversation}
                     >
                       <X size={14} className="text-outline" />
                     </button>

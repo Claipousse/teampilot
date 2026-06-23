@@ -16,7 +16,7 @@ export default function MobileHeader() {
 
   const initials  = user ? `${user.firstName[0]}${user.lastName[0]}` : '?';
   const fullName  = user ? `${user.firstName} ${user.lastName}` : '—';
-  const roleLabel = user?.isAdmin ? 'Admin' : user?.type === 'staff' ? 'Staff' : 'Joueur';
+  const roleLabel = user?.isAdmin ? 'Admin' : user?.type === 'staff' ? 'Staff' : t.profile.rolePlayer;
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen,   setNotifOpen]   = useState(false);
@@ -144,13 +144,13 @@ export default function MobileHeader() {
               <button onClick={() => { setProfileOpen(false); router.push('/change-password'); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors whitespace-nowrap">
                 <KeyRound size={15} className="text-on-surface-variant shrink-0" />
-                Changer le mot de passe
+                {t.profile.changePassword}
               </button>
               <div className="border-t border-outline-variant" />
               <button onClick={() => { setProfileOpen(false); logout(); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-error hover:bg-error/5 transition-colors">
                 <LogOut size={15} className="shrink-0" />
-                Se déconnecter
+                {t.profile.logout}
               </button>
             </div>
           )}

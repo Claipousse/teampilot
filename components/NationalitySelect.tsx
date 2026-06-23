@@ -1,23 +1,22 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type Nat = { label: string; iso: string };
 
-// Cache module-level : partagé entre toutes les instances NationalitySelect dans la page.
-// _promise déduplique les appels concurrents — si deux composants montent simultanément,
-// un seul fetch part ; le second attend la même promesse.
-let _cache: Nat[] | null = null;
-let _promise: Promise<Nat[]> | null = null;
+// Cache par langue
+const _cache: Partial<Record<string, Nat[]>> = {};
+const _promise: Partial<Record<string, Promise<Nat[]>>> = {};
 
-function loadNationalities(): Promise<Nat[]> {
-  if (_cache) return Promise.resolve(_cache);
-  if (_promise) return _promise;
-  _promise = fetch('/api/nationalities')
+function loadNationalities(lang: string): Promise<Nat[]> {
+  if (_cache[lang]) return Promise.resolve(_cache[lang]!);
+  if (_promise[lang]) return _promise[lang]!;
+  _promise[lang] = fetch(`/api/nationalities?lang=${lang}`)
     .then(r => r.ok ? r.json() : [])
-    .then((data: Nat[]) => { _cache = data; return _cache; })
-    .catch(() => { _promise = null; return []; }); // reset sur erreur pour permettre un retry
-  return _promise;
+    .then((data: Nat[]) => { _cache[lang] = data; return _cache[lang]!; })
+    .catch(() => { delete _promise[lang]; return []; });
+  return _promise[lang]!;
 }
 
 interface Props {
@@ -28,12 +27,13 @@ interface Props {
 }
 
 export default function NationalitySelect({ value, iso, onChange, error }: Props) {
+  const { lang } = useLanguage();
   const [nats, setNats]   = useState<Nat[]>([]);
   const [query, setQuery] = useState(value);
   const [open, setOpen]   = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { loadNationalities().then(setNats); }, []);
+  useEffect(() => { loadNationalities(lang).then(setNats); }, [lang]);
   useEffect(() => { setQuery(value); }, [value]);
 
   useEffect(() => {
@@ -49,16 +49,15 @@ export default function NationalitySelect({ value, iso, onChange, error }: Props
     : nats;
 
   function handleBlur() {
-    // 150 ms pour laisser le onClick de l'option s'exécuter avant de fermer la liste :
-    // blur se déclenche avant click, donc sans délai le dropdown disparaîtrait au moment du clic.
     setTimeout(() => {
       if (!ref.current?.contains(document.activeElement)) {
-        setQuery(value); // revert si l'utilisateur a tapé sans sélectionner
+        setQuery(value);
         setOpen(false);
       }
     }, 150);
   }
 
+  const placeholder = lang === 'en' ? (nats.length === 0 ? 'Loading…' : 'Ex: French') : (nats.length === 0 ? 'Chargement…' : 'Ex : Français');
   const cls = `w-full py-3 pr-4 bg-surface-container border ${error ? 'border-error' : 'border-outline-variant'} rounded-xl text-base text-on-surface outline-none focus:ring-2 focus:ring-primary transition-all ${iso ? 'pl-10' : 'pl-4'}`;
 
   return (
@@ -80,7 +79,7 @@ export default function NationalitySelect({ value, iso, onChange, error }: Props
           onChange={e => { setQuery(e.target.value); setOpen(true); }}
           onFocus={e => { e.target.select(); setOpen(true); }}
           onBlur={handleBlur}
-          placeholder={nats.length === 0 ? 'Chargement…' : 'Ex : Français'}
+          placeholder={placeholder}
           className={cls}
         />
       </div>
@@ -90,7 +89,7 @@ export default function NationalitySelect({ value, iso, onChange, error }: Props
             <button
               key={n.iso}
               type="button"
-              onMouseDown={e => e.preventDefault()} // empêche le blur sur l'input avant que onClick ne s'exécute
+              onMouseDown={e => e.preventDefault()}
               onClick={() => { onChange(n.label, n.iso); setQuery(n.label); setOpen(false); }}
               className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-surface-container text-sm text-left transition-colors"
             >

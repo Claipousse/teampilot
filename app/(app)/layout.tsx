@@ -2,13 +2,13 @@ import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import BottomNav from '@/components/layout/BottomNav';
 import MobileHeader from '@/components/layout/MobileHeader';
-import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
+    <LanguageProvider>
     <AuthProvider>
-      <LanguageProvider>
         <div className="flex h-screen overflow-hidden bg-surface">
 
           {/* Sidebar — desktop uniquement */}
@@ -36,7 +36,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
           </div>
         </div>
-      </LanguageProvider>
     </AuthProvider>
+    </LanguageProvider>
   );
 }

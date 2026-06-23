@@ -45,6 +45,7 @@ export const T = {
     },
     profile: {
       changePassword: 'Changer le mot de passe',
+      changePhoto: 'Changer la photo',
       logout: 'Se déconnecter',
       rolePlayer: 'Joueur',
     },
@@ -276,6 +277,7 @@ export const T = {
     },
     profile: {
       changePassword: 'Change password',
+      changePhoto: 'Change photo',
       logout: 'Sign out',
       rolePlayer: 'Player',
     },

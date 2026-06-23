@@ -50,7 +50,7 @@ async def create_player(data: PlayerCreate, db: AsyncSession = Depends(get_db)):
         position_short=data.position_short, nationality=data.nationality,
         nationality_flag=data.nationality_flag, date_of_birth=data.date_of_birth,
         height_cm=data.height_cm, weight_kg=data.weight_kg,
-        preferred_foot=data.preferred_foot, status=data.status,
+        preferred_foot=data.preferred_foot, photo_url=data.photo_url, status=data.status,
         injury_description=data.injury_description, return_date_estimate=data.return_date_estimate,
         contract_end_date=data.contract_end_date, academy=data.academy, notes=data.notes,
     )

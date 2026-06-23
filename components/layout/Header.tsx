@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Bell, X, LogOut, KeyRound } from 'lucide-react';
+import { Search, Bell, X, LogOut, KeyRound, Camera } from 'lucide-react';
 import { useLanguage, useT } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications, evtDotClass, msgDotClass, fmtNotifTime } from '@/hooks/useNotifications';
@@ -39,7 +39,8 @@ export default function Header() {
 
   const { lang, setLang } = useLanguage();
   const t = useT();
-  const { user, logout } = useAuth();
+  const { user, logout, updatePhoto } = useAuth();
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   const { evtNotifs, msgNotifs, totalUnread, remove } = useNotifications();
@@ -106,6 +107,22 @@ export default function Header() {
     if (n.event_id) router.push(`/calendrier?eventId=${n.event_id}`);
   };
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      const url = ev.target?.result as string;
+      const res = await fetch('/api/backend/auth/me/photo', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo_url: url }),
+      });
+      if (res.ok) updatePhoto(url);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
   const visibleEvents   = evtNotifs.slice(0, MAX_VISIBLE);
   const visibleMessages = msgNotifs.slice(0, MAX_VISIBLE);
   const hasSearchResults = searchPlayers.length > 0 || searchEvents.length > 0 || searchConvos.length > 0;
@@ -164,7 +181,7 @@ export default function Header() {
                   <>
                     <div className={`px-4 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container/60 border-b border-outline-variant/50 ${(searchPlayers.length > 0 || searchEvents.length > 0) ? 'border-t border-outline-variant/50' : ''}`}>{t.header.tabMessages}</div>
                     {searchConvos.map(c => (
-                      <button key={c.id} onClick={() => { router.push('/messagerie'); setSearchOpen(false); setQuery(''); }}
+                      <button key={c.id} onClick={() => { router.push(`/messagerie?convId=${c.id}`); setSearchOpen(false); setQuery(''); }}
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-surface-container transition-colors text-left">
                         <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                           <Search size={13} className="text-primary" />
@@ -307,16 +324,25 @@ export default function Header() {
               <p className="text-lg font-bold text-on-surface leading-tight">{fullName}</p>
               <p className="text-sm text-primary uppercase tracking-widest font-semibold">{roleLabel}</p>
             </div>
-            <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shrink-0">
-              <span className="text-white text-base font-bold">{initials}</span>
+            <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shrink-0 overflow-hidden">
+              {user?.photoUrl
+                ? <img src={user.photoUrl} alt="" className="w-full h-full object-cover" />
+                : <span className="text-white text-base font-bold">{initials}</span>}
             </div>
           </button>
+          <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
           {profileOpen && (
             <div className="absolute top-full right-0 mt-2 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg overflow-hidden z-50 min-w-[230px]">
               <button onClick={() => { setProfileOpen(false); router.push('/change-password'); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors whitespace-nowrap">
                 <KeyRound size={15} className="text-on-surface-variant shrink-0" />
                 {t.profile.changePassword}
+              </button>
+              <div className="border-t border-outline-variant" />
+              <button onClick={() => { setProfileOpen(false); photoInputRef.current?.click(); }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-on-surface hover:bg-surface-container transition-colors whitespace-nowrap">
+                <Camera size={15} className="text-on-surface-variant shrink-0" />
+                {t.profile.changePhoto}
               </button>
               <div className="border-t border-outline-variant" />
               <button onClick={() => { setProfileOpen(false); logout(); }}

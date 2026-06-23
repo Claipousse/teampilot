@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Pencil, Send, Trash2, Upload, AlertTriangle, Copy, Check, KeyRound } from 'lucide-react';
+import { X, Pencil, Trash2, Upload, AlertTriangle, Copy, Check, KeyRound } from 'lucide-react';
 import NationalitySelect from '@/components/NationalitySelect';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useT, useLanguage } from '@/contexts/LanguageContext';
@@ -171,7 +171,7 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
         nationality_flag: editForm.flag || null, date_of_birth: editForm.dob || null,
         height_cm: editForm.height ? parseInt(editForm.height) : null,
         weight_kg: editForm.weight ? parseInt(editForm.weight) : null,
-        preferred_foot: editForm.foot || null, status: editForm.status,
+        preferred_foot: editForm.foot || null, photo_url: editForm.photoUrl || null, status: editForm.status,
         injury_description: editForm.injury || null, return_date_estimate: editForm.returnDate || null,
         contract_end_date: editForm.contract || null, academy: editForm.academy || null, notes: editForm.notes || null,
         matches:        editForm.matches       !== '' ? parseInt(editForm.matches)       : null,
@@ -203,7 +203,7 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
         nationality_flag: createForm.flag || null, date_of_birth: createForm.dob || null,
         height_cm: createForm.height ? parseInt(createForm.height) : null,
         weight_kg: createForm.weight ? parseInt(createForm.weight) : null,
-        preferred_foot: createForm.foot || null, status: createForm.status,
+        preferred_foot: createForm.foot || null, photo_url: createForm.photoUrl || null, status: createForm.status,
         injury_description: createForm.injury || null, return_date_estimate: createForm.returnDate || null,
         contract_end_date: createForm.contract || null, academy: createForm.academy || null, notes: createForm.notes || null,
       }),
@@ -598,14 +598,6 @@ export default function JoueursMobile({ openCreate = false }: { openCreate?: boo
                     <Pencil size={15} /> {t.common.edit}
                   </button>
                 )}
-                <div className="relative group">
-                  <a href="/messagerie" className="w-11 h-11 flex items-center justify-center rounded-full bg-surface-container transition-colors hover:bg-primary/10">
-                    <Send size={19} className="text-on-surface-variant" />
-                  </a>
-                  <span className="absolute right-full top-1/2 -translate-y-1/2 mr-2 px-2.5 py-1.5 bg-inverse-surface text-inverse-on-surface text-xs font-semibold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10">
-                    {t.messaging.sendMessage}
-                  </span>
-                </div>
                 <button onClick={closeDetailModal} className="w-11 h-11 flex items-center justify-center rounded-xl bg-surface-container">
                   <X size={20} className="text-on-surface-variant" />
                 </button>

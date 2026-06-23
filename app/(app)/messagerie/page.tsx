@@ -1,14 +1,21 @@
 import MessagerieDesktop from './MessagerieDesktop';
 import MessagerieMobile from './MessagerieMobile';
 
-export default function MessageriePage() {
+export default async function MessageriePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ convId?: string }>;
+}) {
+  const params = await searchParams;
+  const openConvId = params?.convId ? parseInt(params.convId) : undefined;
+
   return (
     <>
       <div className="hidden lg:block h-full">
-        <MessagerieDesktop />
+        <MessagerieDesktop openConvId={openConvId} />
       </div>
       <div className="lg:hidden">
-        <MessagerieMobile />
+        <MessagerieMobile openConvId={openConvId} />
       </div>
     </>
   );

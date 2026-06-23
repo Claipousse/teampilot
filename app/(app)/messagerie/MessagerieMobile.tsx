@@ -150,7 +150,7 @@ const VIRTUAL_AI_CONV: Conversation = {
 
 // ── Composant ─────────────────────────────────────────────────────────────────
 
-export default function MessagerieMobile() {
+export default function MessagerieMobile({ openConvId }: { openConvId?: number }) {
   const t = useT();
   const { user } = useAuth();
 
@@ -198,9 +198,12 @@ export default function MessagerieMobile() {
       .then((data: ApiConversation[]) => {
         const convs = data.map(toConversation);
         setConversations(convs);
-        if (convs.length > 0) setActiveConv(convs[0]);
+        if (convs.length > 0) {
+          const target = openConvId ? (convs.find(c => c.id === openConvId) ?? convs[0]) : convs[0];
+          setActiveConv(target);
+        }
       });
-  }, []);
+  }, [openConvId]);
 
   // Chargement des messages quand la conversation change
   useEffect(() => {

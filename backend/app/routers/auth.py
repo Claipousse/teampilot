@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -24,6 +25,21 @@ async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
 @router.get("/me", response_model=UserResponse)
 async def me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+class PhotoUpdate(BaseModel):
+    photo_url: str | None
+
+
+@router.patch("/me/photo")
+async def update_my_photo(
+    data: PhotoUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    current_user.photo_url = data.photo_url
+    await db.commit()
+    return {"ok": True}
 
 
 @router.post("/change-password")

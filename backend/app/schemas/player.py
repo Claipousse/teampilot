@@ -16,6 +16,7 @@ class PlayerCreate(BaseModel):
     height_cm: int | None = None
     weight_kg: int | None = None
     preferred_foot: str | None = None
+    photo_url: str | None = None
     status: PlayerStatus = "Disponible"
     injury_description: str | None = None
     return_date_estimate: str | None = None
@@ -36,6 +37,7 @@ class PlayerUpdate(BaseModel):
     height_cm: int | None = None
     weight_kg: int | None = None
     preferred_foot: str | None = None
+    photo_url: str | None = None
     status: PlayerStatus | None = None
     injury_description: str | None = None
     return_date_estimate: str | None = None

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Search, X, Pencil, Send, Trash2, Upload, AlertTriangle, Copy, Check, KeyRound } from 'lucide-react';
+import { Search, X, Pencil, Trash2, Upload, AlertTriangle, Copy, Check, KeyRound } from 'lucide-react';
 import NationalitySelect from '@/components/NationalitySelect';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useT, useLanguage } from '@/contexts/LanguageContext';
@@ -195,7 +195,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
       date_of_birth: editForm.dob || null,
       height_cm: editForm.height ? parseInt(editForm.height) : null,
       weight_kg: editForm.weight ? parseInt(editForm.weight) : null,
-      preferred_foot: editForm.foot || null, status: editForm.status,
+      preferred_foot: editForm.foot || null, photo_url: editForm.photoUrl || null, status: editForm.status,
       injury_description: editForm.injury || null,
       return_date_estimate: editForm.returnDate || null,
       contract_end_date: editForm.contract || null,
@@ -237,7 +237,7 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
         date_of_birth: createForm.dob || null,
         height_cm: createForm.height ? parseInt(createForm.height) : null,
         weight_kg: createForm.weight ? parseInt(createForm.weight) : null,
-        preferred_foot: createForm.foot || null, status: createForm.status,
+        preferred_foot: createForm.foot || null, photo_url: createForm.photoUrl || null, status: createForm.status,
         injury_description: createForm.injury || null,
         return_date_estimate: createForm.returnDate || null,
         contract_end_date: createForm.contract || null,
@@ -638,9 +638,6 @@ export default function JoueursDesktop({ openCreate = false }: { openCreate?: bo
                       <p className="text-base text-on-surface-variant mb-3">{t.players.positions[displayed.position as keyof typeof t.players.positions] ?? displayed.position}</p>
                       <span className={`px-4 py-2 rounded-xl text-base font-extrabold ${s.badge}`}>{t.players.statuses[displayed.status]}</span>
                     </div>
-                    <a href="/messagerie" className="w-13 h-13 flex items-center justify-center rounded-full bg-surface-container hover:bg-primary/10 transition-colors">
-                      <Send size={24} className="text-on-surface-variant" />
-                    </a>
                   </div>
                 </div>
                 <div className="p-5 space-y-5">

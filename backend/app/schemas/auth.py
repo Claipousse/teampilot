@@ -16,6 +16,7 @@ class UserResponse(BaseModel):
     player_id: int | None = None
     staff_id: int | None = None
     must_change_password: bool = False
+    photo_url: str | None = None
 
     model_config = {"from_attributes": True}
 

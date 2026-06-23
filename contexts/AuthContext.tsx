@@ -14,18 +14,21 @@ export type AuthUser = {
   mustChangePassword: boolean; // vrai pour les nouveaux comptes avec mot de passe temporaire
   playerId?: number;           // défini uniquement si type === 'player'
   staffId?: number;            // défini uniquement si type === 'staff'
+  photoUrl?: string;
 };
 
 type AuthCtxType = {
   user: AuthUser | null;
   loading: boolean;
   logout: () => Promise<void>;
+  updatePhoto: (url: string | undefined) => void;
 };
 
 const AuthCtx = createContext<AuthCtxType>({
   user: null,
   loading: true,
   logout: async () => {},
+  updatePhoto: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -49,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             mustChangePassword: data.must_change_password ?? false,
             playerId: data.player_id ?? undefined,
             staffId: data.staff_id ?? undefined,
+            photoUrl: data.photo_url ?? undefined,
           };
           setUser(u);
           // Redirige immédiatement si le mot de passe temporaire n'a pas encore été changé
@@ -70,8 +74,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
 
+  const updatePhoto = (url: string | undefined) => {
+    setUser(prev => prev ? { ...prev, photoUrl: url } : prev);
+  };
+
   return (
-    <AuthCtx.Provider value={{ user, loading, logout }}>
+    <AuthCtx.Provider value={{ user, loading, logout, updatePhoto }}>
       {children}
     </AuthCtx.Provider>
   );
